@@ -12,7 +12,7 @@ struct ResultsView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 48))
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
 
                     Text("Examination Complete")
                         .font(.largeTitle)

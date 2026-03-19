@@ -26,26 +26,38 @@ struct PDFParserService: DocumentParserProtocol {
         var allText = ""
         var sections: [DocumentSection] = []
 
-        for pageIndex in 0..<pdfDocument.pageCount {
+        // Limit pages to avoid exceeding context windows
+        let maxPages = min(pdfDocument.pageCount, 100)
+        logger.info("Parsing PDF: \(pdfDocument.pageCount) pages (processing first \(maxPages))")
+
+        for pageIndex in 0..<maxPages {
             guard let page = pdfDocument.page(at: pageIndex) else { continue }
 
-            if let pageText = page.string, !pageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let pageText = page.string ?? ""
+            let trimmed = pageText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if trimmed.count > 10 {
                 sections.append(DocumentSection(
                     title: "Page \(pageIndex + 1)",
-                    content: pageText,
+                    content: trimmed,
                     pageNumber: pageIndex + 1
                 ))
-                allText += pageText + "\n\n"
+                allText += trimmed + "\n\n"
             } else {
-                // Scanned page — try OCR
-                let ocrText = try await ocrPage(page)
-                if !ocrText.isEmpty {
-                    sections.append(DocumentSection(
-                        title: "Page \(pageIndex + 1) (OCR)",
-                        content: ocrText,
-                        pageNumber: pageIndex + 1
-                    ))
-                    allText += ocrText + "\n\n"
+                // Scanned page or very little text — try OCR
+                do {
+                    let ocrText = try await ocrPage(page)
+                    let ocrTrimmed = ocrText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if ocrTrimmed.count > 10 {
+                        sections.append(DocumentSection(
+                            title: "Page \(pageIndex + 1) (OCR)",
+                            content: ocrTrimmed,
+                            pageNumber: pageIndex + 1
+                        ))
+                        allText += ocrTrimmed + "\n\n"
+                    }
+                } catch {
+                    logger.warning("OCR failed for page \(pageIndex + 1): \(error.localizedDescription)")
                 }
             }
         }
@@ -68,9 +80,7 @@ struct PDFParserService: DocumentParserProtocol {
     }
 
     private func ocrPage(_ page: PDFPage) async throws -> String {
-        guard let pageImage = page.thumbnail(of: CGSize(width: 2048, height: 2048), for: .mediaBox) else {
-            return ""
-        }
+        let pageImage = page.thumbnail(of: CGSize(width: 2048, height: 2048), for: .mediaBox)
 
         guard let cgImage = pageImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return ""

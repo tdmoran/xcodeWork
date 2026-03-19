@@ -51,7 +51,7 @@ struct ExaminationView: View {
                             .fontWeight(.semibold)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
-                            .background(.accent.opacity(0.15), in: Capsule())
+                            .background(Color.accentColor.opacity(0.15), in: Capsule())
 
                         if let topic = sessionState.currentTopic {
                             Text(topic.name)

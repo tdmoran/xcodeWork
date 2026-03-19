@@ -89,7 +89,7 @@ struct PerformanceDashboard: View {
                     x: .value("Question", turn.questionIndex),
                     y: .value("Score", turn.score * 100)
                 )
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
                 .interpolationMethod(.catmullRom)
 
                 AreaMark(

@@ -29,15 +29,23 @@ struct ClaudeAPIClient: Sendable {
         maxTokens: Int = 4096
     ) async throws -> ClaudeResponse {
         let apiKey = try await requireAPIKey()
+        let sanitized = Self.sanitizeMessages(messages)
 
         let request = ClaudeMessagesRequest(
             model: model.rawValue,
             maxTokens: maxTokens,
-            system: system,
-            messages: messages,
+            system: system.isEmpty ? "You are a helpful assistant." : system,
+            messages: sanitized,
             stream: false,
             outputConfig: nil
         )
+
+        // Debug: dump request to file for troubleshooting
+        if let debugData = try? JSONEncoder().encode(request) {
+            let debugURL = FileManager.default.temporaryDirectory.appendingPathComponent("claude_request_debug.json")
+            try? debugData.write(to: debugURL)
+            logger.info("Debug request written to \(debugURL.path)")
+        }
 
         return try await httpClient.request(
             url: baseURL.appendingPathComponent("messages"),
@@ -98,11 +106,12 @@ struct ClaudeAPIClient: Sendable {
                 do {
                     let apiKey = try await requireAPIKey()
 
+                    let sanitized = Self.sanitizeMessages(messages)
                     let request = ClaudeMessagesRequest(
                         model: model.rawValue,
                         maxTokens: maxTokens,
-                        system: system,
-                        messages: messages,
+                        system: system.isEmpty ? "You are a helpful assistant." : system,
+                        messages: sanitized,
                         stream: true,
                         outputConfig: nil
                     )
@@ -136,6 +145,23 @@ struct ClaudeAPIClient: Sendable {
     }
 
     // MARK: - Helpers
+
+    /// Filters out empty text content blocks that Claude's API rejects.
+    private static func sanitizeMessages(_ messages: [ClaudeMessage]) -> [ClaudeMessage] {
+        messages.map { message in
+            let filtered = message.content.compactMap { block -> ClaudeMessage.ContentBlock? in
+                if case .text(let text) = block {
+                    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if trimmed.isEmpty { return nil }
+                    return .text(trimmed)
+                }
+                return block
+            }
+            // Ensure at least one content block per message
+            let safeContent = filtered.isEmpty ? [ClaudeMessage.ContentBlock.text("(no content)")] : filtered
+            return ClaudeMessage(role: message.role, content: safeContent)
+        }
+    }
 
     private func requireAPIKey() async throws -> String {
         guard let key = await apiKeyProvider() else {

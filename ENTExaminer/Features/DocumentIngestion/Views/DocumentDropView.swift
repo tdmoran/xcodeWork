@@ -34,7 +34,7 @@ struct DocumentDropView: View {
             Image(systemName: "doc.arrow.down.fill")
                 .font(.system(size: 48))
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
                 .symbolEffect(.bounce, value: isDropTargeted)
 
             Text("Drop your document here")
@@ -82,7 +82,7 @@ struct DocumentDropView: View {
             HStack(spacing: 12) {
                 Image(systemName: iconForFormat(document.metadata.format))
                     .font(.title)
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(document.metadata.title ?? document.metadata.url.lastPathComponent)
@@ -180,7 +180,7 @@ struct DocumentDropView: View {
                         .font(.caption2)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(.accent.opacity(0.1), in: Capsule())
+                        .background(Color.accentColor.opacity(0.1), in: Capsule())
                 }
             }
         }

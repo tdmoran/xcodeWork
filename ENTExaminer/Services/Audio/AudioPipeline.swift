@@ -137,6 +137,35 @@ actor AudioPipeline {
         #endif
     }
 
+    // MARK: - Playback-Only Mode
+
+    /// Starts the audio engine for playback only (no mic capture).
+    /// Call this before using `playAudioChunk` if `startCapture` hasn't been called.
+    func startPlayback() async throws {
+        guard engine == nil || !(engine?.isRunning ?? false) else {
+            logger.info("Engine already running, playback ready")
+            return
+        }
+
+        let audioEngine = AVAudioEngine()
+
+        let mixerNode = AVAudioMixerNode()
+        let playerNode = AVAudioPlayerNode()
+        audioEngine.attach(mixerNode)
+        audioEngine.attach(playerNode)
+        audioEngine.connect(playerNode, to: mixerNode, format: nil)
+        audioEngine.connect(mixerNode, to: audioEngine.mainMixerNode, format: nil)
+
+        audioEngine.prepare()
+        try audioEngine.start()
+
+        self.engine = audioEngine
+        self.playbackMixerNode = mixerNode
+        self.playbackPlayerNode = playerNode
+
+        logger.info("Audio engine started in playback-only mode")
+    }
+
     // MARK: - Capture Control
 
     func startCapture() async throws {

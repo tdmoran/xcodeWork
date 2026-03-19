@@ -11,8 +11,8 @@ protocol STTService: Sendable {
     /// - Returns: The final, complete transcript of what the user said.
     /// - Throws: ``AppError`` if microphone access is denied, the audio engine fails, or the API errors.
     func listen(
-        onPartialTranscript: @Sendable (String) -> Void,
-        onAudioLevel: @Sendable (Float) -> Void
+        onPartialTranscript: @escaping @Sendable (String) -> Void,
+        onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws -> String
 
     /// Stops listening and finalizes the current recognition session.

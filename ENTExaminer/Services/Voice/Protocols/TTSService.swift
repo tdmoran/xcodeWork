@@ -13,7 +13,7 @@ protocol TTSService: Sendable {
     func speak(
         text: String,
         voiceId: String,
-        onAudioLevel: @Sendable (Float) -> Void
+        onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws
 
     /// Stops any currently playing speech and cancels the active stream.

@@ -1,9 +1,9 @@
 import Foundation
 
 enum ClaudeModel: String, CaseIterable, Codable, Identifiable, Sendable {
-    case haiku = "claude-haiku-4-5-20251001"
-    case sonnet = "claude-sonnet-4-6-20250514"
-    case opus = "claude-opus-4-6-20250514"
+    case haiku = "claude-haiku-4-5"
+    case sonnet = "claude-sonnet-4-6"
+    case opus = "claude-opus-4-6"
 
     var id: String { rawValue }
 

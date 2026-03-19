@@ -79,7 +79,8 @@ actor ExaminationEngine {
         self.claudeClient = claudeClient
         self.ttsService = ttsService
         self.sttService = sttService
-        self.pipelinedSpeaker = PipelinedSpeaker(ttsService: ttsService, voiceId: config.voiceId ?? "default")
+        // ElevenLabs voice: "Rachel" (clear, professional female voice)
+        self.pipelinedSpeaker = PipelinedSpeaker(ttsService: ttsService, voiceId: config.voiceId ?? "21m00Tcm4TlvDq8ikWAM")
         self.flowController = FlowController()
         self.performanceCalculator = PerformanceCalculator()
         self.document = document
@@ -88,7 +89,7 @@ actor ExaminationEngine {
     }
 
     func startExamination() async throws {
-        logger.info("Starting examination with \(config.model.displayName)")
+        logger.info("Starting examination with \(self.config.model.displayName)")
 
         startTime = Date()
         startTimer()
@@ -116,7 +117,7 @@ actor ExaminationEngine {
 
         timerTask?.cancel()
         await state.update(status: .finished)
-        logger.info("Examination complete: \(allTurns.count) questions asked")
+        logger.info("Examination complete: \(self.allTurns.count) questions asked")
     }
 
     func pause() async {
@@ -174,7 +175,7 @@ actor ExaminationEngine {
             }
         )
 
-        await capturedState.update(isSpeaking: false, currentQuestion: .some(question))
+        await capturedState.update(currentQuestion: .some(question), isSpeaking: false)
 
         // Record the assistant message in conversation history
         let userMessage = ClaudeMessage(
@@ -187,7 +188,7 @@ actor ExaminationEngine {
         ]
 
         // Listen for user answer via STT
-        await capturedState.update(status: .listeningForAnswer, isListening: true)
+        await capturedState.update(isListening: true, status: .listeningForAnswer)
 
         let userAnswer = try await sttService.listen(
             onPartialTranscript: { @Sendable partial in

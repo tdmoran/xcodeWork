@@ -8,23 +8,19 @@ let package = Package(
         .macOS(.v14),
     ],
     targets: [
-        // Core logic library (testable)
-        .target(
-            name: "ENTExaminerCore",
+        .executableTarget(
+            name: "ENTExaminer",
             path: "ENTExaminer",
             exclude: [
                 "Resources/Assets.xcassets",
                 "ENTExaminer.entitlements",
-                "App/ENTExaminerApp.swift",
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),
             ]
         ),
-        // Test runner
         .executableTarget(
             name: "ENTExaminerTests",
-            dependencies: ["ENTExaminerCore"],
             path: "Tests"
         ),
     ]

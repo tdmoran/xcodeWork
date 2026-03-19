@@ -43,9 +43,23 @@ struct DocumentAnalyzer: Sendable {
         Identify 3-8 major topics. Each topic should have 2-5 key concepts.
         """
 
+        // Guard against empty content
+        let documentText = document.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !documentText.isEmpty else {
+            throw AppError.documentEmpty
+        }
+
+        // Truncate to stay within context window (~150k chars ≈ ~37k tokens, leaving room for system prompt + response)
+        let maxChars = 150_000
+        let truncatedText = documentText.count > maxChars
+            ? String(documentText.prefix(maxChars)) + "\n\n[Document truncated at \(maxChars) characters]"
+            : documentText
+
+        logger.info("Sending \(truncatedText.count) characters to Claude for analysis")
+
         let userMessage = ClaudeMessage(
             role: .user,
-            content: [.text("Analyze this document for examination:\n\n\(document.text)")]
+            content: [.text("Analyze this document for examination:\n\n\(truncatedText)")]
         )
 
         let response = try await retryHandler.execute {

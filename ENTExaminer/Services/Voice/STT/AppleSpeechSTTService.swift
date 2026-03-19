@@ -59,12 +59,13 @@ actor AppleSpeechSTTService: STTService {
     // MARK: - STTService
 
     func listen(
-        onPartialTranscript: @Sendable (String) -> Void,
-        onAudioLevel: @Sendable (Float) -> Void
+        onPartialTranscript: @escaping @Sendable (String) -> Void,
+        onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws -> String {
-        guard !isCurrentlyListening else {
-            logger.warning("listen() called while already listening; ignoring")
-            throw AppError.speechRecognitionFailed("Already listening")
+        // Force cleanup of any stale previous session
+        if isCurrentlyListening {
+            logger.warning("listen() called while already listening; cleaning up previous session")
+            tearDown()
         }
 
         // Step 1: Ensure authorization
@@ -93,21 +94,29 @@ actor AppleSpeechSTTService: STTService {
         }
 
         // Step 4: Start recognition and listen via a continuation
-        let transcript: String = try await withTaskCancellationHandler {
-            try await performRecognition(
-                recognizer: recognizer,
-                request: request,
-                engine: engine,
-                inputNode: inputNode,
-                nativeFormat: nativeFormat,
-                onPartialTranscript: onPartialTranscript,
-                onAudioLevel: onAudioLevel
-            )
-        } onCancel: {
-            Task { await self.tearDown() }
-        }
+        do {
+            let transcript: String = try await withTaskCancellationHandler {
+                try await performRecognition(
+                    recognizer: recognizer,
+                    request: request,
+                    engine: engine,
+                    inputNode: inputNode,
+                    nativeFormat: nativeFormat,
+                    onPartialTranscript: onPartialTranscript,
+                    onAudioLevel: onAudioLevel
+                )
+            } onCancel: {
+                Task { await self.tearDown() }
+            }
 
-        return transcript
+            // Always clean up after successful recognition
+            tearDown()
+            return transcript
+        } catch {
+            // Always clean up on error too
+            tearDown()
+            throw error
+        }
     }
 
     func stopListening() async {
@@ -200,8 +209,8 @@ actor AppleSpeechSTTService: STTService {
         engine: AVAudioEngine,
         inputNode: AVAudioInputNode,
         nativeFormat: AVAudioFormat,
-        onPartialTranscript: @Sendable (String) -> Void,
-        onAudioLevel: @Sendable (Float) -> Void
+        onPartialTranscript: @escaping @Sendable (String) -> Void,
+        onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws -> String {
         // Shared mutable state for the recognition callback — protected by the continuation
         // pattern (only one resume is allowed).

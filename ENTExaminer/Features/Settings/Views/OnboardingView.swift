@@ -50,7 +50,7 @@ struct OnboardingView: View {
             Image(systemName: "waveform.circle.fill")
                 .font(.system(size: 64))
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
 
             Text("Welcome to ENTExaminer")
                 .font(.largeTitle)

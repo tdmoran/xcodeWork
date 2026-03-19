@@ -47,10 +47,13 @@ actor ElevenLabsTTSService: TTSService {
     func speak(
         text: String,
         voiceId: String,
-        onAudioLevel: @Sendable (Float) -> Void
+        onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws {
         // Cancel any in-progress speech before starting new
         cancelActiveStream()
+
+        // Ensure audio engine is running for playback
+        try await audioPipeline.startPlayback()
 
         let apiKey = try await requireAPIKey()
         let request = try buildRequest(text: text, voiceId: voiceId, apiKey: apiKey)

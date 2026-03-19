@@ -96,6 +96,9 @@ actor ExaminationEngine {
 
         await state.update(status: .askingQuestion)
 
+        // Speak introduction
+        try await speakIntroduction()
+
         // Run the examination loop
         while allTurns.count < config.maxQuestions {
             let currentPerformance = await state.performance
@@ -152,6 +155,36 @@ actor ExaminationEngine {
     }
 
     // MARK: - Private
+
+    private func speakIntroduction() async throws {
+        let topicNames = analysis.topics.map(\.name).joined(separator: ", ")
+        let intro = """
+        Welcome to your ENT examination session. Today we will be examining you on \
+        \(analysis.documentSummary). The key topics we will cover include \(topicNames). \
+        I will ask you approximately \(config.maxQuestions) questions, starting with \
+        foundational concepts and adapting the difficulty based on your responses. \
+        Please take your time with each answer. Let's begin.
+        """
+
+        let capturedState = state
+        await capturedState.update(currentQuestion: .some(intro), isSpeaking: true)
+
+        try await ttsService.speak(
+            text: intro,
+            voiceId: config.voiceId ?? "21m00Tcm4TlvDq8ikWAM",
+            onAudioLevel: { @Sendable level in
+                Task { @MainActor in
+                    let levels = Self.buildLevelsArray(from: level)
+                    capturedState.update(examinerAudioLevels: levels)
+                }
+            }
+        )
+
+        await capturedState.update(isSpeaking: false)
+
+        // Brief pause before first question
+        try await Task.sleep(for: .seconds(1))
+    }
 
     private func processAction(_ action: FlowController.NextAction) async throws {
         let (topic, questionPrompt) = buildQuestionPrompt(for: action)

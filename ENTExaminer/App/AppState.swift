@@ -105,7 +105,7 @@ final class AppState {
             audioPipeline: audioPipeline
         )
 
-        let sttService = AppleSpeechSTTService()
+        let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
 
         let engine = ExaminationEngine(
             state: sessionState,

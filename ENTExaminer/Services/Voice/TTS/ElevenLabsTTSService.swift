@@ -79,7 +79,7 @@ actor ElevenLabsTTSService: TTSService {
                     accumulatedData = Data()
                     accumulatedData.reserveCapacity(Self.streamChunkSize * 4)
 
-                    try await audioPipeline.playAudioChunk(chunk, format: .mp3)
+                    try await audioPipeline.playAudioChunk(chunk, format: .pcm24kHz)
 
                     // Report a simple level based on audio data energy
                     let level = Self.estimateAudioLevel(from: chunk)
@@ -132,15 +132,17 @@ actor ElevenLabsTTSService: TTSService {
         voiceId: String,
         apiKey: String
     ) throws -> URLRequest {
-        let url = Self.baseURL
+        // Use output_format=pcm_24000 for raw PCM that streams correctly
+        // (MP3 chunks aren't valid standalone files for AVAudioFile)
+        var components = URLComponents(url: Self.baseURL
             .appendingPathComponent(voiceId)
-            .appendingPathComponent("stream")
+            .appendingPathComponent("stream"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "output_format", value: "pcm_24000")]
 
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: components.url!)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("audio/mpeg", forHTTPHeaderField: "Accept")
 
         let body = TTSRequestBody(
             text: text,

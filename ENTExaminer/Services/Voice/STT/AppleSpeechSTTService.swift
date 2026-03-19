@@ -22,6 +22,7 @@ actor AppleSpeechSTTService: STTService {
     private let locale: Locale
     private let silenceTimeout: TimeInterval
     private let energyThreshold: Float
+    private let audioPipeline: AudioPipeline?
 
     // MARK: - Engine State
 
@@ -40,16 +41,19 @@ actor AppleSpeechSTTService: STTService {
     ///
     /// - Parameters:
     ///   - locale: The locale for speech recognition (default: current).
-    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 1.5).
-    ///   - energyThreshold: RMS energy below which audio is classified as silence (default: 0.01).
+    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 5.0).
+    ///   - energyThreshold: RMS energy below which audio is classified as silence (default: 0.008).
+    ///   - audioPipeline: Optional reference to stop playback engine before capturing.
     init(
         locale: Locale = .current,
-        silenceTimeout: TimeInterval = 1.5,
-        energyThreshold: Float = 0.01
+        silenceTimeout: TimeInterval = 5.0,
+        energyThreshold: Float = 0.008,
+        audioPipeline: AudioPipeline? = nil
     ) {
         self.locale = locale
         self.silenceTimeout = silenceTimeout
         self.energyThreshold = energyThreshold
+        self.audioPipeline = audioPipeline
         self.vad = EnergyVAD(
             silenceThreshold: silenceTimeout,
             energyThreshold: energyThreshold
@@ -68,13 +72,19 @@ actor AppleSpeechSTTService: STTService {
             tearDown()
         }
 
-        // Step 1: Ensure authorization
+        // Step 1: Stop any other audio engine that might hold the mic
+        if let pipeline = audioPipeline {
+            await pipeline.stopCapture()
+            logger.info("Stopped AudioPipeline before STT capture")
+        }
+
+        // Step 2: Ensure authorization
         try await requestSpeechAuthorization()
 
-        // Step 2: Validate recognizer availability
+        // Step 3: Validate recognizer availability
         let recognizer = try createRecognizer()
 
-        // Step 3: Set up audio engine and recognition
+        // Step 4: Set up audio engine and recognition
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
 

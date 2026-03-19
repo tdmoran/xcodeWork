@@ -97,6 +97,24 @@ struct ExaminationView: View {
             .padding()
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
 
+            // Live transcript of what the user is saying
+            if sessionState.isListening || !sessionState.userTranscript.isEmpty {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "text.bubble.fill")
+                        .foregroundStyle(.green)
+                        .font(.callout)
+
+                    Text(sessionState.userTranscript.isEmpty ? "Speak your answer..." : sessionState.userTranscript)
+                        .font(.callout)
+                        .foregroundStyle(sessionState.userTranscript.isEmpty ? .secondary : .primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .animation(.easeInOut(duration: 0.2), value: sessionState.userTranscript)
+                }
+                .padding(12)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                .transition(.opacity)
+            }
+
             // Status
             statusBadge
 
@@ -104,6 +122,34 @@ struct ExaminationView: View {
             conversationHistory
 
             Spacer()
+
+            // Control buttons
+            HStack(spacing: 12) {
+                if sessionState.status == .paused {
+                    Button {
+                        Task { await appState.resumeExamination() }
+                    } label: {
+                        Label("Resume", systemImage: "play.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else if sessionState.status != .finished && sessionState.status != .notStarted {
+                    Button {
+                        Task { await appState.pauseExamination() }
+                    } label: {
+                        Label("Pause", systemImage: "pause.fill")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Button {
+                    Task { await appState.stopExamination() }
+                } label: {
+                    Label("Stop Examination", systemImage: "stop.fill")
+                        .foregroundStyle(.red)
+                }
+                .buttonStyle(.bordered)
+            }
+            .padding(.top, 8)
         }
     }
 

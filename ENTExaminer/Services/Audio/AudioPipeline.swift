@@ -8,6 +8,7 @@ private let logger = Logger(subsystem: "com.entexaminer", category: "AudioPipeli
 
 enum AudioFormat: Sendable {
     case pcm16kHz
+    case pcm24kHz
     case mp3
 }
 
@@ -318,20 +319,24 @@ actor AudioPipeline {
 
         switch format {
         case .pcm16kHz:
-            pcmBuffer = try Self.pcmBufferFromInt16Data(data)
+            pcmBuffer = try Self.pcmBufferFromInt16Data(data, sampleRate: 16000)
+
+        case .pcm24kHz:
+            pcmBuffer = try Self.pcmBufferFromInt16Data(data, sampleRate: 24000)
 
         case .mp3:
             pcmBuffer = try await Self.pcmBufferFromCompressedData(data)
+        }
+
+        // Start playing BEFORE scheduling (or it deadlocks)
+        if !playerNode.isPlaying {
+            playerNode.play()
         }
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             playerNode.scheduleBuffer(pcmBuffer) {
                 continuation.resume()
             }
-        }
-
-        if !playerNode.isPlaying {
-            playerNode.play()
         }
     }
 
@@ -532,10 +537,10 @@ actor AudioPipeline {
     // MARK: - Audio Format Conversion Helpers
 
     /// Create a PCM buffer from raw Int16 data at 16kHz mono.
-    private static func pcmBufferFromInt16Data(_ data: Data) throws -> AVAudioPCMBuffer {
+    private static func pcmBufferFromInt16Data(_ data: Data, sampleRate: Double = captureRate) throws -> AVAudioPCMBuffer {
         guard let format = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
-            sampleRate: captureRate,
+            sampleRate: sampleRate,
             channels: 1,
             interleaved: true
         ) else {

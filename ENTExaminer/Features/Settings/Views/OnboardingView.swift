@@ -208,3 +208,15 @@ struct OnboardingView: View {
         withAnimation { step = 2 }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+struct OnboardingView_Previews: PreviewProvider {
+    static var previews: some View {
+        OnboardingView()
+            .environment(PreviewData.makePreviewAppState())
+            .previewDisplayName("Onboarding")
+    }
+}
+#endif

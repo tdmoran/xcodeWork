@@ -38,3 +38,33 @@ struct WaveformView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+struct WaveformView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            WaveformView(
+                levels: (0..<32).map { _ in Float.random(in: 0.1...0.9) },
+                color: .blue,
+                accentColor: .cyan,
+                isActive: true
+            )
+            .frame(height: 48)
+            .padding()
+            .previewDisplayName("Active Waveform")
+
+            WaveformView(
+                levels: Array(repeating: Float(0), count: 32),
+                color: .green,
+                accentColor: .mint,
+                isActive: false
+            )
+            .frame(height: 48)
+            .padding()
+            .previewDisplayName("Idle Waveform")
+        }
+    }
+}
+#endif

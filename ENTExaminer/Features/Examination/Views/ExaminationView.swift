@@ -231,3 +231,23 @@ struct ExaminationView: View {
             .font(.caption)
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+struct ExaminationView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            ExaminationView(sessionState: PreviewData.makePreviewSessionState(status: .listeningForAnswer))
+                .environment(PreviewData.makePreviewAppState(phase: .examining, section: .examination, withExamination: true))
+                .frame(width: 900, height: 650)
+                .previewDisplayName("Examination - Listening")
+
+            ExaminationView(sessionState: PreviewData.makePreviewSessionState(status: .askingQuestion, isListening: false, isSpeaking: true))
+                .environment(PreviewData.makePreviewAppState(phase: .examining, section: .examination, withExamination: true))
+                .frame(width: 900, height: 650)
+                .previewDisplayName("Examination - Speaking")
+        }
+    }
+}
+#endif

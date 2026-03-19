@@ -204,3 +204,16 @@ struct ResultsView: View {
         return "\(minutes)m \(secs)s"
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+struct ResultsView_Previews: PreviewProvider {
+    static var previews: some View {
+        ResultsView(summary: PreviewData.sampleExamSummary)
+            .environment(PreviewData.makePreviewAppState(withResults: true))
+            .frame(width: 700, height: 800)
+            .previewDisplayName("Results View")
+    }
+}
+#endif

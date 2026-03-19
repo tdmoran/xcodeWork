@@ -163,3 +163,23 @@ struct SidebarView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            ContentView()
+                .environment(PreviewData.makePreviewAppState())
+                .frame(width: 1000, height: 700)
+                .previewDisplayName("Content View - Documents")
+
+            ContentView()
+                .environment(PreviewData.makePreviewAppState(section: .results, withResults: true))
+                .frame(width: 1000, height: 700)
+                .previewDisplayName("Content View - Results")
+        }
+    }
+}
+#endif

@@ -111,3 +111,16 @@ struct RadarChartView: View {
         return "Topic mastery chart. " + descriptions.joined(separator: ". ")
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+struct RadarChartView_Previews: PreviewProvider {
+    static var previews: some View {
+        RadarChartView(topicScores: PreviewData.sampleTopicScores)
+            .frame(width: 300, height: 250)
+            .padding()
+            .previewDisplayName("Radar Chart")
+    }
+}
+#endif

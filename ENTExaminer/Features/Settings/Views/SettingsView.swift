@@ -62,6 +62,24 @@ struct GeneralSettingsView: View {
     }
 }
 
+// MARK: - Previews
+
+#if DEBUG
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            SettingsView()
+                .environment(PreviewData.makePreviewAppState())
+                .previewDisplayName("Settings")
+
+            VoiceSettingsView()
+                .frame(width: 480, height: 300)
+                .previewDisplayName("Voice Settings")
+        }
+    }
+}
+#endif
+
 // MARK: - API Keys Settings
 
 struct APIKeysSettingsView: View {

@@ -191,3 +191,29 @@ struct PerformanceDashboard: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+struct PerformanceDashboard_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            PerformanceDashboard(
+                performance: PreviewData.samplePerformance,
+                topicScores: PreviewData.sampleTopicScores,
+                turnScores: PreviewData.sampleTurnScores
+            )
+            .frame(width: 380, height: 700)
+            .previewDisplayName("Performance Dashboard")
+
+            PerformanceDashboard(
+                performance: .empty,
+                topicScores: [],
+                turnScores: []
+            )
+            .frame(width: 380, height: 400)
+            .previewDisplayName("Empty Dashboard")
+        }
+    }
+}
+#endif

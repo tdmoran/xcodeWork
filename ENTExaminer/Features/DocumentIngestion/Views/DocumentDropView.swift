@@ -221,6 +221,26 @@ struct DocumentDropView: View {
     }
 }
 
+// MARK: - Previews
+
+#if DEBUG
+struct DocumentDropView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            DocumentDropView()
+                .environment(PreviewData.makePreviewAppState())
+                .frame(width: 700, height: 500)
+                .previewDisplayName("Drop Zone - Empty")
+
+            DocumentDropView()
+                .environment(PreviewData.makePreviewAppState(withAnalysis: true))
+                .frame(width: 700, height: 600)
+                .previewDisplayName("Drop Zone - Document Loaded")
+        }
+    }
+}
+#endif
+
 // MARK: - Flow Layout
 
 struct FlowLayout: Layout {

@@ -157,14 +157,7 @@ actor ExaminationEngine {
     // MARK: - Private
 
     private func speakIntroduction() async throws {
-        let topicNames = analysis.topics.map(\.name).joined(separator: ", ")
-        let intro = """
-        Welcome to your ENT examination session. Today we will be examining you on \
-        \(analysis.documentSummary). The key topics we will cover include \(topicNames). \
-        I will ask you approximately \(config.maxQuestions) questions, starting with \
-        foundational concepts and adapting the difficulty based on your responses. \
-        Please take your time with each answer. Let's begin.
-        """
+        let intro = "Welcome to your examination on \(analysis.documentSummary)."
 
         let capturedState = state
         await capturedState.update(currentQuestion: .some(intro), isSpeaking: true)

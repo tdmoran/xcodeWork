@@ -328,13 +328,22 @@ actor AudioPipeline {
             pcmBuffer = try await Self.pcmBufferFromCompressedData(data)
         }
 
+        // Convert buffer to the player node's output format to avoid channel/rate mismatch
+        let outputFormat = playerNode.outputFormat(forBus: 0)
+        let playBuffer: AVAudioPCMBuffer
+        if pcmBuffer.format == outputFormat {
+            playBuffer = pcmBuffer
+        } else {
+            playBuffer = try Self.convertBuffer(pcmBuffer, to: outputFormat)
+        }
+
         // Start playing BEFORE scheduling (or it deadlocks)
         if !playerNode.isPlaying {
             playerNode.play()
         }
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            playerNode.scheduleBuffer(pcmBuffer) {
+            playerNode.scheduleBuffer(playBuffer) {
                 continuation.resume()
             }
         }
@@ -535,6 +544,39 @@ actor AudioPipeline {
     }
 
     // MARK: - Audio Format Conversion Helpers
+
+    /// Convert a PCM buffer to a different format (sample rate, channel count, bit depth).
+    private static func convertBuffer(_ source: AVAudioPCMBuffer, to outputFormat: AVAudioFormat) throws -> AVAudioPCMBuffer {
+        guard let converter = AVAudioConverter(from: source.format, to: outputFormat) else {
+            throw AppError.audioEngineFailure(
+                "Cannot create converter from \(source.format) to \(outputFormat)"
+            )
+        }
+
+        let ratio = outputFormat.sampleRate / source.format.sampleRate
+        let outputFrameCount = AVAudioFrameCount(Double(source.frameLength) * ratio) + 1
+        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: outputFrameCount) else {
+            throw AppError.audioEngineFailure("Cannot allocate conversion output buffer")
+        }
+
+        var error: NSError?
+        var consumed = false
+        converter.convert(to: outputBuffer, error: &error) { _, outStatus in
+            if consumed {
+                outStatus.pointee = .endOfStream
+                return nil
+            }
+            consumed = true
+            outStatus.pointee = .haveData
+            return source
+        }
+
+        if let error {
+            throw AppError.audioEngineFailure("Audio conversion failed: \(error.localizedDescription)")
+        }
+
+        return outputBuffer
+    }
 
     /// Create a PCM buffer from raw Int16 data at 16kHz mono.
     private static func pcmBufferFromInt16Data(_ data: Data, sampleRate: Double = captureRate) throws -> AVAudioPCMBuffer {

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 @main
 struct ENTExaminerApp: App {
@@ -9,6 +10,13 @@ struct ENTExaminerApp: App {
             ContentView()
                 .environment(appState)
                 .frame(minWidth: 900, minHeight: 650)
+                .onAppear {
+                    let iconPath = Bundle.main.path(forResource: "AppIcon", ofType: "icns")
+                        ?? Self.findIconPath()
+                    if let path = iconPath, let icon = NSImage(contentsOfFile: path) {
+                        NSApplication.shared.applicationIconImage = icon
+                    }
+                }
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified(showsTitle: true))
@@ -18,5 +26,20 @@ struct ENTExaminerApp: App {
             SettingsView()
                 .environment(appState)
         }
+    }
+
+    /// Walks up from the executable to find the icon in the source tree.
+    private static func findIconPath() -> String? {
+        // When run via `swift run`, the executable is deep in .build/
+        // Walk up to find the project root and look for the icon there
+        var url = URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
+        for _ in 0..<10 {
+            url = url.deletingLastPathComponent()
+            let candidate = url.appendingPathComponent("ENTExaminer/Resources/AppIcon.icns")
+            if FileManager.default.fileExists(atPath: candidate.path) {
+                return candidate.path
+            }
+        }
+        return nil
     }
 }

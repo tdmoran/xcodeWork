@@ -41,3 +41,4 @@ Pods/
 # Secrets
 .env
 *.key
+ENTExaminer.app/

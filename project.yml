@@ -1,0 +1,47 @@
+name: ENTExaminer
+options:
+  bundleIdPrefix: com.entexaminer
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: true
+
+targets:
+  ENTExaminer:
+    type: application
+    platform: macOS
+    sources:
+      - ENTExaminer
+    resources:
+      - ENTExaminer/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.entexaminer.app
+        PRODUCT_NAME: ENTExaminer
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "ENTExaminer needs microphone access for voice examination"
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.education"
+        CODE_SIGN_ENTITLEMENTS: ENTExaminer/ENTExaminer.entitlements
+        GENERATE_INFOPLIST_FILE: true
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 1.0.0
+    entitlements:
+      path: ENTExaminer/ENTExaminer.entitlements
+
+  ENTExaminerTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ENTExaminerTests
+    dependencies:
+      - target: ENTExaminer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.entexaminer.tests
+        GENERATE_INFOPLIST_FILE: true

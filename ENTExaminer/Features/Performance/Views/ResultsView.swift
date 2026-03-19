@@ -5,6 +5,8 @@ struct ResultsView: View {
     @Environment(AppState.self) private var appState
     let summary: ExamSummary
 
+    @State private var animateIn = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -13,6 +15,7 @@ struct ResultsView: View {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 48))
                         .foregroundStyle(Color.accentColor)
+                        .symbolEffect(.bounce, value: animateIn)
 
                     Text("Examination Complete")
                         .font(.largeTitle)
@@ -22,6 +25,8 @@ struct ResultsView: View {
                         .font(.title3)
                         .foregroundStyle(.secondary)
                 }
+                .opacity(animateIn ? 1 : 0)
+                .offset(y: animateIn ? 0 : -20)
 
                 // Score card
                 HStack(spacing: 32) {
@@ -32,6 +37,7 @@ struct ResultsView: View {
                             .font(.title)
                             .fontWeight(.bold)
                             .foregroundStyle(gradeColor)
+                            .contentTransition(.numericText())
 
                         Group {
                             Label("\(summary.questionCount) questions", systemImage: "questionmark.circle")
@@ -44,6 +50,8 @@ struct ResultsView: View {
                 }
                 .padding(24)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                .opacity(animateIn ? 1 : 0)
+                .offset(y: animateIn ? 0 : 20)
 
                 // Topic breakdown
                 if !summary.topicScores.isEmpty {
@@ -64,7 +72,14 @@ struct ResultsView: View {
             }
             .padding(32)
         }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
+                animateIn = true
+            }
+        }
     }
+
+    @State private var scoreProgress: Double = 0
 
     private var scoreCircle: some View {
         ZStack {
@@ -72,15 +87,21 @@ struct ResultsView: View {
                 .stroke(Color.secondary.opacity(0.2), lineWidth: 10)
 
             Circle()
-                .trim(from: 0, to: summary.overallScore)
+                .trim(from: 0, to: scoreProgress)
                 .stroke(gradeColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                 .rotationEffect(.degrees(-90))
 
-            Text("\(Int(summary.overallScore * 100))%")
+            Text("\(Int(scoreProgress * 100))%")
                 .font(.system(size: 36, weight: .bold, design: .rounded))
                 .monospacedDigit()
+                .contentTransition(.numericText())
         }
         .frame(width: 120, height: 120)
+        .onAppear {
+            withAnimation(.easeOut(duration: 1.0).delay(0.3)) {
+                scoreProgress = summary.overallScore
+            }
+        }
     }
 
     private var topicBreakdown: some View {

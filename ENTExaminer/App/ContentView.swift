@@ -43,39 +43,44 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detailView: some View {
-        switch appState.selectedSection {
-        case .documents:
-            DocumentDropView()
-                .environment(appState)
-        case .examination:
-            if let examState = appState.examinationState {
-                ExaminationView(sessionState: examState)
+        Group {
+            switch appState.selectedSection {
+            case .documents:
+                DocumentDropView()
                     .environment(appState)
-            } else {
+                    .id(AppSection.documents)
+            case .examination:
+                if let examState = appState.examinationState {
+                    ExaminationView(sessionState: examState)
+                        .environment(appState)
+                } else {
+                    ContentUnavailableView(
+                        "No Active Examination",
+                        systemImage: "waveform.circle",
+                        description: Text("Load a document and start an examination.")
+                    )
+                }
+            case .results:
+                if let summary = appState.examSummary {
+                    ResultsView(summary: summary)
+                        .environment(appState)
+                } else {
+                    ContentUnavailableView(
+                        "No Results Yet",
+                        systemImage: "chart.bar",
+                        description: Text("Complete an examination to see your results.")
+                    )
+                }
+            case .history:
                 ContentUnavailableView(
-                    "No Active Examination",
-                    systemImage: "waveform.circle",
-                    description: Text("Load a document and start an examination.")
+                    "History",
+                    systemImage: "clock.arrow.circlepath",
+                    description: Text("Past examinations will appear here.")
                 )
             }
-        case .results:
-            if let summary = appState.examSummary {
-                ResultsView(summary: summary)
-                    .environment(appState)
-            } else {
-                ContentUnavailableView(
-                    "No Results Yet",
-                    systemImage: "chart.bar",
-                    description: Text("Complete an examination to see your results.")
-                )
-            }
-        case .history:
-            ContentUnavailableView(
-                "History",
-                systemImage: "clock.arrow.circlepath",
-                description: Text("Past examinations will appear here.")
-            )
         }
+        .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+        .animation(.easeInOut(duration: 0.25), value: appState.selectedSection)
     }
 
     @ViewBuilder

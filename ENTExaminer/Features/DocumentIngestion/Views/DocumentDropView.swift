@@ -10,10 +10,16 @@ struct DocumentDropView: View {
         VStack(spacing: 24) {
             if let document = appState.document {
                 documentPreview(document)
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.95).combined(with: .opacity),
+                        removal: .opacity
+                    ))
             } else {
                 dropZone
+                    .transition(.opacity)
             }
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: appState.document != nil)
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .fileImporter(

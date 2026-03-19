@@ -85,6 +85,8 @@ struct ExaminationView: View {
                     Circle()
                         .fill(sessionState.isListening ? Color.green : Color.secondary)
                         .frame(width: 8, height: 8)
+                        .shadow(color: sessionState.isListening ? .green.opacity(0.5) : .clear, radius: 4)
+                        .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: sessionState.isListening)
 
                     Label(
                         sessionState.isListening ? "Listening..." : "Waiting",

@@ -122,7 +122,7 @@ struct ExaminationView: View {
                     )
                     .frame(height: 36)
 
-                    Text("Dr. Campbell")
+                    Text("Mr. Gogarty")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .opacity(sessionState.isSpeaking ? 1 : 0.5)
@@ -179,7 +179,7 @@ struct ExaminationView: View {
             case .examinerSpeaking:
                 Image(systemName: "person.wave.2.fill")
                     .foregroundStyle(.blue)
-                Text("Dr. Campbell is speaking...")
+                Text("Mr. Gogarty is speaking...")
 
                 // Barge-in button — trainee can interrupt
                 Button {
@@ -202,7 +202,7 @@ struct ExaminationView: View {
             case .thinking:
                 ProgressView()
                     .controlSize(.small)
-                Text("Dr. Campbell is thinking...")
+                Text("Mr. Gogarty is thinking...")
             case .paused:
                 Image(systemName: "pause.circle.fill")
                     .foregroundStyle(.orange)

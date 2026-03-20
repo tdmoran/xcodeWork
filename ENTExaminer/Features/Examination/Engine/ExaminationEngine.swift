@@ -19,6 +19,11 @@ final class ExaminationSessionState {
     private(set) var userAudioLevels: [Float] = Array(repeating: 0, count: 32)
     private(set) var elapsedTime: TimeInterval = 0
 
+    // Conversational mode state
+    private(set) var dialogueMessages: [DialogueMessage] = []
+    private(set) var conversationContext: ConversationContext = .empty
+    private(set) var isConversationalMode: Bool = false
+
     func update(
         turns: [ExamTurn]? = nil,
         currentQuestion: String?? = nil,
@@ -30,7 +35,10 @@ final class ExaminationSessionState {
         userTranscript: String? = nil,
         examinerAudioLevels: [Float]? = nil,
         userAudioLevels: [Float]? = nil,
-        elapsedTime: TimeInterval? = nil
+        elapsedTime: TimeInterval? = nil,
+        dialogueMessages: [DialogueMessage]? = nil,
+        conversationContext: ConversationContext? = nil,
+        isConversationalMode: Bool? = nil
     ) {
         if let turns { self.turns = turns }
         if let currentQuestion { self.currentQuestion = currentQuestion }
@@ -46,6 +54,9 @@ final class ExaminationSessionState {
         if let examinerAudioLevels { self.examinerAudioLevels = examinerAudioLevels }
         if let userAudioLevels { self.userAudioLevels = userAudioLevels }
         if let elapsedTime { self.elapsedTime = elapsedTime }
+        if let dialogueMessages { self.dialogueMessages = dialogueMessages }
+        if let conversationContext { self.conversationContext = conversationContext }
+        if let isConversationalMode { self.isConversationalMode = isConversationalMode }
     }
 }
 
@@ -56,15 +67,28 @@ actor ExaminationEngine {
     private let sttService: STTService
     private let pipelinedSpeaker: PipelinedSpeaker
     private let flowController: FlowController
+    private let dialogueFlowController: DialogueFlowController
     private let performanceCalculator: PerformanceCalculator
     private let document: ParsedDocument
     private let analysis: DocumentAnalysis
     private let config: ExamConfiguration
 
+    // Legacy mode state
     private var conversationHistory: [ClaudeMessage] = []
     private var allTurns: [ExamTurn] = []
+
+    // Conversational mode state
+    private var dialogueMessages: [DialogueMessage] = []
+    private var inlineAssessments: [InlineAssessment] = []
+    private var currentTopicTracker: ExamTopic?
+    private var depthOnCurrentTopic: Int = 0
+
+    // Shared state
     private var timerTask: Task<Void, Never>?
+    private var assessmentTask: Task<Void, Never>?
     private var startTime: Date?
+
+    private let voiceId: String
 
     init(
         state: ExaminationSessionState,
@@ -79,14 +103,17 @@ actor ExaminationEngine {
         self.claudeClient = claudeClient
         self.ttsService = ttsService
         self.sttService = sttService
-        // ElevenLabs voice: "Rachel" (clear, professional female voice)
+        self.voiceId = config.voiceId ?? "21m00Tcm4TlvDq8ikWAM"
         self.pipelinedSpeaker = PipelinedSpeaker(ttsService: ttsService, voiceId: config.voiceId ?? "21m00Tcm4TlvDq8ikWAM")
         self.flowController = FlowController()
+        self.dialogueFlowController = DialogueFlowController()
         self.performanceCalculator = PerformanceCalculator()
         self.document = document
         self.analysis = analysis
         self.config = config
     }
+
+    // MARK: - Legacy Examination Mode
 
     func startExamination() async throws {
         logger.info("Starting examination with \(self.config.model.displayName)")
@@ -96,10 +123,8 @@ actor ExaminationEngine {
 
         await state.update(status: .askingQuestion)
 
-        // Speak introduction
         try await speakIntroduction()
 
-        // Run the examination loop
         while allTurns.count < config.maxQuestions {
             let currentPerformance = await state.performance
             let action = flowController.decideNextAction(
@@ -110,7 +135,6 @@ actor ExaminationEngine {
             )
 
             guard case .wrapUp = action else {
-                // Generate and ask question, then process answer
                 try await processAction(action)
                 continue
             }
@@ -123,6 +147,72 @@ actor ExaminationEngine {
         logger.info("Examination complete: \(self.allTurns.count) questions asked")
     }
 
+    // MARK: - Conversational Examination Mode
+
+    /// Starts a natural Socratic dialogue examination.
+    /// Instead of rigid question→answer→evaluate cycles, this creates a flowing
+    /// conversation where the examiner responds to what the trainee actually says.
+    func startConversation() async throws {
+        logger.info("Starting conversational examination with \(self.config.model.displayName)")
+
+        startTime = Date()
+        startTimer()
+
+        await state.update(
+            status: .examinerSpeaking,
+            isConversationalMode: true
+        )
+
+        // The examiner opens the conversation
+        let openingMove = dialogueFlowController.decideNextMove(
+            analysis: analysis,
+            messages: [],
+            context: .empty,
+            assessments: []
+        )
+
+        try await speakExaminerMove(openingMove)
+
+        // Main conversation loop: listen → assess → respond
+        while !Task.isCancelled {
+            // 1. Listen for trainee's response
+            let traineeText = try await listenToTrainee()
+
+            // 2. Record trainee message
+            let traineeMessage = DialogueMessage(role: .trainee, content: traineeText)
+            dialogueMessages = dialogueMessages + [traineeMessage]
+            await updateDialogueState()
+
+            // 3. Assess the exchange in background (non-blocking)
+            launchBackgroundAssessment(traineeText: traineeText)
+
+            // 4. Decide the examiner's next conversational move
+            let context = buildConversationContext()
+            let responseMove = dialogueFlowController.decideNextMove(
+                analysis: analysis,
+                messages: dialogueMessages,
+                context: context,
+                assessments: inlineAssessments
+            )
+
+            // 5. Speak the response (or close)
+            try await speakExaminerMove(responseMove)
+
+            if case .closing = responseMove.intent {
+                break
+            }
+        }
+
+        // Wait for any pending assessment
+        assessmentTask?.cancel()
+        timerTask?.cancel()
+        await state.update(status: .finished)
+
+        logger.info("Conversation complete: \(self.dialogueMessages.count) exchanges")
+    }
+
+    // MARK: - Shared Controls
+
     func pause() async {
         timerTask?.cancel()
         await state.update(status: .paused)
@@ -130,11 +220,13 @@ actor ExaminationEngine {
 
     func resume() async {
         startTimer()
-        await state.update(status: .askingQuestion)
+        let isConversational = await state.isConversationalMode
+        await state.update(status: isConversational ? .inConversation : .askingQuestion)
     }
 
     func stop() async {
         timerTask?.cancel()
+        assessmentTask?.cancel()
         await ttsService.stopSpeaking()
         await sttService.stopListening()
         await state.update(status: .finished)
@@ -154,7 +246,458 @@ actor ExaminationEngine {
         )
     }
 
-    // MARK: - Private
+    func buildDialogueSummary() async -> DialogueSummary {
+        let elapsed = startTime.map { Date().timeIntervalSince($0) } ?? 0
+        let perf = await state.performance
+        let context = buildConversationContext()
+
+        return DialogueSummary(
+            messages: dialogueMessages,
+            assessments: inlineAssessments,
+            topicDiscussions: context.topicsDiscussed,
+            overallScore: perf.overallScore,
+            topicScores: perf.topicScores,
+            totalDuration: elapsed,
+            documentTitle: document.metadata.title ?? document.metadata.url.lastPathComponent,
+            modelUsed: config.model
+        )
+    }
+
+    // MARK: - Conversational Mode: Core Methods
+
+    /// Generates the examiner's spoken response and streams it through TTS.
+    private func speakExaminerMove(_ move: DialogueFlowController.NextMove) async throws {
+        let capturedState = state
+
+        // Update topic tracking
+        switch move.intent {
+        case .openTopic(let topic), .transition(let topic, _):
+            currentTopicTracker = topic
+            depthOnCurrentTopic = 0
+            await capturedState.update(currentTopic: .some(topic))
+        default:
+            depthOnCurrentTopic += 1
+        }
+
+        await capturedState.update(isSpeaking: true, status: .examinerSpeaking)
+
+        // Build the Claude prompt for this conversational move
+        let stream = generateConversationalStream(move: move)
+
+        let examinerText = try await pipelinedSpeaker.speakStream(
+            stream,
+            onAudioLevel: { @Sendable level in
+                Task { @MainActor in
+                    let levels = Self.buildLevelsArray(from: level)
+                    capturedState.update(examinerAudioLevels: levels)
+                }
+            }
+        )
+
+        await capturedState.update(
+            currentQuestion: .some(examinerText),
+            isSpeaking: false,
+            status: .inConversation
+        )
+
+        // Record examiner message
+        let examinerMessage = DialogueMessage(
+            role: .examiner,
+            content: examinerText,
+            intent: move.intent
+        )
+        dialogueMessages = dialogueMessages + [examinerMessage]
+
+        // Update Claude conversation history for context continuity
+        conversationHistory = conversationHistory + [
+            ClaudeMessage(role: .assistant, content: [.text(examinerText)])
+        ]
+
+        await updateDialogueState()
+    }
+
+    /// Listens for the trainee's response with live transcript updates.
+    private func listenToTrainee() async throws -> String {
+        let capturedState = state
+
+        await capturedState.update(
+            isListening: true,
+            status: .inConversation,
+            userTranscript: ""
+        )
+
+        let traineeText = try await sttService.listen(
+            onPartialTranscript: { @Sendable partial in
+                Task { @MainActor in
+                    capturedState.update(userTranscript: partial)
+                }
+            },
+            onAudioLevel: { @Sendable level in
+                Task { @MainActor in
+                    let levels = Self.buildLevelsArray(from: level)
+                    capturedState.update(userAudioLevels: levels)
+                }
+            }
+        )
+
+        await capturedState.update(isListening: false, userTranscript: traineeText)
+
+        // Record in Claude conversation history
+        conversationHistory = conversationHistory + [
+            ClaudeMessage(role: .user, content: [.text(traineeText)])
+        ]
+
+        return traineeText
+    }
+
+    /// Generates the examiner's conversational response as a stream.
+    private func generateConversationalStream(
+        move: DialogueFlowController.NextMove
+    ) -> AsyncThrowingStream<ClaudeStreamEvent, Error> {
+        let systemPrompt = buildConversationalSystemPrompt()
+
+        // The move's prompt guidance tells Claude how to respond
+        let guidance = ClaudeMessage(
+            role: .user,
+            content: [.text("""
+                [EXAMINER GUIDANCE — not spoken aloud]
+                \(move.promptGuidance)
+
+                Respond naturally as the examiner. Speak directly to the trainee. \
+                Do NOT include any metadata, JSON, or annotations. Just speak.
+                """)]
+        )
+
+        return claudeClient.stream(
+            model: config.model,
+            system: systemPrompt,
+            messages: conversationHistory + [guidance],
+            maxTokens: 512
+        )
+    }
+
+    /// Runs assessment in the background so it doesn't block the conversation flow.
+    private func launchBackgroundAssessment(traineeText: String) {
+        assessmentTask?.cancel()
+
+        let messages = dialogueMessages
+        let topic = currentTopicTracker
+        let client = claudeClient
+        let model = config.model
+        let analysisTopics = analysis.topics
+
+        assessmentTask = Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                let assessment = try await Self.assessExchange(
+                    client: client,
+                    model: model,
+                    messages: messages,
+                    currentTopic: topic,
+                    analysisTopics: analysisTopics,
+                    traineeText: traineeText
+                )
+
+                guard !Task.isCancelled else { return }
+
+                await self.recordAssessment(assessment)
+            } catch {
+                logger.warning("Background assessment failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Calls Claude to assess the trainee's understanding from the latest exchange.
+    private static func assessExchange(
+        client: ClaudeAPIClient,
+        model: ClaudeModel,
+        messages: [DialogueMessage],
+        currentTopic: ExamTopic?,
+        analysisTopics: [ExamTopic],
+        traineeText: String
+    ) async throws -> InlineAssessment {
+        let recentExchanges = messages.suffix(6).map { msg in
+            "\(msg.role.rawValue.capitalized): \(msg.content)"
+        }.joined(separator: "\n")
+
+        let topicName = currentTopic?.name ?? "General"
+        let keyConcepts = currentTopic?.keyConcepts.joined(separator: ", ") ?? ""
+
+        let assessPrompt = """
+        Assess the trainee's understanding from this recent conversation excerpt.
+
+        Topic: \(topicName)
+        Key concepts: \(keyConcepts)
+
+        Recent conversation:
+        \(recentExchanges)
+
+        Trainee's latest response: \(traineeText)
+
+        Respond with ONLY valid JSON:
+        {
+            "topicName": "\(topicName)",
+            "understanding": 0.0-1.0,
+            "confidence": 0.0-1.0,
+            "signals": [
+                {
+                    "type": "demonstrated|partial|misconception|uncertain|connection",
+                    "concept": "concept name",
+                    "detail": "what specifically was demonstrated/missed/wrong"
+                }
+            ]
+        }
+
+        Assessment guidelines:
+        - "understanding" reflects depth, not just correctness
+        - A trainee who explains WHY scores higher than one who just states facts
+        - Connecting concepts to clinical practice shows deep understanding
+        - "I don't know" with good reasoning about related concepts still shows partial understanding
+        - Short but accurate answers should score moderate (0.5-0.7), not low
+        """
+
+        let retryHandler = RetryHandler()
+        let response = try await retryHandler.execute {
+            try await client.complete(
+                model: model,
+                system: "You assess trainee understanding during oral examinations. Return only valid JSON.",
+                messages: [ClaudeMessage(role: .user, content: [.text(assessPrompt)])],
+                maxTokens: 512
+            )
+        }
+
+        var cleaned = response.textContent.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.hasPrefix("```") {
+            cleaned = cleaned.components(separatedBy: "\n").dropFirst().dropLast().joined(separator: "\n")
+        }
+
+        guard let data = cleaned.data(using: .utf8) else {
+            throw AppError.apiResponseInvalid(detail: "Could not parse assessment")
+        }
+
+        return try JSONDecoder().decode(InlineAssessment.self, from: data)
+    }
+
+    /// Records an assessment and updates performance metrics.
+    private func recordAssessment(_ assessment: InlineAssessment) async {
+        inlineAssessments = inlineAssessments + [assessment]
+
+        // Convert inline assessments to performance snapshot for the dashboard
+        let performance = computeDialoguePerformance()
+        await state.update(performance: performance)
+    }
+
+    /// Computes a PerformanceSnapshot from accumulated inline assessments.
+    private func computeDialoguePerformance() -> PerformanceSnapshot {
+        guard !inlineAssessments.isEmpty else { return .empty }
+
+        let alpha = 0.4
+
+        // Group assessments by topic
+        var topicMap: [String: (mastery: Double, asked: Int, correct: Int, scores: [Double])] = [:]
+
+        for assessment in inlineAssessments {
+            let existing = topicMap[assessment.topicName] ?? (mastery: 0, asked: 0, correct: 0, scores: [])
+            let newMastery = alpha * assessment.understanding + (1 - alpha) * existing.mastery
+            let newCorrect = existing.correct + (assessment.understanding >= 0.6 ? 1 : 0)
+
+            topicMap[assessment.topicName] = (
+                mastery: newMastery,
+                asked: existing.asked + 1,
+                correct: newCorrect,
+                scores: existing.scores + [assessment.understanding]
+            )
+        }
+
+        let topicScores = topicMap.map { name, data in
+            let trend: TopicScore.Trend
+            if data.scores.count < 2 {
+                trend = .stable
+            } else {
+                let recent = data.scores.suffix(2)
+                let diff = (recent.last ?? 0) - (recent.first ?? 0)
+                if diff > 0.1 { trend = .improving }
+                else if diff < -0.1 { trend = .declining }
+                else { trend = .stable }
+            }
+
+            return TopicScore(
+                topicName: name,
+                mastery: data.mastery,
+                questionsAsked: data.asked,
+                questionsCorrect: data.correct,
+                trend: trend
+            )
+        }
+
+        // Overall weighted score
+        let weightedSum = topicScores.reduce(0.0) { sum, ts in
+            let importance = analysis.topics.first { $0.name == ts.topicName }?.importance ?? 0.5
+            return sum + ts.mastery * importance
+        }
+        let totalWeight = topicScores.reduce(0.0) { sum, ts in
+            let importance = analysis.topics.first { $0.name == ts.topicName }?.importance ?? 0.5
+            return sum + importance
+        }
+        let overallScore = totalWeight > 0 ? weightedSum / totalWeight : 0
+
+        let recentScores = inlineAssessments.suffix(5).map(\.understanding)
+        let confidence = recentScores.isEmpty ? 0 : recentScores.reduce(0, +) / Double(recentScores.count)
+
+        var streak = 0
+        for assessment in inlineAssessments.reversed() {
+            if assessment.understanding >= 0.7 { streak += 1 } else { break }
+        }
+
+        let turnScores = inlineAssessments.enumerated().map { index, assessment in
+            TurnScore(
+                questionIndex: index + 1,
+                score: assessment.understanding,
+                topicName: assessment.topicName
+            )
+        }
+
+        let maxExchanges = config.maxQuestions * 2
+        return PerformanceSnapshot(
+            overallScore: overallScore,
+            confidence: confidence,
+            topicScores: topicScores,
+            turnScores: turnScores,
+            streak: streak,
+            turnsCompleted: inlineAssessments.count,
+            turnsRemaining: max(0, maxExchanges - dialogueMessages.count)
+        )
+    }
+
+    // MARK: - Conversation Context
+
+    private func buildConversationContext() -> ConversationContext {
+        let elapsed = startTime.map { Date().timeIntervalSince($0) } ?? 0
+
+        // Group assessments by topic
+        var topicDiscussions: [String: TopicDiscussion] = [:]
+        for assessment in inlineAssessments {
+            let existing = topicDiscussions[assessment.topicName]
+            let topic = analysis.topics.first { $0.name == assessment.topicName }
+                ?? ExamTopic(
+                    name: assessment.topicName,
+                    importance: 0.5,
+                    keyConcepts: [],
+                    difficulty: .intermediate,
+                    subtopics: []
+                )
+
+            topicDiscussions[assessment.topicName] = TopicDiscussion(
+                topic: topic,
+                exchangeCount: (existing?.exchangeCount ?? 0) + 1,
+                assessments: (existing?.assessments ?? []) + [assessment]
+            )
+        }
+
+        // Infer mood from recent assessments
+        let recentMood: TraineeMood
+        let recentScores = inlineAssessments.suffix(3).map(\.understanding)
+        if recentScores.isEmpty {
+            recentMood = .neutral
+        } else {
+            let avg = recentScores.reduce(0, +) / Double(recentScores.count)
+            switch avg {
+            case 0.8...: recentMood = .confident
+            case 0.6..<0.8: recentMood = .engaged
+            case 0.4..<0.6: recentMood = .neutral
+            case 0.2..<0.4: recentMood = .hesitant
+            default: recentMood = .struggling
+            }
+        }
+
+        return ConversationContext(
+            currentTopic: currentTopicTracker,
+            topicsDiscussed: Array(topicDiscussions.values),
+            exchangeCount: dialogueMessages.count,
+            recentMood: recentMood,
+            depthOnCurrentTopic: depthOnCurrentTopic,
+            totalDuration: elapsed
+        )
+    }
+
+    /// Pushes the current dialogue state to the observable UI state.
+    private func updateDialogueState() async {
+        let context = buildConversationContext()
+        await state.update(
+            dialogueMessages: dialogueMessages,
+            conversationContext: context
+        )
+    }
+
+    // MARK: - Conversational System Prompt
+
+    private func buildConversationalSystemPrompt() -> String {
+        let topicList = analysis.topics.map { topic in
+            "- \(topic.name) (\(topic.difficulty.rawValue)): \(topic.keyConcepts.joined(separator: ", "))"
+        }.joined(separator: "\n")
+
+        let assessmentSummary: String
+        if inlineAssessments.isEmpty {
+            assessmentSummary = "No assessment data yet — this is the beginning of the conversation."
+        } else {
+            let topicSummaries = Dictionary(grouping: inlineAssessments, by: \.topicName)
+                .map { name, assessments in
+                    let avg = assessments.map(\.understanding).reduce(0, +) / Double(assessments.count)
+                    return "  \(name): \(String(format: "%.0f%%", avg * 100)) understanding"
+                }
+                .joined(separator: "\n")
+            assessmentSummary = "Running assessment:\n\(topicSummaries)"
+        }
+
+        return """
+        You are a senior ENT consultant conducting a viva voce examination with a surgical \
+        trainee. You are warm, rigorous, and genuinely interested in how the trainee thinks.
+
+        DOCUMENT CONTEXT:
+        \(analysis.documentSummary)
+
+        TOPICS TO EXPLORE:
+        \(topicList)
+
+        \(assessmentSummary)
+
+        YOUR PERSONA:
+        - You are Dr. Campbell, a senior consultant with 20 years of experience
+        - You conduct oral examinations regularly and are known for being fair but thorough
+        - You make trainees feel comfortable while still pushing them to demonstrate depth
+        - You use clinical scenarios and "what would you do" questions naturally
+        - You often reference real cases (anonymized) to ground the discussion
+
+        CONVERSATION RULES:
+        - This is a DIALOGUE, not an interrogation. Respond to what the trainee actually says.
+        - ALWAYS acknowledge before probing: "That's right..." / "Good point about..." / \
+          "Interesting that you mention..."
+        - If the trainee gives a partial answer, probe the gap: "And what about..." / \
+          "You mentioned X, but what role does Y play?"
+        - If the trainee is wrong, don't say "That's incorrect." Instead: "I see what you \
+          mean, but consider..." or "What if we think about it from the perspective of..."
+        - If they say "I don't know", be supportive: "That's okay — let's think through it. \
+          What do you know about..." or "No worries. Let me put it another way..."
+        - Make topic transitions feel natural, not announced: "You mentioned X earlier, which \
+          actually connects to..." NOT "Let's move on to the next topic."
+        - Keep responses concise (2-4 sentences typically). This is spoken, not written.
+        - Use the trainee's own words when following up — it shows you're listening.
+        - Vary your question style: direct questions, clinical scenarios, "what if" hypotheticals, \
+          "talk me through" walkthroughs, comparison questions ("how does X differ from Y?")
+        - If the trainee makes an unexpected but valid connection, explore it even if it \
+          wasn't in your plan.
+
+        SPEECH GUIDELINES:
+        - Use natural spoken English, not formal written English
+        - Contractions are fine: "you've", "that's", "what's"
+        - Filler phrases are okay sparingly: "So...", "Right, so...", "Okay, now..."
+        - Avoid bullet points, numbered lists, or any formatting — this will be spoken aloud
+        - Keep sentences short and clear for speech synthesis
+        """
+    }
+
+    // MARK: - Legacy Mode: Private Methods
 
     private func speakIntroduction() async throws {
         let intro = "Welcome to your examination on \(analysis.documentSummary)."
@@ -164,7 +707,7 @@ actor ExaminationEngine {
 
         try await ttsService.speak(
             text: intro,
-            voiceId: config.voiceId ?? "21m00Tcm4TlvDq8ikWAM",
+            voiceId: voiceId,
             onAudioLevel: { @Sendable level in
                 Task { @MainActor in
                     let levels = Self.buildLevelsArray(from: level)
@@ -175,7 +718,6 @@ actor ExaminationEngine {
 
         await capturedState.update(isSpeaking: false)
 
-        // Brief pause before first question
         try await Task.sleep(for: .seconds(1))
     }
 
@@ -184,9 +726,7 @@ actor ExaminationEngine {
 
         await state.update(currentTopic: .some(topic), status: .askingQuestion)
 
-        // Generate question stream via Claude and pipe through TTS sentence-by-sentence
         let stream = generateQuestionStream(prompt: questionPrompt)
-
         let capturedState = state
 
         await capturedState.update(isSpeaking: true)
@@ -203,7 +743,6 @@ actor ExaminationEngine {
 
         await capturedState.update(currentQuestion: .some(question), isSpeaking: false)
 
-        // Record the assistant message in conversation history
         let userMessage = ClaudeMessage(
             role: .user,
             content: [.text(questionPrompt)]
@@ -213,7 +752,6 @@ actor ExaminationEngine {
             ClaudeMessage(role: .assistant, content: [.text(question)])
         ]
 
-        // Listen for user answer via STT
         await capturedState.update(isListening: true, status: .listeningForAnswer)
 
         let userAnswer = try await sttService.listen(
@@ -232,11 +770,9 @@ actor ExaminationEngine {
 
         await capturedState.update(isListening: false, userTranscript: userAnswer)
 
-        // Evaluate the answer
         await capturedState.update(status: .evaluatingAnswer)
         let evaluation = try await evaluateAnswer(question: question, answer: userAnswer, topic: topic)
 
-        // Record the turn
         let turn = ExamTurn(
             questionIndex: allTurns.count,
             topic: topic,
@@ -246,7 +782,6 @@ actor ExaminationEngine {
         )
         allTurns = allTurns + [turn]
 
-        // Update performance
         let performance = performanceCalculator.computeSnapshot(
             turns: allTurns,
             analysis: analysis,
@@ -254,7 +789,6 @@ actor ExaminationEngine {
         )
         await capturedState.update(turns: allTurns, performance: performance, status: .transitioning)
 
-        // Brief pause between turns
         try await Task.sleep(for: .milliseconds(800))
     }
 
@@ -299,8 +833,6 @@ actor ExaminationEngine {
         }
     }
 
-    /// Returns the Claude streaming response as an `AsyncThrowingStream` so that
-    /// `PipelinedSpeaker` can consume text deltas sentence-by-sentence for TTS.
     private func generateQuestionStream(
         prompt: String
     ) -> AsyncThrowingStream<ClaudeStreamEvent, Error> {
@@ -352,12 +884,12 @@ actor ExaminationEngine {
             )
         }
 
-        guard let jsonText = response.textContent.data(using: .utf8) else {
+        var cleaned = response.textContent.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !cleaned.isEmpty else {
             throw AppError.apiResponseInvalid(detail: "Empty evaluation response")
         }
 
-        // Extract JSON from potential code blocks
-        var cleaned = response.textContent.trimmingCharacters(in: .whitespacesAndNewlines)
         if cleaned.hasPrefix("```") {
             cleaned = cleaned.components(separatedBy: "\n").dropFirst().dropLast().joined(separator: "\n")
         }
@@ -388,25 +920,24 @@ actor ExaminationEngine {
         """
     }
 
+    // MARK: - Shared Helpers
+
     private func startTimer() {
+        let capturedStart = startTime ?? Date()
         timerTask = Task { [weak state] in
             guard let state else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
-                let elapsed = Date().timeIntervalSince(self.startTime ?? Date())
+                let elapsed = Date().timeIntervalSince(capturedStart)
                 await state.update(elapsedTime: elapsed)
             }
         }
     }
 
-    /// Builds a 32-element audio level array from a single scalar level value.
-    /// The scalar is distributed across bands with slight variation to produce
-    /// a natural-looking waveform visualization.
-    private static func buildLevelsArray(from level: Float) -> [Float] {
+    static func buildLevelsArray(from level: Float) -> [Float] {
         let bandCount = 32
         let clamped = max(0, min(1, level))
         return (0..<bandCount).map { band in
-            // Slight sinusoidal variation per band for a natural waveform look
             let variation = Float(sin(Double(band) * 0.4)) * 0.15
             return max(0, min(1, clamped + variation * clamped))
         }

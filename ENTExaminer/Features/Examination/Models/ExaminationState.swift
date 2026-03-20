@@ -8,6 +8,85 @@ enum ExamStatus: String, Sendable, Equatable {
     case transitioning
     case paused
     case finished
+
+    // Conversational mode statuses
+    case examinerSpeaking
+    case inConversation
+    case thinking
+}
+
+// MARK: - Dialogue-Aware Exam Summary
+
+struct DialogueSummary: Sendable, Equatable {
+    let messages: [DialogueMessage]
+    let assessments: [InlineAssessment]
+    let topicDiscussions: [TopicDiscussion]
+    let overallScore: Double
+    let topicScores: [TopicScore]
+    let totalDuration: TimeInterval
+    let documentTitle: String
+    let modelUsed: ClaudeModel
+
+    var exchangeCount: Int { messages.count }
+
+    var grade: String {
+        switch overallScore {
+        case 0.9...: return "Excellent"
+        case 0.75..<0.9: return "Good"
+        case 0.6..<0.75: return "Satisfactory"
+        case 0.4..<0.6: return "Needs Improvement"
+        default: return "Unsatisfactory"
+        }
+    }
+
+    /// Converts to legacy ExamSummary for backward-compatible views.
+    func asLegacySummary() -> ExamSummary {
+        ExamSummary(
+            turns: buildLegacyTurns(),
+            overallScore: overallScore,
+            topicScores: topicScores,
+            totalDuration: totalDuration,
+            documentTitle: documentTitle,
+            modelUsed: modelUsed
+        )
+    }
+
+    private func buildLegacyTurns() -> [ExamTurn] {
+        let examinerMessages = messages.filter { $0.role == .examiner }
+        let traineeMessages = messages.filter { $0.role == .trainee }
+
+        return zip(examinerMessages, traineeMessages).enumerated().map { index, pair in
+            let (examiner, trainee) = pair
+            let assessment = examiner.assessment ?? trainee.assessment
+            let score = assessment?.understanding ?? 0.5
+
+            return ExamTurn(
+                questionIndex: index,
+                topic: topicDiscussions.last?.topic ?? ExamTopic(
+                    name: "General",
+                    importance: 1.0,
+                    keyConcepts: [],
+                    difficulty: .intermediate,
+                    subtopics: []
+                ),
+                question: examiner.content,
+                userAnswer: trainee.content,
+                evaluation: TurnEvaluation(
+                    correctnessScore: score,
+                    completenessScore: score,
+                    clarityScore: score,
+                    keyPointsCovered: assessment?.signals
+                        .filter { $0.type == .demonstrated }
+                        .map(\.concept) ?? [],
+                    keyPointsMissed: assessment?.signals
+                        .filter { $0.type == .partial || $0.type == .misconception }
+                        .map(\.concept) ?? [],
+                    feedback: "",
+                    followUpSuggestion: .moveToNextTopic
+                )
+            )
+        }
+    }
 }
 
 struct ExamTurn: Sendable, Equatable, Identifiable {

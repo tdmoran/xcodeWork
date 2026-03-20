@@ -7,6 +7,7 @@ enum DocumentFormat: String, Sendable, CaseIterable, Codable {
     case plainText
     case markdown
     case image
+    case webURL
 
     var displayName: String {
         switch self {
@@ -15,6 +16,7 @@ enum DocumentFormat: String, Sendable, CaseIterable, Codable {
         case .plainText: return "TXT"
         case .markdown: return "Markdown"
         case .image: return "Image"
+        case .webURL: return "Web Page"
         }
     }
 
@@ -25,10 +27,15 @@ enum DocumentFormat: String, Sendable, CaseIterable, Codable {
         case .plainText: return [.plainText, .utf8PlainText]
         case .markdown: return [UTType("net.daringfireball.markdown") ?? .plainText]
         case .image: return [.png, .jpeg, .heic, .tiff]
+        case .webURL: return [.url]
         }
     }
 
     static func detect(from url: URL) -> DocumentFormat? {
+        if url.scheme == "http" || url.scheme == "https" {
+            return .webURL
+        }
+
         let ext = url.pathExtension.lowercased()
         switch ext {
         case "pdf": return .pdf

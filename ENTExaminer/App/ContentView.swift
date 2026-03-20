@@ -11,6 +11,7 @@ struct ContentView: View {
         } detail: {
             detailView
         }
+        .overlay { ProgressOverlayView() }
         .navigationSplitViewStyle(.balanced)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {

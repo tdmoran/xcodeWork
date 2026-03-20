@@ -1,8 +1,7 @@
-import Testing
+import XCTest
 @testable import ENTExaminer
 
-@Suite("FlowController")
-struct FlowControllerTests {
+final class FlowControllerTests: XCTestCase {
     let flowController = FlowController()
 
     let sampleAnalysis = DocumentAnalysis(
@@ -17,8 +16,7 @@ struct FlowControllerTests {
         difficultyAssessment: "intermediate"
     )
 
-    @Test("First question targets the most important topic at foundational level")
-    func firstQuestionStartsWithMostImportantTopic() {
+    func testFirstQuestionStartsWithMostImportantTopic() {
         let action = flowController.decideNextAction(
             analysis: sampleAnalysis,
             completedTurns: [],
@@ -27,15 +25,14 @@ struct FlowControllerTests {
         )
 
         if case .askQuestion(let topic, let difficulty, _) = action {
-            #expect(topic.name == "Photosynthesis")
-            #expect(difficulty == .foundational)
+            XCTAssertEqual(topic.name, "Photosynthesis")
+            XCTAssertEqual(difficulty, .foundational)
         } else {
-            Issue.record("Expected askQuestion, got \(action)")
+            XCTFail("Expected askQuestion, got \(action)")
         }
     }
 
-    @Test("Wraps up when max questions reached")
-    func wrapsUpAtMaxQuestions() {
+    func testWrapsUpAtMaxQuestions() {
         let turns = (0..<10).map { index in
             makeTurn(index: index, topic: sampleAnalysis.topics[0], score: 0.8)
         }
@@ -47,11 +44,10 @@ struct FlowControllerTests {
             maxQuestions: 10
         )
 
-        #expect(action == .wrapUp)
+        XCTAssertEqual(action, .wrapUp)
     }
 
-    @Test("Transitions to next topic after high mastery")
-    func movesToNextTopicAfterHighMastery() {
+    func testMovesToNextTopicAfterHighMastery() {
         let turns = [
             makeTurn(index: 0, topic: sampleAnalysis.topics[0], score: 0.9),
             makeTurn(index: 1, topic: sampleAnalysis.topics[0], score: 0.9),
@@ -70,15 +66,14 @@ struct FlowControllerTests {
         )
 
         if case .transitionTopic(let from, let to) = action {
-            #expect(from.name == "Photosynthesis")
-            #expect(to.name == "Cell Respiration")
+            XCTAssertEqual(from.name, "Photosynthesis")
+            XCTAssertEqual(to.name, "Cell Respiration")
         } else {
-            Issue.record("Expected transitionTopic, got \(action)")
+            XCTFail("Expected transitionTopic, got \(action)")
         }
     }
 
-    @Test("Escalates difficulty when mastery is high but within same topic")
-    func escalatesDifficultyOnHighMastery() {
+    func testEscalatesDifficultyOnHighMastery() {
         let turns = [
             makeTurn(index: 0, topic: sampleAnalysis.topics[0], score: 0.85),
         ]
@@ -94,17 +89,15 @@ struct FlowControllerTests {
             maxQuestions: 10
         )
 
-        // With only 1 question asked (< 3), should stay on topic but at advanced difficulty
         if case .askQuestion(let topic, let difficulty, _) = action {
-            #expect(topic.name == "Photosynthesis")
-            #expect(difficulty == .advanced)
+            XCTAssertEqual(topic.name, "Photosynthesis")
+            XCTAssertEqual(difficulty, .advanced)
         } else {
-            Issue.record("Expected askQuestion, got \(action)")
+            XCTFail("Expected askQuestion, got \(action)")
         }
     }
 
-    @Test("Reduces difficulty when mastery is low")
-    func reducesDifficultyOnLowMastery() {
+    func testReducesDifficultyOnLowMastery() {
         let turns = [
             makeTurn(index: 0, topic: sampleAnalysis.topics[0], score: 0.2),
         ]
@@ -121,11 +114,11 @@ struct FlowControllerTests {
         )
 
         if case .askQuestion(_, let difficulty, _) = action {
-            #expect(difficulty == .foundational)
+            XCTAssertEqual(difficulty, .foundational)
         } else if case .clarifyMisunderstanding = action {
-            // Also acceptable — the FlowController may choose to clarify
+            // Also acceptable
         } else {
-            Issue.record("Expected askQuestion or clarify, got \(action)")
+            XCTFail("Expected askQuestion or clarify, got \(action)")
         }
     }
 

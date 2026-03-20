@@ -242,6 +242,160 @@ struct ImageOCRParserService: DocumentParserProtocol {
     }
 }
 
+// MARK: - DOCX Parser
+
+struct DocxParserService: DocumentParserProtocol {
+    func canParse(format: DocumentFormat) -> Bool {
+        format == .docx
+    }
+
+    func parse(url: URL) async throws -> ParsedDocument {
+        let data = try Data(contentsOf: url)
+        let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("docx_\(UUID().uuidString)")
+
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+
+        let extractedXML = try extractDocumentXML(from: url, to: tempDir)
+        let text = try parseWordXML(at: extractedXML)
+
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw AppError.documentEmpty
+        }
+
+        let sections = splitIntoParagraphSections(text: text)
+
+        let metadata = FileMetadata(
+            url: url,
+            title: url.deletingPathExtension().lastPathComponent,
+            fileSize: Int64(data.count),
+            pageCount: nil,
+            format: .docx
+        )
+
+        return ParsedDocument(
+            text: text.trimmingCharacters(in: .whitespacesAndNewlines),
+            sections: sections,
+            metadata: metadata,
+            contentHash: hash
+        )
+    }
+
+    private func extractDocumentXML(from docxURL: URL, to tempDir: URL) throws -> URL {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+        process.arguments = ["-o", docxURL.path, "word/document.xml", "-d", tempDir.path]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+
+        try process.run()
+        process.waitUntilExit()
+
+        guard process.terminationStatus == 0 else {
+            throw AppError.parseFailure("Failed to extract DOCX contents (unzip exit code \(process.terminationStatus))")
+        }
+
+        let xmlPath = tempDir.appendingPathComponent("word/document.xml")
+        guard FileManager.default.fileExists(atPath: xmlPath.path) else {
+            throw AppError.parseFailure("DOCX file does not contain word/document.xml")
+        }
+
+        return xmlPath
+    }
+
+    private func parseWordXML(at xmlURL: URL) throws -> String {
+        let data = try Data(contentsOf: xmlURL)
+        let delegate = WordXMLParserDelegate()
+        let parser = XMLParser(data: data)
+        parser.delegate = delegate
+
+        guard parser.parse() else {
+            let errorDesc = parser.parserError?.localizedDescription ?? "Unknown XML parse error"
+            throw AppError.parseFailure("Failed to parse DOCX XML: \(errorDesc)")
+        }
+
+        return delegate.extractedText
+    }
+
+    private func splitIntoParagraphSections(text: String) -> [DocumentSection] {
+        let paragraphs = text.components(separatedBy: "\n\n")
+        var sections: [DocumentSection] = []
+        var sectionIndex = 1
+
+        for paragraph in paragraphs {
+            let trimmed = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+
+            sections.append(DocumentSection(
+                title: "Section \(sectionIndex)",
+                content: trimmed
+            ))
+            sectionIndex += 1
+        }
+
+        return sections
+    }
+}
+
+// MARK: - Word XML Parser Delegate
+
+private final class WordXMLParserDelegate: NSObject, XMLParserDelegate {
+    private(set) var extractedText = ""
+    private var isInsideTextElement = false
+    private var currentParagraphText = ""
+    private var isNewParagraph = false
+
+    func parser(
+        _ parser: XMLParser,
+        didStartElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName: String?,
+        attributes: [String: String] = [:]
+    ) {
+        // <w:t> elements contain the actual text runs
+        if elementName == "w:t" {
+            isInsideTextElement = true
+        }
+        // <w:p> marks a new paragraph
+        if elementName == "w:p" {
+            isNewParagraph = true
+            currentParagraphText = ""
+        }
+    }
+
+    func parser(_ parser: XMLParser, foundCharacters string: String) {
+        if isInsideTextElement {
+            currentParagraphText += string
+        }
+    }
+
+    func parser(
+        _ parser: XMLParser,
+        didEndElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName: String?
+    ) {
+        if elementName == "w:t" {
+            isInsideTextElement = false
+        }
+        if elementName == "w:p" {
+            let trimmed = currentParagraphText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                if !extractedText.isEmpty {
+                    extractedText += "\n\n"
+                }
+                extractedText += trimmed
+            }
+            isNewParagraph = false
+            currentParagraphText = ""
+        }
+    }
+}
+
 // MARK: - Composite Parser
 
 struct CompositeDocumentParser: DocumentParserProtocol {
@@ -250,6 +404,7 @@ struct CompositeDocumentParser: DocumentParserProtocol {
     init() {
         self.parsers = [
             PDFParserService(),
+            DocxParserService(),
             PlainTextParserService(),
             ImageOCRParserService(),
         ]

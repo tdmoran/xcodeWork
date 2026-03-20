@@ -32,6 +32,7 @@ final class AppState {
 
     // Services
     private let documentParser = CompositeDocumentParser()
+    private let webFetcher = WebDocumentFetcher()
     private let audioPipeline = AudioPipeline()
     private var documentAnalyzer: DocumentAnalyzer?
     private var examinationEngine: ExaminationEngine?
@@ -86,6 +87,9 @@ final class AppState {
             let docId = UUID()
             let storedName = try await DocumentStore.shared.importFile(from: url, documentId: docId)
             currentPhase = .ingesting(progress: 0.9)
+
+            // Cache extracted text for future use
+            await DocumentStore.shared.cacheText(parsed.text, for: parsed.contentHash)
 
             let title = parsed.metadata.title ?? url.deletingPathExtension().lastPathComponent
             let preview = String(parsed.text.prefix(500))
@@ -277,6 +281,77 @@ final class AppState {
         }
 
         return sections.joined(separator: "\n")
+    }
+
+    // MARK: - Web URL Import
+
+    func importWebURL(_ urlString: String) async {
+        currentPhase = .ingesting(progress: 0.2)
+        error = nil
+
+        do {
+            let parsed = try await webFetcher.fetch(urlString: urlString)
+            currentPhase = .ingesting(progress: 0.7)
+
+            // Cache extracted text
+            await DocumentStore.shared.cacheText(parsed.text, for: parsed.contentHash)
+
+            let docId = UUID()
+            let title = parsed.metadata.title ?? urlString
+            let preview = String(parsed.text.prefix(500))
+
+            // Save web content as a text file in the library
+            let storedName = "\(docId.uuidString).txt"
+            let libraryDoc = LibraryDocument(
+                id: docId,
+                title: title,
+                sourceFileName: storedName,
+                format: .webURL,
+                fileSize: parsed.metadata.fileSize,
+                pageCount: nil,
+                addedDate: Date(),
+                contentPreview: preview
+            )
+
+            let fileURL = await DocumentStore.shared.fileURL(for: libraryDoc)
+            try parsed.text.write(to: fileURL, atomically: true, encoding: .utf8)
+
+            libraryDocuments = libraryDocuments + [libraryDoc]
+            persistLibrary()
+
+            currentPhase = .idle
+            logger.info("Imported web document: \(title)")
+        } catch let appError as AppError {
+            presentError(appError)
+            currentPhase = .idle
+        } catch {
+            presentError(.parseFailure(error.localizedDescription))
+            currentPhase = .idle
+        }
+    }
+
+    // MARK: - Transcript Export
+
+    func exportTranscript(asMarkdown: Bool = false) -> String? {
+        if let dSummary = dialogueSummary {
+            return asMarkdown
+                ? TranscriptExporter.exportAsMarkdown(from: dSummary)
+                : TranscriptExporter.exportAsText(from: dSummary)
+        } else if let summary = examSummary {
+            return asMarkdown
+                ? TranscriptExporter.exportAsMarkdown(from: summary)
+                : TranscriptExporter.exportAsText(from: summary)
+        }
+        return nil
+    }
+
+    func saveTranscriptToFile(asMarkdown: Bool = false) -> URL? {
+        guard let content = exportTranscript(asMarkdown: asMarkdown) else { return nil }
+        let ext = asMarkdown ? "md" : "txt"
+        let title = selectedLibraryDocument?.title ?? "Examination"
+        let sanitized = title.replacingOccurrences(of: "[^a-zA-Z0-9_-]", with: "_", options: .regularExpression)
+        let filename = "\(sanitized)_transcript.\(ext)"
+        return try? TranscriptExporter.saveToFile(content: content, filename: filename)
     }
 
     // MARK: - Document Ingestion (legacy — still used by drag-and-drop on ContentView)

@@ -8,6 +8,7 @@ private let logger = Logger(subsystem: "com.entexaminer", category: "DocumentSto
 /// Directory layout:
 /// - Documents/Library/          — active document files
 /// - Documents/Library/Archive/  — archived document files
+/// - Documents/Library/Cache/    — extracted text cache (keyed by content hash)
 /// - Documents/Library/metadata.json — library index
 actor DocumentStore {
     static let shared = DocumentStore()
@@ -34,6 +35,10 @@ actor DocumentStore {
         libraryRoot.appendingPathComponent("Archive", isDirectory: true)
     }
 
+    var cacheRoot: URL {
+        libraryRoot.appendingPathComponent("Cache", isDirectory: true)
+    }
+
     private var metadataURL: URL {
         libraryRoot.appendingPathComponent("metadata.json")
     }
@@ -49,6 +54,7 @@ actor DocumentStore {
     private func ensureDirectories() throws {
         try fileManager.createDirectory(at: libraryRoot, withIntermediateDirectories: true)
         try fileManager.createDirectory(at: archiveRoot, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: cacheRoot, withIntermediateDirectories: true)
     }
 
     // MARK: - Library CRUD
@@ -131,12 +137,67 @@ actor DocumentStore {
         logger.info("Restored document: \(document.sourceFileName)")
     }
 
-    /// Permanently deletes a document's file from disk.
-    func deleteFile(for document: LibraryDocument) throws {
+    /// Permanently deletes a document's file from disk and removes any cached text.
+    func deleteFile(for document: LibraryDocument, contentHash: String? = nil) throws {
         let url = fileURL(for: document)
         if fileManager.fileExists(atPath: url.path) {
             try fileManager.removeItem(at: url)
             logger.info("Deleted document file: \(document.sourceFileName)")
+        }
+
+        if let hash = contentHash {
+            removeCachedText(for: hash)
+        }
+    }
+
+    // MARK: - Text Extraction Cache
+
+    /// Returns the file URL for a cache entry keyed by content hash.
+    private func cacheFileURL(for contentHash: String) -> URL {
+        cacheRoot.appendingPathComponent("\(contentHash).txt")
+    }
+
+    /// Retrieves previously cached extracted text for the given content hash.
+    /// Returns `nil` if no cache entry exists.
+    func cachedText(for contentHash: String) -> String? {
+        let url = cacheFileURL(for: contentHash)
+
+        guard fileManager.fileExists(atPath: url.path) else {
+            return nil
+        }
+
+        do {
+            let text = try String(contentsOf: url, encoding: .utf8)
+            logger.debug("Cache hit for hash \(contentHash.prefix(12))…")
+            return text
+        } catch {
+            logger.warning("Failed to read cache for hash \(contentHash.prefix(12))…: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Stores extracted text in the cache keyed by content hash.
+    func cacheText(_ text: String, for contentHash: String) {
+        do {
+            try ensureDirectories()
+            let url = cacheFileURL(for: contentHash)
+            try text.write(to: url, atomically: true, encoding: .utf8)
+            logger.debug("Cached text for hash \(contentHash.prefix(12))… (\(text.count) chars)")
+        } catch {
+            logger.warning("Failed to cache text for hash \(contentHash.prefix(12))…: \(error.localizedDescription)")
+        }
+    }
+
+    /// Removes a cache entry for the given content hash, if it exists.
+    private func removeCachedText(for contentHash: String) {
+        let url = cacheFileURL(for: contentHash)
+        guard fileManager.fileExists(atPath: url.path) else { return }
+
+        do {
+            try fileManager.removeItem(at: url)
+            logger.info("Removed cache for hash \(contentHash.prefix(12))…")
+        } catch {
+            logger.warning("Failed to remove cache for hash \(contentHash.prefix(12))…: \(error.localizedDescription)")
         }
     }
 

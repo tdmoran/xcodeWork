@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 
 import PackageDescription
 
@@ -17,15 +17,7 @@ let package = Package(
                 "ENTExaminer.entitlements",
             ],
             swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency"),
-            ]
-        ),
-        .testTarget(
-            name: "ENTExaminerTests",
-            dependencies: ["ENTExaminer"],
-            path: "ENTExaminerTests",
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency"),
+                .swiftLanguageMode(.v5),
             ]
         ),
     ]

@@ -109,6 +109,7 @@ struct LibraryDocument: Codable, Sendable, Equatable, Identifiable {
         case .plainText: return "doc.text.fill"
         case .markdown: return "doc.text.fill"
         case .image: return "photo.fill"
+        case .webURL: return "globe"
         }
     }
 }

@@ -6,6 +6,9 @@ private let logger = Logger(subsystem: "com.entexaminer", category: "PipelinedSp
 /// Bridges Claude streaming output to text-to-speech by accumulating text deltas,
 /// splitting on sentence boundaries, and speaking each sentence as soon as it is
 /// complete. Sentences are queued and played in order for natural pacing.
+///
+/// Supports barge-in: external callers can invoke ``bargeIn()`` to immediately
+/// stop the current speech and return what has been spoken so far.
 actor PipelinedSpeaker {
     // MARK: - Dependencies
 
@@ -16,6 +19,7 @@ actor PipelinedSpeaker {
     // MARK: - State
 
     private var currentSpeakTask: Task<Void, Error>?
+    private var bargedIn: Bool = false
 
     // MARK: - Initialization
 
@@ -43,6 +47,9 @@ actor PipelinedSpeaker {
     /// they are immediately dispatched to the TTS service. Each sentence awaits completion
     /// before the next begins, ensuring correct playback order.
     ///
+    /// If ``bargeIn()`` is called during playback, the stream is consumed silently
+    /// (to capture the full text) but no further sentences are spoken.
+    ///
     /// - Parameters:
     ///   - stream: The Claude streaming event source producing text deltas.
     ///   - onAudioLevel: A callback invoked with playback audio levels for visualization.
@@ -52,6 +59,7 @@ actor PipelinedSpeaker {
         _ stream: AsyncThrowingStream<ClaudeStreamEvent, Error>,
         onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws -> String {
+        bargedIn = false
         var buffer = ""
         var fullText = ""
         var pendingSentences: [String] = []
@@ -64,12 +72,15 @@ actor PipelinedSpeaker {
                 buffer += delta
                 fullText += delta
 
+                // If barged in, keep consuming stream for full text but don't speak
+                guard !bargedIn else { continue }
+
                 let result = sentenceSplitter.extract(from: buffer)
                 buffer = result.remainder
                 pendingSentences = pendingSentences + result.sentences
 
                 // Speak all ready sentences in order
-                while let sentence = pendingSentences.first {
+                while let sentence = pendingSentences.first, !bargedIn {
                     pendingSentences = Array(pendingSentences.dropFirst())
                     try await speakSentence(sentence, onAudioLevel: onAudioLevel)
                 }
@@ -83,20 +94,36 @@ actor PipelinedSpeaker {
             }
         }
 
-        // Flush any remaining text in the buffer as a final sentence
-        let remainingText = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !remainingText.isEmpty {
-            try await speakSentence(remainingText, onAudioLevel: onAudioLevel)
+        // Flush remaining text only if not barged in
+        if !bargedIn {
+            let remainingText = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !remainingText.isEmpty {
+                try await speakSentence(remainingText, onAudioLevel: onAudioLevel)
+            }
+
+            for sentence in pendingSentences {
+                try await speakSentence(sentence, onAudioLevel: onAudioLevel)
+            }
         }
 
-        // Speak any sentences that were extracted but not yet spoken
-        for sentence in pendingSentences {
-            try await speakSentence(sentence, onAudioLevel: onAudioLevel)
-        }
-
-        logger.info("Pipelined speech finished (\(fullText.count) characters)")
+        let wasBargedIn = bargedIn
+        logger.info("Pipelined speech finished (\(fullText.count) chars, bargedIn: \(wasBargedIn))")
         return fullText
     }
+
+    /// Immediately stops speech playback, allowing the trainee to interrupt.
+    /// The stream will continue being consumed silently to capture the full text.
+    func bargeIn() async {
+        guard !bargedIn else { return }
+        bargedIn = true
+        currentSpeakTask?.cancel()
+        currentSpeakTask = nil
+        await ttsService.stopSpeaking()
+        logger.info("Barge-in: speech interrupted by trainee")
+    }
+
+    /// Whether the speaker was interrupted by a barge-in during the last stream.
+    var wasBargedIn: Bool { bargedIn }
 
     /// Stops the current speech pipeline, cancelling any in-progress TTS.
     func stop() async {

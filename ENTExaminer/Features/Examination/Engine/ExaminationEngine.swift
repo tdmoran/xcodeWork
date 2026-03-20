@@ -86,7 +86,9 @@ actor ExaminationEngine {
     // Shared state
     private var timerTask: Task<Void, Never>?
     private var assessmentTask: Task<Void, Never>?
+    private var speakingTask: Task<String, Error>?
     private var startTime: Date?
+    private var lastBargeInText: String?
 
     private let voiceId: String
 
@@ -173,9 +175,9 @@ actor ExaminationEngine {
 
         try await speakExaminerMove(openingMove)
 
-        // Main conversation loop: listen → assess → respond
+        // Main conversation loop: listen → assess → think → respond
         while !Task.isCancelled {
-            // 1. Listen for trainee's response
+            // 1. Listen for trainee's response (with barge-in detection)
             let traineeText = try await listenToTrainee()
 
             // 2. Record trainee message
@@ -186,7 +188,10 @@ actor ExaminationEngine {
             // 3. Assess the exchange in background (non-blocking)
             launchBackgroundAssessment(traineeText: traineeText)
 
-            // 4. Decide the examiner's next conversational move
+            // 4. Thinking pause — brief natural delay before responding
+            await showThinkingPause()
+
+            // 5. Decide the examiner's next conversational move
             let context = buildConversationContext()
             let responseMove = dialogueFlowController.decideNextMove(
                 analysis: analysis,
@@ -195,7 +200,7 @@ actor ExaminationEngine {
                 assessments: inlineAssessments
             )
 
-            // 5. Speak the response (or close)
+            // 6. Speak the response (or close)
             try await speakExaminerMove(responseMove)
 
             if case .closing = responseMove.intent {
@@ -266,6 +271,8 @@ actor ExaminationEngine {
     // MARK: - Conversational Mode: Core Methods
 
     /// Generates the examiner's spoken response and streams it through TTS.
+    /// Supports barge-in: if the trainee starts speaking during examiner speech,
+    /// TTS is stopped immediately and the full streamed text is still captured.
     private func speakExaminerMove(_ move: DialogueFlowController.NextMove) async throws {
         let capturedState = state
 
@@ -280,6 +287,7 @@ actor ExaminationEngine {
         }
 
         await capturedState.update(isSpeaking: true, status: .examinerSpeaking)
+        lastBargeInText = nil
 
         // Build the Claude prompt for this conversational move
         let stream = generateConversationalStream(move: move)
@@ -294,13 +302,15 @@ actor ExaminationEngine {
             }
         )
 
+        let wasInterrupted = await pipelinedSpeaker.wasBargedIn
+
         await capturedState.update(
             currentQuestion: .some(examinerText),
             isSpeaking: false,
             status: .inConversation
         )
 
-        // Record examiner message
+        // Record examiner message (full text even if barged in)
         let examinerMessage = DialogueMessage(
             role: .examiner,
             content: examinerText,
@@ -314,6 +324,29 @@ actor ExaminationEngine {
         ]
 
         await updateDialogueState()
+
+        if wasInterrupted {
+            logger.info("Examiner was interrupted by trainee barge-in")
+        }
+    }
+
+    /// Triggers a barge-in, stopping the examiner's speech so the trainee can speak.
+    func handleBargeIn() async {
+        await pipelinedSpeaker.bargeIn()
+        await state.update(isSpeaking: false)
+    }
+
+    /// Shows a brief "thinking" state before the examiner responds.
+    /// Varies the delay to feel natural — shorter for follow-ups, longer for topic changes.
+    private func showThinkingPause() async {
+        await state.update(status: .thinking)
+
+        // Vary the pause: 0.8-2.0 seconds
+        let baseDelay = 0.8
+        let variability = Double.random(in: 0.0...1.2)
+        let delaySeconds = baseDelay + variability
+
+        try? await Task.sleep(for: .seconds(delaySeconds))
     }
 
     /// Listens for the trainee's response with live transcript updates.
@@ -651,10 +684,11 @@ actor ExaminationEngine {
         }
 
         return """
-        You are a senior ENT consultant conducting a viva voce examination with a surgical \
-        trainee. You are warm, rigorous, and genuinely interested in how the trainee thinks.
+        You are a senior ENT consultant conducting a viva voce examination (FRCS-style oral exam) \
+        with a surgical trainee preparing for their FRCS (ORL-HNS). You are warm, rigorous, and \
+        genuinely interested in how the trainee thinks through clinical problems.
 
-        DOCUMENT CONTEXT:
+        CLINICAL CONTEXT:
         \(analysis.documentSummary)
 
         TOPICS TO EXPLORE:

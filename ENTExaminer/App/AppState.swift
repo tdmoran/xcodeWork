@@ -10,6 +10,8 @@ final class AppState {
     var analysis: DocumentAnalysis?
     var examinationState: ExaminationSessionState?
     var examSummary: ExamSummary?
+    var dialogueSummary: DialogueSummary?
+    var selectedCase: ClinicalCase?
     var error: AppError?
     var showError: Bool = false
     var showSettings: Bool = false
@@ -135,6 +137,84 @@ final class AppState {
         }
     }
 
+    /// Starts a conversational Socratic examination using the current document.
+    func startConversation() async {
+        guard let document, let analysis else { return }
+
+        let sessionState = ExaminationSessionState()
+        examinationState = sessionState
+        selectedSection = .examination
+
+        let config = ExamConfiguration(
+            model: selectedModel,
+            maxQuestions: analysis.suggestedQuestionCount,
+            voiceId: selectedVoiceId
+        )
+
+        let ttsService = ElevenLabsTTSService(
+            apiKeyProvider: { @Sendable in
+                try? await KeychainManager.shared.retrieve(account: KeychainManager.elevenLabsAccount)
+            },
+            audioPipeline: audioPipeline
+        )
+
+        let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
+
+        let engine = ExaminationEngine(
+            state: sessionState,
+            claudeClient: makeClaudeClient(),
+            ttsService: ttsService,
+            sttService: sttService,
+            document: document,
+            analysis: analysis,
+            config: config
+        )
+        examinationEngine = engine
+
+        currentPhase = .examining
+
+        do {
+            try await engine.startConversation()
+            let summary = await engine.buildDialogueSummary()
+            dialogueSummary = summary
+            examSummary = summary.asLegacySummary()
+            currentPhase = .complete
+            selectedSection = .results
+        } catch let appError as AppError {
+            presentError(appError)
+            currentPhase = .idle
+        } catch {
+            presentError(.examinationInterrupted(reason: error.localizedDescription))
+            currentPhase = .idle
+        }
+    }
+
+    /// Starts a conversational examination from a pre-built clinical case.
+    func startCaseExamination(_ clinicalCase: ClinicalCase) async {
+        let caseAnalysis = clinicalCase.toAnalysis()
+        let caseParsedDoc = ParsedDocument(
+            text: clinicalCase.clinicalVignette,
+            sections: [],
+            metadata: FileMetadata(
+                url: URL(fileURLWithPath: "/cases/\(clinicalCase.id).txt"),
+                title: clinicalCase.title,
+                fileSize: Int64(clinicalCase.clinicalVignette.utf8.count),
+                pageCount: 1,
+                format: .plainText
+            ),
+            contentHash: clinicalCase.id.uuidString
+        )
+
+        selectedCase = clinicalCase
+        document = caseParsedDoc
+        analysis = caseAnalysis
+        await startConversation()
+    }
+
+    func handleBargeIn() async {
+        await examinationEngine?.handleBargeIn()
+    }
+
     func pauseExamination() async {
         await examinationEngine?.pause()
     }
@@ -146,8 +226,14 @@ final class AppState {
     func stopExamination() async {
         await examinationEngine?.stop()
         if let engine = examinationEngine {
-            let summary = await engine.buildSummary()
-            examSummary = summary
+            if let examState = examinationState, examState.isConversationalMode {
+                let dSummary = await engine.buildDialogueSummary()
+                dialogueSummary = dSummary
+                examSummary = dSummary.asLegacySummary()
+            } else {
+                let summary = await engine.buildSummary()
+                examSummary = summary
+            }
             currentPhase = .complete
             selectedSection = .results
         }
@@ -158,6 +244,8 @@ final class AppState {
         analysis = nil
         examinationState = nil
         examSummary = nil
+        dialogueSummary = nil
+        selectedCase = nil
         examinationEngine = nil
         currentPhase = .idle
         selectedSection = .documents
@@ -191,6 +279,7 @@ enum AppPhase: Equatable {
 
 enum AppSection: String, CaseIterable, Identifiable {
     case documents
+    case cases
     case examination
     case results
     case history
@@ -200,6 +289,7 @@ enum AppSection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .documents: return "Documents"
+        case .cases: return "Case Bank"
         case .examination: return "Examination"
         case .results: return "Results"
         case .history: return "History"
@@ -209,6 +299,7 @@ enum AppSection: String, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .documents: return "doc.text.fill"
+        case .cases: return "cross.case.fill"
         case .examination: return "waveform.circle.fill"
         case .results: return "chart.bar.fill"
         case .history: return "clock.arrow.circlepath"

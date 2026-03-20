@@ -49,6 +49,10 @@ struct ContentView: View {
                 DocumentDropView()
                     .environment(appState)
                     .id(AppSection.documents)
+            case .cases:
+                CaseBankView()
+                    .environment(appState)
+                    .id(AppSection.cases)
             case .examination:
                 if let examState = appState.examinationState {
                     ExaminationView(sessionState: examState)
@@ -61,7 +65,10 @@ struct ContentView: View {
                     )
                 }
             case .results:
-                if let summary = appState.examSummary {
+                if let dialogueSummary = appState.dialogueSummary {
+                    ConversationSummaryView(summary: dialogueSummary)
+                        .environment(appState)
+                } else if let summary = appState.examSummary {
                     ResultsView(summary: summary)
                         .environment(appState)
                 } else {
@@ -162,8 +169,9 @@ struct SidebarView: View {
     private func isSectionEnabled(_ section: AppSection) -> Bool {
         switch section {
         case .documents: return true
+        case .cases: return true
         case .examination: return appState.examinationState != nil
-        case .results: return appState.examSummary != nil
+        case .results: return appState.examSummary != nil || appState.dialogueSummary != nil
         case .history: return true
         }
     }

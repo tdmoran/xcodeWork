@@ -180,6 +180,17 @@ struct ExaminationView: View {
                 Image(systemName: "person.wave.2.fill")
                     .foregroundStyle(.blue)
                 Text("Dr. Campbell is speaking...")
+
+                // Barge-in button — trainee can interrupt
+                Button {
+                    Task { await appState.handleBargeIn() }
+                } label: {
+                    Label("Interrupt", systemImage: "hand.raised.fill")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .tint(.orange)
             case .inConversation where sessionState.isListening:
                 Image(systemName: "ear.fill")
                     .foregroundStyle(.green)
@@ -191,7 +202,7 @@ struct ExaminationView: View {
             case .thinking:
                 ProgressView()
                     .controlSize(.small)
-                Text("Thinking...")
+                Text("Dr. Campbell is thinking...")
             case .paused:
                 Image(systemName: "pause.circle.fill")
                     .foregroundStyle(.orange)

@@ -53,9 +53,11 @@ struct DocumentLibraryView: View {
                 }
             }
         }
+        #if os(macOS)
         .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
             handleDrop(providers)
         }
+        #endif
     }
 
     // MARK: - Empty State
@@ -164,6 +166,7 @@ struct DocumentLibraryView: View {
 
     // MARK: - Helpers
 
+    #if os(macOS)
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
         for provider in providers {
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
@@ -175,6 +178,7 @@ struct DocumentLibraryView: View {
         }
         return true
     }
+    #endif
 
     private var supportedTypes: [UTType] {
         [.pdf, .plainText, .png, .jpeg, .tiff,

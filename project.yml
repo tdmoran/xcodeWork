@@ -54,6 +54,19 @@ schemes:
     archive:
       config: Release
 
+  ENTExaminerIOS:
+    build:
+      targets:
+        ENTExaminerIOS: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
 targets:
   ENTExaminer:
     type: application
@@ -86,6 +99,43 @@ targets:
           CODE_SIGN_IDENTITY: "-"
     entitlements:
       path: ENTExaminer/ENTExaminer.entitlements
+
+  ENTExaminerIOS:
+    type: application
+    platform: iOS
+    deploymentTarget:
+      iOS: "17.0"
+    sources:
+      - path: ENTExaminer
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.entexaminer.app.ios
+        PRODUCT_NAME: ENTExaminer
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "ENTExaminer needs microphone access for voice examination"
+        INFOPLIST_KEY_CFBundleDisplayName: "ENT Examiner"
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2024 ENTExaminer. All rights reserved."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "ENTExaminer uses speech recognition to transcribe your answers"
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        CODE_SIGN_ENTITLEMENTS: ENTExaminer/ENTExaminerIOS.entitlements
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: true
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 1.0.0
+        TARGETED_DEVICE_FAMILY: "1,2"
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+      configs:
+        Debug:
+          CODE_SIGN_IDENTITY: "Apple Development"
+        Release:
+          CODE_SIGN_IDENTITY: "Apple Distribution"
+    entitlements:
+      path: ENTExaminer/ENTExaminerIOS.entitlements
 
   ENTExaminerTests:
     type: bundle.unit-test

@@ -37,7 +37,9 @@ struct SettingsView: View {
                     }
             }
         }
+        #if os(macOS)
         .frame(width: 480, height: 400)
+        #endif
     }
 }
 
@@ -64,7 +66,9 @@ struct GeneralSettingsView: View {
                         .tag(model)
                     }
                 }
+                #if os(macOS)
                 .pickerStyle(.radioGroup)
+                #endif
 
                 Text(appState.selectedModel.description)
                     .font(.caption)
@@ -140,7 +144,7 @@ struct APIKeysSettingsView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "lock.shield.fill")
                         .foregroundStyle(.green)
-                    Text("Keys are stored securely in macOS Keychain")
+                    Text("Keys are stored securely in Keychain")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

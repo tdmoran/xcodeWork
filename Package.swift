@@ -6,6 +6,7 @@ let package = Package(
     name: "ENTExaminer",
     platforms: [
         .macOS(.v14),
+        .iOS(.v17),
     ],
     targets: [
         .executableTarget(

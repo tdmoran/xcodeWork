@@ -67,9 +67,11 @@ struct ContentView: View {
                 }
             }
         }
+        #if os(macOS)
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             handleFileDrop(providers)
         }
+        #endif
     }
 
     @ViewBuilder
@@ -181,6 +183,7 @@ struct ContentView: View {
         }
     }
 
+    #if os(macOS)
     private func handleFileDrop(_ providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
 
@@ -193,6 +196,7 @@ struct ContentView: View {
 
         return true
     }
+    #endif
 
     private func formatTime(_ interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60

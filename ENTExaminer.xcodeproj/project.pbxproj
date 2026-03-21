@@ -9,63 +9,117 @@
 /* Begin PBXBuildFile section */
 		002A0B6F58C7873C69D6890C /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 7EDB32F954EB5F9180096F3A /* AppIcon.icns */; };
 		009404F19C1B0BBBA0ACE49F /* AudioRealTimePrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DDAF106AEE92B9A96610CD8 /* AudioRealTimePrimitives.swift */; };
+		0250AD2E2D7271F0E030BA79 /* RadarChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEB9906E13F2E8C5269669DA /* RadarChartView.swift */; };
 		02CA320C7CC4416374F91F0A /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBF0809800D6771261759F /* FlowLayout.swift */; };
+		07645DA9372A54D7C2BEE5FA /* STTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10A79D99EE78E7678906EAEA /* STTService.swift */; };
 		0A6092041A23E449EE8ED41F /* PerformanceCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 663681821F17DB000497D03E /* PerformanceCalculatorTests.swift */; };
 		0AC68467982C22E0E1758ECB /* FlowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C64E31DA1A9484358CE1ECF /* FlowControllerTests.swift */; };
+		0C64BD1D2CF7DD71D530DBDD /* ClaudeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1947D088FCD344A42EEA0C5A /* ClaudeModels.swift */; };
+		0EDC65C667E5385E326EE512 /* SessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B13EC479945BF3FA5671C5 /* SessionPersistence.swift */; };
+		14A74648B737271E86ADDCB1 /* DocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D9DB66587D3A727ED96DB98 /* DocumentParser.swift */; };
 		15BAB23039BD6239DB2873A4 /* RetryHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1F1379350D51FB8273EFF4 /* RetryHandler.swift */; };
 		17AA70A7F579851765E70331 /* RadarChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEB9906E13F2E8C5269669DA /* RadarChartView.swift */; };
 		1A6A094E08F7C9DA435A09E1 /* ElevenLabsTTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74B29BD6593ECECBBDEA0C0B /* ElevenLabsTTSService.swift */; };
 		1AA389A45E40C423E2D56818 /* CaseBank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AA0B4DF66C44CFBF23B7C /* CaseBank.swift */; };
+		1AB0F7159E3AD4EAA020714E /* ENTExaminerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E63CE979C790B43836837FED /* ENTExaminerApp.swift */; };
 		1B1B4CB4427A90D00EF8B9EA /* STTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10A79D99EE78E7678906EAEA /* STTService.swift */; };
 		1B82530B48E8095F59C3ACBA /* TranscriptExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 319C24CEA4D90888FA824A28 /* TranscriptExporterTests.swift */; };
 		1C0CE13F13265EAA596DA7D5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2052FBC843EA607BF3B8F88C /* SettingsView.swift */; };
+		20E32138F99CA856B62FD4F8 /* DialogueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F07C5635FD7EE9E40A36F28 /* DialogueModels.swift */; };
+		242EE5CBEAFDB65695102FC3 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBF0809800D6771261759F /* FlowLayout.swift */; };
+		25AF64BE70228292C21366B2 /* ExaminationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F984D01617B99D837A39669 /* ExaminationEngine.swift */; };
+		265DD24CF1F9499B94538193 /* FlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB74E905C57330570ED58336 /* FlowController.swift */; };
+		299D21426341FB2E2B5B9B0E /* ConversationSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D03A703B3AE13AFB884206C /* ConversationSummaryView.swift */; };
+		2C8AF6FE451CFAF025EFCBC3 /* VoiceActivityDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79E38D8D4DC940AF9F32668 /* VoiceActivityDetector.swift */; };
+		30F8DF0C2ED404FEC31D9E03 /* CaseBank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AA0B4DF66C44CFBF23B7C /* CaseBank.swift */; };
 		352A229EB46B664DDD8742A4 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939E65DADFC50C541967E84F /* ArchiveView.swift */; };
 		35E2CE2C47E14F175152C723 /* DialogueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F07C5635FD7EE9E40A36F28 /* DialogueModels.swift */; };
+		372451363170FB26E9CF3830 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EA694F1489FDA59F546B0E5 /* ContentView.swift */; };
 		3959CE79CC424542446D71A0 /* VoiceActivityDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79E38D8D4DC940AF9F32668 /* VoiceActivityDetector.swift */; };
 		3AB5E5495F27B50A511CF87C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1FC054D6CF71A2D8F3A8E5 /* OnboardingView.swift */; };
+		3BE087224B9EE3F7E87B2DF0 /* DocumentChunker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 715620ED2EF5D2DC3C546470 /* DocumentChunker.swift */; };
 		404FB19F2DE3CC008C03EB32 /* ClaudeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1947D088FCD344A42EEA0C5A /* ClaudeModels.swift */; };
+		424CC50C55A3666256EA84CB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2052FBC843EA607BF3B8F88C /* SettingsView.swift */; };
 		43DFC7C5482B5F804FFF3700 /* PipelinedSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD15D51ECFE4E284F5DD1C0 /* PipelinedSpeaker.swift */; };
 		47248808F3DEE91D3C6CA2A5 /* DocumentLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623231DE1D3F1AE09B73263E /* DocumentLibraryView.swift */; };
 		4A8644C030552E3D0DDA91D1 /* TranscriptExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40FE7E0489A7868B5BBE35DD /* TranscriptExporter.swift */; };
 		539B6453F01AE2B1E960A50D /* AudioPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C59983C5B18F932E123D46 /* AudioPipeline.swift */; };
 		53EC864937248CFBA3A9B35F /* SessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B13EC479945BF3FA5671C5 /* SessionPersistence.swift */; };
 		568192CA66A6ECB59845CE14 /* FlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB74E905C57330570ED58336 /* FlowController.swift */; };
+		5BE3FB7019A90CC07B62EE1E /* ExaminationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150C9BE3956EEE4029A8326 /* ExaminationState.swift */; };
+		5E7901FA0481993BA4423ADA /* DocumentLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623231DE1D3F1AE09B73263E /* DocumentLibraryView.swift */; };
+		5EDF0F6F6C717F88BEC098F7 /* PipelinedSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD15D51ECFE4E284F5DD1C0 /* PipelinedSpeaker.swift */; };
+		621102DF7EECFFA2331C10FC /* DialogueFlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC3C39F9F99D3247BD6E6A /* DialogueFlowController.swift */; };
 		663BBA6072ED199643343E44 /* DocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C247E0F1D5A92891B90A6135 /* DocumentDetailView.swift */; };
 		6677322125D0A8FADCF4A748 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C1235BF88BD19E06443905 /* DocumentStore.swift */; };
 		69EF71838413C15AAA49868D /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70AC26F4747F2DBED3412B38 /* ResultsView.swift */; };
+		6A89DDA937304F9E40D996DA /* AudioPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C59983C5B18F932E123D46 /* AudioPipeline.swift */; };
+		6B128E25D9A0A52242DF04D4 /* AppleSpeechSTTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0505AD59059D47F668A2F95E /* AppleSpeechSTTService.swift */; };
 		6BD0FD7778ADDEF8DABFED6F /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C7A29DD7BCC04F216D44A3 /* SSEClient.swift */; };
+		6CC5AE7D2004C17226F01E02 /* PerformanceDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE9BAA4DC1B0866E66277 /* PerformanceDashboard.swift */; };
 		6D9B5CD0F78AE91884C89792 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFA052912EE9A2073A0E8A0 /* AppState.swift */; };
+		6F3E3B452A686A0F9452F1AD /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1FC054D6CF71A2D8F3A8E5 /* OnboardingView.swift */; };
 		70755A8A496FD5EE7C6CD11A /* SentenceSplitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F6F05A803D50F96C1D43785 /* SentenceSplitterTests.swift */; };
 		70871F61A7C1FC1D7FB65F43 /* EnergyVAD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9CC6A0B4AAED6DB815386A /* EnergyVAD.swift */; };
+		70D72C0981EBF35D0439BAD2 /* DocumentAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE323226D8589A3EBB6AA3F /* DocumentAnalyzer.swift */; };
+		7A01BF0C7ABE512F7762078B /* TranscriptExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40FE7E0489A7868B5BBE35DD /* TranscriptExporter.swift */; };
 		7A43273742CBF96F9A8C6E39 /* DocumentAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE323226D8589A3EBB6AA3F /* DocumentAnalyzer.swift */; };
+		7FF636809759CE3A0C2FA18A /* ProgressOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783D4D4874B2990FBB6CBEB8 /* ProgressOverlayView.swift */; };
+		81110AD4FA39A72E27C29B19 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF72481ED17A457FC21352F2 /* Assets.xcassets */; };
 		8285300FA283D4BC9F10E811 /* DocumentChunker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 715620ED2EF5D2DC3C546470 /* DocumentChunker.swift */; };
+		83FB9E23621198A9444B5315 /* ClaudeAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B52776A841111E197D38B01 /* ClaudeAPIClient.swift */; };
 		850BEA0C20FFF411602691FD /* DocumentStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D36BCC9C011A73F6F8487A /* DocumentStoreTests.swift */; };
 		8A91EE35E0DA9C9166784C6D /* TTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBFA3D3FA49080F71F4B1E5 /* TTSService.swift */; };
 		8C4871E2988D9EFD42AAE1A0 /* ExaminationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777D11699E9754E2BEC9AC9A /* ExaminationView.swift */; };
+		8E9B983A041C84134BB3D779 /* RetryHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1F1379350D51FB8273EFF4 /* RetryHandler.swift */; };
+		946155AF02E45A475E88A2CF /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFA052912EE9A2073A0E8A0 /* AppState.swift */; };
 		95080447C20AE48250DCA1E1 /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C781526E444189C230F6A85 /* PreviewHelpers.swift */; };
 		9778715CA6C6FF998C06B4C5 /* ProgressOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783D4D4874B2990FBB6CBEB8 /* ProgressOverlayView.swift */; };
+		97F5D323FB2E77A3566DA853 /* PerformanceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191A16645C0AC8FCE4CA7909 /* PerformanceModels.swift */; };
 		9CC088D3DB269BB72B2AD7B3 /* PerformanceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191A16645C0AC8FCE4CA7909 /* PerformanceModels.swift */; };
+		9FA324FB0F077093D4AE3D68 /* IngestionDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865AD86D0690488E143F2479 /* IngestionDocument.swift */; };
+		A0B5C734980AD9E3540413CD /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 7EDB32F954EB5F9180096F3A /* AppIcon.icns */; };
+		A525A9F4445A445BAA2E5844 /* WebDocumentFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DBB4E59964E5E6818F4463 /* WebDocumentFetcher.swift */; };
+		AB7683935242BCE557FB77C8 /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C781526E444189C230F6A85 /* PreviewHelpers.swift */; };
 		AC9FF30DFE175A50118DD037 /* DialogueFlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC3C39F9F99D3247BD6E6A /* DialogueFlowController.swift */; };
 		AE155FD7770EEC62E45CB4F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF72481ED17A457FC21352F2 /* Assets.xcassets */; };
 		AE878DD1190E5CDB9F1B456C /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71FFE188E788DBCC67A0B47 /* KeychainManager.swift */; };
+		B34498D53269D79E337A3F63 /* LibraryDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE8E4B17D35099B7885A147 /* LibraryDocument.swift */; };
 		B351F36AB0C7E3F92C97AEF6 /* LibraryDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE8E4B17D35099B7885A147 /* LibraryDocument.swift */; };
+		B57757D5D85D0D6F95A32958 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939E65DADFC50C541967E84F /* ArchiveView.swift */; };
 		B93F9BF33348BBF41DB118DC /* DocumentDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63227B81875477050E91A262 /* DocumentDropView.swift */; };
+		BBAC5B2532ADAE53ED4226C2 /* EnergyVAD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9CC6A0B4AAED6DB815386A /* EnergyVAD.swift */; };
 		BC36C4B4DC20771AE60EAABC /* DocumentChunkerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754520E1C0A285BEDD9FDC09 /* DocumentChunkerTests.swift */; };
+		C136753084C5936D545BADBF /* DocumentDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63227B81875477050E91A262 /* DocumentDropView.swift */; };
 		C3826D28B5D1B4F5B688404A /* ConversationSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D03A703B3AE13AFB884206C /* ConversationSummaryView.swift */; };
+		C3A29287BB19E361F4E20526 /* ElevenLabsTTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74B29BD6593ECECBBDEA0C0B /* ElevenLabsTTSService.swift */; };
+		C3ED978D9A47F9FDFDA2C558 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71FFE188E788DBCC67A0B47 /* KeychainManager.swift */; };
 		C7F37142D9AA529081CED85A /* ClaudeAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B52776A841111E197D38B01 /* ClaudeAPIClient.swift */; };
 		CDE9CAC794AC7B801BABBA28 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EA694F1489FDA59F546B0E5 /* ContentView.swift */; };
 		CDF05F44B603104F5838BDE5 /* ExaminationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150C9BE3956EEE4029A8326 /* ExaminationState.swift */; };
+		D03C39F02403F7BD617CBC94 /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70AC26F4747F2DBED3412B38 /* ResultsView.swift */; };
 		D09103176A0EAAB5E1FBB3AA /* CaseBankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8850BD29986BD024725BBB0E /* CaseBankView.swift */; };
+		D42541334152C41F25632B6E /* ExaminationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777D11699E9754E2BEC9AC9A /* ExaminationView.swift */; };
 		D44C0691AD9C2CBA355E127E /* WebDocumentFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DBB4E59964E5E6818F4463 /* WebDocumentFetcher.swift */; };
+		D560C95AA8F71B9BB291E750 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74DAF83ABCA48E183F401252 /* HTTPClient.swift */; };
+		D7C7F99F31011566A81376B6 /* CaseBankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8850BD29986BD024725BBB0E /* CaseBankView.swift */; };
 		DA00C4536BAACFB82D3EC999 /* SentenceSplitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52ABF3E262E990B1800657A /* SentenceSplitter.swift */; };
+		DB855894DE552067201306C6 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D977F8C7748451C268850B7C /* WaveformView.swift */; };
 		DFBE17D0F1DD704A458A796D /* AppleSpeechSTTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0505AD59059D47F668A2F95E /* AppleSpeechSTTService.swift */; };
+		E0275B336C6357615D71BD63 /* SentenceSplitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52ABF3E262E990B1800657A /* SentenceSplitter.swift */; };
 		E04C90F59940F43DECFE97BD /* IngestionDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865AD86D0690488E143F2479 /* IngestionDocument.swift */; };
+		E70CF06848DC5859DD6DE51C /* DocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C247E0F1D5A92891B90A6135 /* DocumentDetailView.swift */; };
 		E8EFF4DF6388DAB41A87C2CD /* DocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D9DB66587D3A727ED96DB98 /* DocumentParser.swift */; };
 		E908A5C1E8C27107744C13AA /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74DAF83ABCA48E183F401252 /* HTTPClient.swift */; };
 		ECB108E0EE998D159C67846B /* PerformanceDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE9BAA4DC1B0866E66277 /* PerformanceDashboard.swift */; };
+		EF5BB71EEFA37E3F088B8740 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C1235BF88BD19E06443905 /* DocumentStore.swift */; };
+		F1A0BEBB024981C86164E176 /* AudioRealTimePrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DDAF106AEE92B9A96610CD8 /* AudioRealTimePrimitives.swift */; };
 		F3D48F32DA32EB9B9159CDA9 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D977F8C7748451C268850B7C /* WaveformView.swift */; };
+		F44F1B77E598EB1E2758E3E1 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C7A29DD7BCC04F216D44A3 /* SSEClient.swift */; };
 		F57A7805C5BD63519E57972B /* ENTExaminerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E63CE979C790B43836837FED /* ENTExaminerApp.swift */; };
+		F6B2FC66339D4CC3A0F11486 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F9C6DC7B42ED5CE4770B03 /* AppError.swift */; };
 		FA2C5223AD0A9121AD0937BC /* HTMLTextConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A4B967E9733BA5C3C1510F /* HTMLTextConverterTests.swift */; };
+		FD06B95CA7F0C62B781E6AC0 /* TTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBFA3D3FA49080F71F4B1E5 /* TTSService.swift */; };
 		FE356EB3C7625D3C951AFE92 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F9C6DC7B42ED5CE4770B03 /* AppError.swift */; };
 		FEFBB4FA2F6B70443764D038 /* ExaminationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F984D01617B99D837A39669 /* ExaminationEngine.swift */; };
 /* End PBXBuildFile section */
@@ -108,6 +162,7 @@
 		6ECBF0809800D6771261759F /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		70AC26F4747F2DBED3412B38 /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
 		715620ED2EF5D2DC3C546470 /* DocumentChunker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentChunker.swift; sourceTree = "<group>"; };
+		72F45BF84B2369D6ED42AF22 /* ENTExaminerIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ENTExaminerIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		74B29BD6593ECECBBDEA0C0B /* ElevenLabsTTSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenLabsTTSService.swift; sourceTree = "<group>"; };
 		74DAF83ABCA48E183F401252 /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
 		754520E1C0A285BEDD9FDC09 /* DocumentChunkerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentChunkerTests.swift; sourceTree = "<group>"; };
@@ -144,6 +199,7 @@
 		E7C59983C5B18F932E123D46 /* AudioPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPipeline.swift; sourceTree = "<group>"; };
 		EFE323226D8589A3EBB6AA3F /* DocumentAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAnalyzer.swift; sourceTree = "<group>"; };
 		F0AC3C39F9F99D3247BD6E6A /* DialogueFlowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogueFlowController.swift; sourceTree = "<group>"; };
+		F7D0D2BA128401D2849ED1E4 /* ENTExaminerIOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ENTExaminerIOS.entitlements; sourceTree = "<group>"; };
 		FEB9906E13F2E8C5269669DA /* RadarChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarChartView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -184,6 +240,13 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+		18DED7217DAA0E8C85BA4F3E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 		1B8B71A3C5AFDC2B6F20F9EE /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -197,9 +260,17 @@
 			isa = PBXGroup;
 			children = (
 				3949D54F6258F90BBF5E4A39 /* ENTExaminer.app */,
+				72F45BF84B2369D6ED42AF22 /* ENTExaminerIOS.app */,
 				9865F9454751ECE9BF8BBDD5 /* ENTExaminerTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2DE741CC8D826857F7EFBE9F /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		2F5B78BF9730B3BDD53B80C9 /* Resources */ = {
@@ -216,6 +287,7 @@
 			children = (
 				92B3A1A06E024A8EEF334429 /* Audio */,
 				C6C8420CEC7923C86EC72874 /* Claude */,
+				3B9EF02B889FBE0C23AD92D4 /* ElevenLabs */,
 				54AE58661F4CE62FAF82D76D /* Voice */,
 			);
 			path = Services;
@@ -255,6 +327,20 @@
 				40FE7E0489A7868B5BBE35DD /* TranscriptExporter.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		3B9EF02B889FBE0C23AD92D4 /* ElevenLabs */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ElevenLabs;
+			sourceTree = "<group>";
+		};
+		3EBB3581FB7C63F448BC3C03 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 		465A4F6E4F7AF5E1CF8F6B9E /* Models */ = {
@@ -306,6 +392,7 @@
 			isa = PBXGroup;
 			children = (
 				77F7DE4807C6B96BB7963413 /* Errors */,
+				2DE741CC8D826857F7EFBE9F /* Extensions */,
 				D2343C20ECAEFB6E4DCE0CC8 /* Keychain */,
 				35D721C85A338F8043D375DA /* Networking */,
 			);
@@ -315,6 +402,7 @@
 		6B915F75C1362BB348254259 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				18DED7217DAA0E8C85BA4F3E /* Models */,
 				1B8B71A3C5AFDC2B6F20F9EE /* Views */,
 			);
 			path = Settings;
@@ -381,9 +469,11 @@
 				DDCDE09A27C7A227341851DB /* App */,
 				5D896209D8763F97B2AEF64D /* Core */,
 				5194B98A6A1CC7A40C06C557 /* Features */,
+				3EBB3581FB7C63F448BC3C03 /* Preview Content */,
 				2F5B78BF9730B3BDD53B80C9 /* Resources */,
 				2FC9974AB3DDD2E58551B40E /* Services */,
 				CC56B9084DB064CEEE46DFA6 /* ENTExaminer.entitlements */,
+				F7D0D2BA128401D2849ED1E4 /* ENTExaminerIOS.entitlements */,
 			);
 			path = ENTExaminer;
 			sourceTree = "<group>";
@@ -535,6 +625,24 @@
 			productReference = 9865F9454751ECE9BF8BBDD5 /* ENTExaminerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		78F8E5DD4CF3CA982533E680 /* ENTExaminerIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC103844AF5E6ADE2C0AC526 /* Build configuration list for PBXNativeTarget "ENTExaminerIOS" */;
+			buildPhases = (
+				ED99D997B4D4CF2C0DF93611 /* Sources */,
+				519142190C1C3FA8BC0EC737 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ENTExaminerIOS;
+			packageProductDependencies = (
+			);
+			productName = ENTExaminerIOS;
+			productReference = 72F45BF84B2369D6ED42AF22 /* ENTExaminerIOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		F388AC21CFAD05C9D4E0B772 /* ENTExaminer */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BD5C85CC3206EEE17F5A7AC3 /* Build configuration list for PBXNativeTarget "ENTExaminer" */;
@@ -562,6 +670,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					78F8E5DD4CF3CA982533E680 = {
+						ProvisioningStyle = Automatic;
+					};
 					F388AC21CFAD05C9D4E0B772 = {
 						ProvisioningStyle = Automatic;
 					};
@@ -582,6 +693,7 @@
 			projectRoot = "";
 			targets = (
 				F388AC21CFAD05C9D4E0B772 /* ENTExaminer */,
+				78F8E5DD4CF3CA982533E680 /* ENTExaminerIOS */,
 				6464F768C30BC9A043A877C0 /* ENTExaminerTests */,
 			);
 		};
@@ -594,6 +706,15 @@
 			files = (
 				002A0B6F58C7873C69D6890C /* AppIcon.icns in Resources */,
 				AE155FD7770EEC62E45CB4F1 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		519142190C1C3FA8BC0EC737 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0B5C734980AD9E3540413CD /* AppIcon.icns in Resources */,
+				81110AD4FA39A72E27C29B19 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -611,6 +732,65 @@
 				0A6092041A23E449EE8ED41F /* PerformanceCalculatorTests.swift in Sources */,
 				70755A8A496FD5EE7C6CD11A /* SentenceSplitterTests.swift in Sources */,
 				1B82530B48E8095F59C3ACBA /* TranscriptExporterTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ED99D997B4D4CF2C0DF93611 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6B2FC66339D4CC3A0F11486 /* AppError.swift in Sources */,
+				946155AF02E45A475E88A2CF /* AppState.swift in Sources */,
+				6B128E25D9A0A52242DF04D4 /* AppleSpeechSTTService.swift in Sources */,
+				B57757D5D85D0D6F95A32958 /* ArchiveView.swift in Sources */,
+				6A89DDA937304F9E40D996DA /* AudioPipeline.swift in Sources */,
+				F1A0BEBB024981C86164E176 /* AudioRealTimePrimitives.swift in Sources */,
+				30F8DF0C2ED404FEC31D9E03 /* CaseBank.swift in Sources */,
+				D7C7F99F31011566A81376B6 /* CaseBankView.swift in Sources */,
+				83FB9E23621198A9444B5315 /* ClaudeAPIClient.swift in Sources */,
+				0C64BD1D2CF7DD71D530DBDD /* ClaudeModels.swift in Sources */,
+				372451363170FB26E9CF3830 /* ContentView.swift in Sources */,
+				299D21426341FB2E2B5B9B0E /* ConversationSummaryView.swift in Sources */,
+				621102DF7EECFFA2331C10FC /* DialogueFlowController.swift in Sources */,
+				20E32138F99CA856B62FD4F8 /* DialogueModels.swift in Sources */,
+				70D72C0981EBF35D0439BAD2 /* DocumentAnalyzer.swift in Sources */,
+				3BE087224B9EE3F7E87B2DF0 /* DocumentChunker.swift in Sources */,
+				E70CF06848DC5859DD6DE51C /* DocumentDetailView.swift in Sources */,
+				C136753084C5936D545BADBF /* DocumentDropView.swift in Sources */,
+				5E7901FA0481993BA4423ADA /* DocumentLibraryView.swift in Sources */,
+				14A74648B737271E86ADDCB1 /* DocumentParser.swift in Sources */,
+				EF5BB71EEFA37E3F088B8740 /* DocumentStore.swift in Sources */,
+				1AB0F7159E3AD4EAA020714E /* ENTExaminerApp.swift in Sources */,
+				C3A29287BB19E361F4E20526 /* ElevenLabsTTSService.swift in Sources */,
+				BBAC5B2532ADAE53ED4226C2 /* EnergyVAD.swift in Sources */,
+				25AF64BE70228292C21366B2 /* ExaminationEngine.swift in Sources */,
+				5BE3FB7019A90CC07B62EE1E /* ExaminationState.swift in Sources */,
+				D42541334152C41F25632B6E /* ExaminationView.swift in Sources */,
+				265DD24CF1F9499B94538193 /* FlowController.swift in Sources */,
+				242EE5CBEAFDB65695102FC3 /* FlowLayout.swift in Sources */,
+				D560C95AA8F71B9BB291E750 /* HTTPClient.swift in Sources */,
+				9FA324FB0F077093D4AE3D68 /* IngestionDocument.swift in Sources */,
+				C3ED978D9A47F9FDFDA2C558 /* KeychainManager.swift in Sources */,
+				B34498D53269D79E337A3F63 /* LibraryDocument.swift in Sources */,
+				6F3E3B452A686A0F9452F1AD /* OnboardingView.swift in Sources */,
+				6CC5AE7D2004C17226F01E02 /* PerformanceDashboard.swift in Sources */,
+				97F5D323FB2E77A3566DA853 /* PerformanceModels.swift in Sources */,
+				5EDF0F6F6C717F88BEC098F7 /* PipelinedSpeaker.swift in Sources */,
+				AB7683935242BCE557FB77C8 /* PreviewHelpers.swift in Sources */,
+				7FF636809759CE3A0C2FA18A /* ProgressOverlayView.swift in Sources */,
+				0250AD2E2D7271F0E030BA79 /* RadarChartView.swift in Sources */,
+				D03C39F02403F7BD617CBC94 /* ResultsView.swift in Sources */,
+				8E9B983A041C84134BB3D779 /* RetryHandler.swift in Sources */,
+				F44F1B77E598EB1E2758E3E1 /* SSEClient.swift in Sources */,
+				07645DA9372A54D7C2BEE5FA /* STTService.swift in Sources */,
+				E0275B336C6357615D71BD63 /* SentenceSplitter.swift in Sources */,
+				0EDC65C667E5385E326EE512 /* SessionPersistence.swift in Sources */,
+				424CC50C55A3666256EA84CB /* SettingsView.swift in Sources */,
+				FD06B95CA7F0C62B781E6AC0 /* TTSService.swift in Sources */,
+				7A01BF0C7ABE512F7762078B /* TranscriptExporter.swift in Sources */,
+				2C8AF6FE451CFAF025EFCBC3 /* VoiceActivityDetector.swift in Sources */,
+				DB855894DE552067201306C6 /* WaveformView.swift in Sources */,
+				A525A9F4445A445BAA2E5844 /* WebDocumentFetcher.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -763,11 +943,40 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		21516C399655E7F19AE97692 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ENTExaminer/ENTExaminerIOS.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "ENT Examiner";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 ENTExaminer. All rights reserved.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ENTExaminer uses speech recognition to transcribe your answers";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.entexaminer.app.ios;
+				PRODUCT_NAME = ENTExaminer;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -887,11 +1096,40 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		F2FFE68FBC740E58DF3F5E26 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ENTExaminer/ENTExaminerIOS.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "ENT Examiner";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 ENTExaminer. All rights reserved.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ENTExaminer uses speech recognition to transcribe your answers";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.entexaminer.app.ios;
+				PRODUCT_NAME = ENTExaminer;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -912,6 +1150,15 @@
 			buildConfigurations = (
 				243EBA1336A32A1C77541742 /* Debug */,
 				03855DEDECDD65A01D1A6690 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DC103844AF5E6ADE2C0AC526 /* Build configuration list for PBXNativeTarget "ENTExaminerIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2FFE68FBC740E58DF3F5E26 /* Debug */,
+				21516C399655E7F19AE97692 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

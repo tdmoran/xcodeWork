@@ -41,8 +41,11 @@ struct DocumentDropView: View {
                 .font(.system(size: 48))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Color.accentColor)
+                #if os(macOS)
                 .symbolEffect(.bounce, value: isDropTargeted)
+                #endif
 
+            #if os(macOS)
             Text("Drop your document here")
                 .font(.title2)
                 .fontWeight(.medium)
@@ -54,6 +57,15 @@ struct DocumentDropView: View {
             Divider()
                 .frame(width: 200)
                 .padding(.vertical, 4)
+            #else
+            Text("Select a document to study")
+                .font(.title2)
+                .fontWeight(.medium)
+
+            Text("PDF, DOCX, TXT, Markdown, or Image")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            #endif
 
             Button("Browse Files") {
                 showFilePicker = true
@@ -63,6 +75,7 @@ struct DocumentDropView: View {
         }
         .padding(48)
         .frame(maxWidth: 500)
+        #if os(macOS)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(
@@ -79,6 +92,19 @@ struct DocumentDropView: View {
         .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
             handleDrop(providers)
         }
+        #else
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(
+                    Color.secondary.opacity(0.3),
+                    style: StrokeStyle(lineWidth: 2, dash: [8, 4])
+                )
+        )
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+        )
+        #endif
     }
 
     // MARK: - Document Preview
@@ -197,6 +223,7 @@ struct DocumentDropView: View {
 
     // MARK: - Helpers
 
+    #if os(macOS)
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
 
@@ -209,6 +236,7 @@ struct DocumentDropView: View {
 
         return true
     }
+    #endif
 
     private func iconForFormat(_ format: DocumentFormat) -> String {
         switch format {

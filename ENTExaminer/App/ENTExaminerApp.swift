@@ -1,5 +1,7 @@
 import SwiftUI
+#if os(macOS)
 import AppKit
+#endif
 
 private func appDebugLog(_ message: String) {
     let url = URL(fileURLWithPath: "/tmp/entexaminer_debug.log")
@@ -29,6 +31,7 @@ struct ENTExaminerApp: App {
         WindowGroup {
             ContentView()
                 .environment(appState)
+                #if os(macOS)
                 .frame(minWidth: 900, minHeight: 650)
                 .onAppear {
                     appDebugLog("ContentView appeared")
@@ -38,17 +41,23 @@ struct ENTExaminerApp: App {
                         NSApplication.shared.applicationIconImage = icon
                     }
                 }
+                #endif
         }
+        #if os(macOS)
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified(showsTitle: true))
         .defaultSize(width: 1100, height: 750)
+        #endif
 
+        #if os(macOS)
         Settings {
             SettingsView()
                 .environment(appState)
         }
+        #endif
     }
 
+    #if os(macOS)
     /// Walks up from the executable to find the icon in the source tree.
     private static func findIconPath() -> String? {
         // When run via `swift run`, the executable is deep in .build/
@@ -63,4 +72,5 @@ struct ENTExaminerApp: App {
         }
         return nil
     }
+    #endif
 }

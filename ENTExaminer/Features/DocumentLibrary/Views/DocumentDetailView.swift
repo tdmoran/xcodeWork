@@ -1,5 +1,7 @@
 import SwiftUI
+#if os(macOS)
 import AppKit
+#endif
 
 struct DocumentDetailView: View {
     @Environment(AppState.self) private var appState
@@ -331,7 +333,11 @@ struct DocumentDetailView: View {
                 if hasExportableSummary {
                     Button {
                         if let url = appState.saveTranscriptToFile(asMarkdown: true) {
+                            #if os(macOS)
                             NSWorkspace.shared.activateFileViewerSelecting([url])
+                            #else
+                            // On iOS, the file is saved; a share sheet could be presented here
+                            #endif
                         }
                     } label: {
                         Label("Export", systemImage: "square.and.arrow.up")

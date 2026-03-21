@@ -3,6 +3,11 @@ import PDFKit
 import Vision
 import OSLog
 import CryptoKit
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 private let logger = Logger(subsystem: "com.entexaminer", category: "DocumentParser")
 
@@ -82,9 +87,15 @@ struct PDFParserService: DocumentParserProtocol {
     private func ocrPage(_ page: PDFPage) async throws -> String {
         let pageImage = page.thumbnail(of: CGSize(width: 2048, height: 2048), for: .mediaBox)
 
+        #if os(macOS)
         guard let cgImage = pageImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return ""
         }
+        #else
+        guard let cgImage = pageImage.cgImage else {
+            return ""
+        }
+        #endif
 
         return try await withCheckedThrowingContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
@@ -189,10 +200,17 @@ struct ImageOCRParserService: DocumentParserProtocol {
     func parse(url: URL) async throws -> ParsedDocument {
         let data = try Data(contentsOf: url)
 
+        #if os(macOS)
         guard let nsImage = NSImage(contentsOf: url),
               let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             throw AppError.parseFailure("Could not load image")
         }
+        #else
+        guard let uiImage = UIImage(contentsOfFile: url.path),
+              let cgImage = uiImage.cgImage else {
+            throw AppError.parseFailure("Could not load image")
+        }
+        #endif
 
         let text = try await recognizeText(in: cgImage)
         let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
@@ -286,6 +304,7 @@ struct DocxParserService: DocumentParserProtocol {
     }
 
     private func extractDocumentXML(from docxURL: URL, to tempDir: URL) throws -> URL {
+        #if os(macOS)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
         process.arguments = ["-o", docxURL.path, "word/document.xml", "-d", tempDir.path]
@@ -298,6 +317,11 @@ struct DocxParserService: DocumentParserProtocol {
         guard process.terminationStatus == 0 else {
             throw AppError.parseFailure("Failed to extract DOCX contents (unzip exit code \(process.terminationStatus))")
         }
+        #else
+        // On iOS, Process is unavailable. Extract the zip archive manually.
+        let docxData = try Data(contentsOf: docxURL)
+        try extractZipEntry(from: docxData, entryPath: "word/document.xml", to: tempDir)
+        #endif
 
         let xmlPath = tempDir.appendingPathComponent("word/document.xml")
         guard FileManager.default.fileExists(atPath: xmlPath.path) else {
@@ -320,6 +344,54 @@ struct DocxParserService: DocumentParserProtocol {
 
         return delegate.extractedText
     }
+
+    #if !os(macOS)
+    /// Minimal zip entry extraction for iOS (no Process available).
+    /// Locates a single file inside a zip archive and writes it to the destination directory.
+    private func extractZipEntry(from zipData: Data, entryPath: String, to destinationDir: URL) throws {
+        // ZIP local file header signature = 0x04034b50
+        let signature: [UInt8] = [0x50, 0x4B, 0x03, 0x04]
+        var offset = 0
+
+        while offset + 30 <= zipData.count {
+            let headerBytes = [UInt8](zipData[offset..<offset + 4])
+            guard headerBytes == signature else { break }
+
+            let compressionMethod = UInt16(zipData[offset + 8]) | (UInt16(zipData[offset + 9]) << 8)
+            let compressedSize = Int(UInt32(zipData[offset + 18])
+                | (UInt32(zipData[offset + 19]) << 8)
+                | (UInt32(zipData[offset + 20]) << 16)
+                | (UInt32(zipData[offset + 21]) << 24))
+            let fileNameLength = Int(UInt16(zipData[offset + 26]) | (UInt16(zipData[offset + 27]) << 8))
+            let extraFieldLength = Int(UInt16(zipData[offset + 28]) | (UInt16(zipData[offset + 29]) << 8))
+
+            let fileNameStart = offset + 30
+            let fileNameData = zipData[fileNameStart..<fileNameStart + fileNameLength]
+            let fileName = String(data: fileNameData, encoding: .utf8) ?? ""
+
+            let dataStart = fileNameStart + fileNameLength + extraFieldLength
+
+            if fileName == entryPath {
+                guard compressionMethod == 0 else {
+                    // Stored (uncompressed) entries only; deflate would need zlib
+                    throw AppError.parseFailure("DOCX entry is compressed; a zip library is required on iOS")
+                }
+                let entryData = zipData[dataStart..<dataStart + compressedSize]
+                let targetURL = destinationDir.appendingPathComponent(entryPath)
+                try FileManager.default.createDirectory(
+                    at: targetURL.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try entryData.write(to: targetURL)
+                return
+            }
+
+            offset = dataStart + compressedSize
+        }
+
+        throw AppError.parseFailure("DOCX file does not contain \(entryPath)")
+    }
+    #endif
 
     private func splitIntoParagraphSections(text: String) -> [DocumentSection] {
         let paragraphs = text.components(separatedBy: "\n\n")

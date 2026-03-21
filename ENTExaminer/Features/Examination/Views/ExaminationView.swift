@@ -5,6 +5,7 @@ struct ExaminationView: View {
     let sessionState: ExaminationSessionState
 
     var body: some View {
+        #if os(macOS)
         HSplitView {
             // Left: Voice interaction (adapts based on mode)
             if sessionState.isConversationalMode {
@@ -24,6 +25,32 @@ struct ExaminationView: View {
             .frame(minWidth: 300, idealWidth: 350)
         }
         .padding()
+        #else
+        TabView {
+            // Voice interaction (adapts based on mode)
+            Group {
+                if sessionState.isConversationalMode {
+                    conversationalPanel
+                } else {
+                    legacyVoiceInteractionPanel
+                }
+            }
+            .tabItem {
+                Label("Examination", systemImage: "waveform.circle")
+            }
+
+            // Performance dashboard
+            PerformanceDashboard(
+                performance: sessionState.performance,
+                topicScores: sessionState.topicScores,
+                turnScores: sessionState.performance.turnScores
+            )
+            .tabItem {
+                Label("Performance", systemImage: "chart.bar")
+            }
+        }
+        .padding()
+        #endif
     }
 
     // MARK: - Conversational Mode Panel

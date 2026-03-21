@@ -568,6 +568,12 @@ final class AppState {
         await examinationEngine?.handleBargeIn()
     }
 
+    func toggleTeachingMode() async {
+        guard let engine = examinationEngine, let examState = examinationState else { return }
+        let newMode = !examState.isTeachingMode
+        await engine.setTeachingMode(newMode)
+    }
+
     func pauseExamination() async {
         await examinationEngine?.pause()
     }

@@ -39,6 +39,7 @@ final class ExaminationSessionState {
     private(set) var dialogueMessages: [DialogueMessage] = []
     private(set) var conversationContext: ConversationContext = .empty
     private(set) var isConversationalMode: Bool = false
+    private(set) var isTeachingMode: Bool = false
 
     func update(
         turns: [ExamTurn]? = nil,
@@ -54,7 +55,8 @@ final class ExaminationSessionState {
         elapsedTime: TimeInterval? = nil,
         dialogueMessages: [DialogueMessage]? = nil,
         conversationContext: ConversationContext? = nil,
-        isConversationalMode: Bool? = nil
+        isConversationalMode: Bool? = nil,
+        isTeachingMode: Bool? = nil
     ) {
         if let turns { self.turns = turns }
         if let currentQuestion { self.currentQuestion = currentQuestion }
@@ -73,6 +75,7 @@ final class ExaminationSessionState {
         if let dialogueMessages { self.dialogueMessages = dialogueMessages }
         if let conversationContext { self.conversationContext = conversationContext }
         if let isConversationalMode { self.isConversationalMode = isConversationalMode }
+        if let isTeachingMode { self.isTeachingMode = isTeachingMode }
     }
 }
 
@@ -98,6 +101,9 @@ actor ExaminationEngine {
     private var inlineAssessments: [InlineAssessment] = []
     private var currentTopicTracker: ExamTopic?
     private var depthOnCurrentTopic: Int = 0
+
+    // Teaching mode
+    private var isTeachingMode: Bool = false
 
     // Shared state
     private var timerTask: Task<Void, Never>?
@@ -257,6 +263,12 @@ actor ExaminationEngine {
     }
 
     // MARK: - Shared Controls
+
+    func setTeachingMode(_ enabled: Bool) async {
+        isTeachingMode = enabled
+        await state.update(isTeachingMode: enabled)
+        engineLog("Teaching mode: \(enabled)")
+    }
 
     func pause() async {
         timerTask?.cancel()
@@ -429,25 +441,37 @@ actor ExaminationEngine {
     private func generateConversationalStream(
         move: DialogueFlowController.NextMove
     ) -> AsyncThrowingStream<ClaudeStreamEvent, Error> {
-        let systemPrompt = buildConversationalSystemPrompt()
+        let systemPrompt = isTeachingMode
+            ? buildTeachingSystemPrompt()
+            : buildConversationalSystemPrompt()
 
-        // The move's prompt guidance tells Claude how to respond
+        let guidanceText = isTeachingMode
+            ? """
+            The trainee has asked a question or wants to learn more. \
+            Explain clearly and thoroughly, using examples from the document. \
+            Speak directly to the trainee. Do NOT include metadata or annotations.
+            """
+            : """
+            [EXAMINER GUIDANCE — not spoken aloud]
+            \(move.promptGuidance)
+
+            Respond naturally as the examiner. Speak directly to the trainee. \
+            Do NOT include any metadata, JSON, or annotations. Just speak.
+            """
+
         let guidance = ClaudeMessage(
             role: .user,
-            content: [.text("""
-                [EXAMINER GUIDANCE — not spoken aloud]
-                \(move.promptGuidance)
-
-                Respond naturally as the examiner. Speak directly to the trainee. \
-                Do NOT include any metadata, JSON, or annotations. Just speak.
-                """)]
+            content: [.text(guidanceText)]
         )
+
+        // Allow longer responses in teaching mode
+        let tokens = isTeachingMode ? 512 : 150
 
         return claudeClient.stream(
             model: config.model,
             system: systemPrompt,
             messages: conversationHistory + [guidance],
-            maxTokens: 150
+            maxTokens: tokens
         )
     }
 
@@ -766,6 +790,37 @@ actor ExaminationEngine {
         - Keep it SHORT. One to two sentences per response, maximum.
         - Natural spoken English, contractions fine.
         - No bullet points, lists, or formatting — this is spoken aloud.
+        """
+    }
+
+    private func buildTeachingSystemPrompt() -> String {
+        let topicList = analysis.topics.map { topic in
+            "- \(topic.name): \(topic.keyConcepts.joined(separator: ", "))"
+        }.joined(separator: "\n")
+
+        return """
+        You are a knowledgeable, patient teacher helping a student understand \
+        the material in depth. You are now in TEACHING MODE — the exam is paused.
+
+        DOCUMENT CONTEXT:
+        \(analysis.documentSummary)
+
+        TOPICS COVERED:
+        \(topicList)
+
+        TEACHING RULES:
+        - Answer the student's questions thoroughly but concisely.
+        - Explain concepts clearly, using examples from the document.
+        - Connect ideas to clinical practice where relevant.
+        - If the student asks "why", go deeper into the mechanism or reasoning.
+        - Use analogies to make complex concepts accessible.
+        - Keep explanations spoken-friendly — 3-5 sentences is ideal.
+        - After explaining, ask if they'd like to know more or go back to the exam.
+
+        SPEECH GUIDELINES:
+        - Natural spoken English, contractions fine.
+        - No bullet points, lists, or formatting — this is spoken aloud.
+        - Keep sentences clear and short for speech synthesis.
         """
     }
 

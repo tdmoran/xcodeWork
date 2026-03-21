@@ -77,7 +77,16 @@ struct ExaminationView: View {
 
     private var topicBar: some View {
         HStack(spacing: 8) {
-            if let topic = sessionState.currentTopic {
+            if sessionState.isTeachingMode {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundStyle(.orange)
+                    .font(.caption)
+
+                Text("Teaching Mode")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.orange)
+            } else if let topic = sessionState.currentTopic {
                 Image(systemName: "bubble.left.and.bubble.right.fill")
                     .foregroundStyle(.blue)
                     .font(.caption)
@@ -265,6 +274,18 @@ struct ExaminationView: View {
                 }
                 .buttonStyle(.bordered)
             }
+
+            Button {
+                Task { await appState.toggleTeachingMode() }
+            } label: {
+                if sessionState.isTeachingMode {
+                    Label("Resume Exam", systemImage: "graduationcap.fill")
+                } else {
+                    Label("Teach Me", systemImage: "lightbulb.fill")
+                }
+            }
+            .buttonStyle(.bordered)
+            .tint(sessionState.isTeachingMode ? .blue : .orange)
 
             Button {
                 Task { await appState.stopExamination() }

@@ -314,6 +314,48 @@ struct DocumentDetailView: View {
                 examModePicker
             }
 
+            #if os(iOS)
+            VStack(spacing: 10) {
+                if appState.analysis == nil {
+                    Button("Analyze Document") {
+                        Task { await appState.analyzeDocument() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+                    .disabled(appState.currentPhase == .analyzing)
+                } else {
+                    Button(examButtonTitle) {
+                        Task { await startSelectedExam() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+                }
+
+                HStack(spacing: 10) {
+                    if hasExportableSummary {
+                        Button {
+                            if let url = appState.saveTranscriptToFile(asMarkdown: true) {
+                                // On iOS, the file is saved; a share sheet could be presented here
+                            }
+                        } label: {
+                            Label("Export", systemImage: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Button("Back to Library") {
+                        appState.selectedSection = .library
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            #else
             HStack(spacing: 12) {
                 if appState.analysis == nil {
                     Button("Analyze Document") {
@@ -333,11 +375,7 @@ struct DocumentDetailView: View {
                 if hasExportableSummary {
                     Button {
                         if let url = appState.saveTranscriptToFile(asMarkdown: true) {
-                            #if os(macOS)
                             NSWorkspace.shared.activateFileViewerSelecting([url])
-                            #else
-                            // On iOS, the file is saved; a share sheet could be presented here
-                            #endif
                         }
                     } label: {
                         Label("Export", systemImage: "square.and.arrow.up")
@@ -352,10 +390,26 @@ struct DocumentDetailView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.large)
             }
+            #endif
         }
     }
 
     private var examModePicker: some View {
+        #if os(iOS)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Exam Mode:")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Picker("Exam Mode", selection: $selectedExamMode) {
+                ForEach(ExamMode.allCases) { mode in
+                    Label(mode.displayName, systemImage: mode.icon)
+                        .tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        #else
         HStack(spacing: 16) {
             Text("Exam Mode:")
                 .font(.subheadline)
@@ -370,6 +424,7 @@ struct DocumentDetailView: View {
             .pickerStyle(.segmented)
             .frame(maxWidth: 300)
         }
+        #endif
     }
 
     private var examButtonTitle: String {

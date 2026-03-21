@@ -54,7 +54,9 @@ struct OnboardingView: View {
             }
             .padding(.bottom, 20)
         }
+        #if os(macOS)
         .frame(width: 500, height: 420)
+        #endif
     }
 
     // MARK: - Welcome
@@ -131,7 +133,7 @@ struct OnboardingView: View {
             HStack(spacing: 6) {
                 Image(systemName: "lock.shield.fill")
                     .foregroundStyle(.green)
-                Text("Keys are stored securely in macOS Keychain")
+                Text("Keys are stored securely on this device")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -186,7 +188,11 @@ struct OnboardingView: View {
                         .tag(model)
                     }
                 }
+                #if os(macOS)
                 .pickerStyle(.radioGroup)
+                #else
+                .pickerStyle(.inline)
+                #endif
                 .labelsHidden()
             }
 

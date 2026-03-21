@@ -121,6 +121,38 @@ struct DocumentLibraryView: View {
     private var libraryContent: some View {
         VStack(spacing: 0) {
             // Toolbar
+            #if os(iOS)
+            VStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search documents...", text: $searchText)
+                        .textFieldStyle(.plain)
+                }
+
+                HStack {
+                    Picker("Sort", selection: $sortOrder) {
+                        ForEach(SortOrder.allCases, id: \.self) { order in
+                            Text(order.rawValue).tag(order)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    Spacer()
+
+                    Button {
+                        showFilePicker = true
+                    } label: {
+                        Label("Add Document", systemImage: "plus")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial)
+            #else
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
@@ -145,13 +177,14 @@ struct DocumentLibraryView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .background(.ultraThinMaterial)
+            #endif
 
             Divider()
 
             // Document grid
             ScrollView {
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 280, maximum: 400), spacing: 16)],
+                    columns: [GridItem(.adaptive(minimum: gridMinWidth, maximum: 400), spacing: 16)],
                     spacing: 16
                 ) {
                     ForEach(activeDocuments) { doc in
@@ -179,6 +212,14 @@ struct DocumentLibraryView: View {
         return true
     }
     #endif
+
+    private var gridMinWidth: CGFloat {
+        #if os(iOS)
+        200
+        #else
+        280
+        #endif
+    }
 
     private var supportedTypes: [UTType] {
         [.pdf, .plainText, .png, .jpeg, .tiff,

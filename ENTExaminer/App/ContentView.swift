@@ -76,9 +76,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detailView: some View {
-        let _ = debugLog("detailView: selectedSection = \(appState.selectedSection)")
+        let _ = debugLog("detailView: selectedSection = \(String(describing: appState.selectedSection))")
         Group {
-            switch appState.selectedSection {
+            switch appState.selectedSection ?? .library {
             case .library:
                 DocumentLibraryView()
                     .environment(appState)
@@ -218,35 +218,23 @@ struct SidebarView: View {
         @Bindable var state = appState
         let _ = debugLog("SidebarView body computed")
 
-        List {
+        List(selection: $state.selectedSection) {
             ForEach(AppSection.sidebarSections) { section in
-                Button {
-                    debugLog("Button clicked: \(section.title)")
-                    if isSectionEnabled(section) {
-                        debugLog("Setting selectedSection to: \(section)")
-                        state.selectedSection = section
-                    } else {
-                        debugLog("Section disabled: \(section.title)")
+                HStack {
+                    Label(section.title, systemImage: section.systemImage)
+                        .foregroundStyle(isSectionEnabled(section) ? .primary : .secondary)
+                    Spacer()
+                    if badgeCount(for: section) > 0 {
+                        Text("\(badgeCount(for: section))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.2), in: Capsule())
                     }
-                } label: {
-                    HStack {
-                        Label(section.title, systemImage: section.systemImage)
-                            .foregroundStyle(isSectionEnabled(section) ? .primary : .secondary)
-                        Spacer()
-                        if badgeCount(for: section) > 0 {
-                            Text("\(badgeCount(for: section))")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
-                                .background(Color.secondary.opacity(0.2), in: Capsule())
-                        }
-                    }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .tag(section)
                 .disabled(!isSectionEnabled(section))
-                .listRowBackground(state.selectedSection == section ? Color.accentColor.opacity(0.2) : Color.clear)
             }
         }
         .listStyle(.sidebar)

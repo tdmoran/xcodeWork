@@ -97,7 +97,11 @@ enum AppError: LocalizedError, Equatable {
         case .audioEngineFailure:
             return "Try restarting the application."
         case .noAudioInputDevice:
-            return "Connect a microphone or headset and try again."
+            #if targetEnvironment(simulator)
+            return "On the Simulator, go to your Mac's System Settings > Privacy & Security > Microphone and enable access for Simulator."
+            #else
+            return "Go to Settings > Privacy & Security > Microphone and enable access for ENTExaminer."
+            #endif
         case .speechRecognitionDenied:
             return "Open System Settings > Privacy & Security > Speech Recognition and enable access for ENTExaminer."
         case .speechRecognitionUnavailable:

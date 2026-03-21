@@ -194,16 +194,34 @@ actor AudioPipeline {
 
         try await requestMicrophonePermission()
 
-        let audioEngine = AVAudioEngine()
-
         #if os(iOS)
         try configureAudioSession()
         #endif
 
+        let audioEngine = AVAudioEngine()
+
         // Enable voice processing for echo cancellation on the input node.
         // This must be set before connecting nodes or starting the engine.
         let inputNode = audioEngine.inputNode
-        guard inputNode.inputFormat(forBus: 0).channelCount > 0 else {
+
+        #if os(iOS)
+        // On iOS/Simulator, the input node may need a moment after audio session
+        // activation before it reports the correct format. Retry briefly.
+        var inputFormat = inputNode.inputFormat(forBus: 0)
+        if inputFormat.channelCount == 0 {
+            // Deactivate and reactivate the session to nudge the input node
+            let session = AVAudioSession.sharedInstance()
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+            try configureAudioSession()
+            inputFormat = inputNode.inputFormat(forBus: 0)
+        }
+        #else
+        let inputFormat = inputNode.inputFormat(forBus: 0)
+        #endif
+
+        guard inputFormat.channelCount > 0 else {
+            logger.error("No audio input: channelCount=0, sampleRate=\(inputFormat.sampleRate)")
             throw AppError.noAudioInputDevice
         }
 

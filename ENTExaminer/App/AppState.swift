@@ -24,7 +24,7 @@ private func debugLog(_ message: String) {
 @Observable
 final class AppState {
     var currentPhase: AppPhase = .idle
-    var selectedSection: AppSection = .library
+    var selectedSection: AppSection? = .library
     var error: AppError?
     var showError: Bool = false
     var showSettings: Bool = false

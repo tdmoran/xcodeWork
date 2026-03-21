@@ -285,19 +285,28 @@ struct ExaminationView: View {
     }
 
     private var controlBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             if sessionState.status == .paused {
                 Button {
                     Task { await appState.resumeExamination() }
                 } label: {
+                    #if os(iOS)
                     Label("Resume", systemImage: "play.fill")
+                        .labelStyle(.titleAndIcon)
+                    #else
+                    Label("Resume", systemImage: "play.fill")
+                    #endif
                 }
                 .buttonStyle(.borderedProminent)
             } else if sessionState.status != .finished && sessionState.status != .notStarted {
                 Button {
                     Task { await appState.pauseExamination() }
                 } label: {
+                    #if os(iOS)
+                    Image(systemName: "pause.fill")
+                    #else
                     Label("Pause", systemImage: "pause.fill")
+                    #endif
                 }
                 .buttonStyle(.bordered)
             }
@@ -305,24 +314,36 @@ struct ExaminationView: View {
             Button {
                 Task { await appState.toggleTeachingMode() }
             } label: {
+                #if os(iOS)
+                Image(systemName: sessionState.isTeachingMode ? "graduationcap.fill" : "lightbulb.fill")
+                #else
                 if sessionState.isTeachingMode {
                     Label("Resume Exam", systemImage: "graduationcap.fill")
                 } else {
                     Label("Teach Me", systemImage: "lightbulb.fill")
                 }
+                #endif
             }
             .buttonStyle(.bordered)
             .tint(sessionState.isTeachingMode ? .blue : .orange)
 
+            Spacer()
+
             Button {
                 Task { await appState.stopExamination() }
             } label: {
+                #if os(iOS)
+                Image(systemName: "stop.fill")
+                    .foregroundStyle(.red)
+                #else
                 Label("End Conversation", systemImage: "stop.fill")
                     .foregroundStyle(.red)
+                #endif
             }
             .buttonStyle(.bordered)
         }
-        .padding(12)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 
     // MARK: - Dialogue Bubble

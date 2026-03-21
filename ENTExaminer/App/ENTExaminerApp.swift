@@ -1,9 +1,29 @@
 import SwiftUI
 import AppKit
 
+private func appDebugLog(_ message: String) {
+    let url = URL(fileURLWithPath: "/tmp/entexaminer_debug.log")
+    let line = "\(Date()): \(message)\n"
+    if let data = line.data(using: .utf8) {
+        if FileManager.default.fileExists(atPath: url.path) {
+            if let handle = try? FileHandle(forWritingTo: url) {
+                handle.seekToEndOfFile()
+                handle.write(data)
+                handle.closeFile()
+            }
+        } else {
+            try? data.write(to: url)
+        }
+    }
+}
+
 @main
 struct ENTExaminerApp: App {
     @State private var appState = AppState()
+
+    init() {
+        appDebugLog("ENTExaminerApp initialized")
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -11,6 +31,7 @@ struct ENTExaminerApp: App {
                 .environment(appState)
                 .frame(minWidth: 900, minHeight: 650)
                 .onAppear {
+                    appDebugLog("ContentView appeared")
                     let iconPath = Bundle.main.path(forResource: "AppIcon", ofType: "icns")
                         ?? Self.findIconPath()
                     if let path = iconPath, let icon = NSImage(contentsOfFile: path) {

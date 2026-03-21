@@ -1,7 +1,30 @@
 import SwiftUI
+import OSLog
+
+private let logger = Logger(subsystem: "com.entexaminer", category: "ContentView")
+
+private func debugLog(_ message: String) {
+    let url = URL(fileURLWithPath: "/tmp/entexaminer_debug.log")
+    let line = "\(Date()): \(message)\n"
+    if let data = line.data(using: .utf8) {
+        if FileManager.default.fileExists(atPath: url.path) {
+            if let handle = try? FileHandle(forWritingTo: url) {
+                handle.seekToEndOfFile()
+                handle.write(data)
+                handle.closeFile()
+            }
+        } else {
+            try? data.write(to: url)
+        }
+    }
+}
 
 struct ContentView: View {
     @Environment(AppState.self) private var appState
+
+    init() {
+        debugLog("ContentView initialized")
+    }
 
     var body: some View {
         @Bindable var state = appState
@@ -51,6 +74,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detailView: some View {
+        let _ = debugLog("detailView: selectedSection = \(appState.selectedSection)")
         Group {
             switch appState.selectedSection {
             case .library:
@@ -182,15 +206,43 @@ struct ContentView: View {
 struct SidebarView: View {
     @Environment(AppState.self) private var appState
 
+    init() {
+        debugLog("SidebarView initialized")
+    }
+
     var body: some View {
         @Bindable var state = appState
+        let _ = debugLog("SidebarView body computed")
 
-        List(selection: $state.selectedSection) {
+        List {
             ForEach(AppSection.sidebarSections) { section in
-                Label(section.title, systemImage: section.systemImage)
-                    .tag(section)
-                    .foregroundStyle(isSectionEnabled(section) ? .primary : .secondary)
-                    .badge(badgeCount(for: section))
+                Button {
+                    debugLog("Button clicked: \(section.title)")
+                    if isSectionEnabled(section) {
+                        debugLog("Setting selectedSection to: \(section)")
+                        state.selectedSection = section
+                    } else {
+                        debugLog("Section disabled: \(section.title)")
+                    }
+                } label: {
+                    HStack {
+                        Label(section.title, systemImage: section.systemImage)
+                            .foregroundStyle(isSectionEnabled(section) ? .primary : .secondary)
+                        Spacer()
+                        if badgeCount(for: section) > 0 {
+                            Text("\(badgeCount(for: section))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(Color.secondary.opacity(0.2), in: Capsule())
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(!isSectionEnabled(section))
+                .listRowBackground(state.selectedSection == section ? Color.accentColor.opacity(0.2) : Color.clear)
             }
         }
         .listStyle(.sidebar)

@@ -5,7 +5,7 @@ import OSLog
 private let logger = Logger(subsystem: "com.examiner", category: "AppState")
 
 private func debugLog(_ message: String) {
-    let url = FileManager.default.temporaryDirectory.appendingPathComponent("entexaminer_debug.log")
+    let url = URL(fileURLWithPath: "/tmp/entexaminer_debug.log")
     let line = "\(Date()): \(message)\n"
     if let data = line.data(using: .utf8) {
         if FileManager.default.fileExists(atPath: url.path) {
@@ -60,7 +60,9 @@ final class AppState {
             debugLog("init: hasAnthropicKey=\(hasAnthropicKey), hasElevenLabsKey=\(hasElevenLabsKey)")
             if !hasAnthropicKey || !hasElevenLabsKey {
                 showOnboarding = true
-                debugLog("init: showing onboarding")
+                debugLog("init: showing onboarding because keys missing")
+            } else {
+                debugLog("init: keys found, skipping onboarding")
             }
 
             // Load persisted library

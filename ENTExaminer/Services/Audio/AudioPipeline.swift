@@ -328,8 +328,25 @@ actor AudioPipeline {
     // MARK: - Playback
 
     func playAudioChunk(_ data: Data, format: AudioFormat) async throws {
+        // Debug logging
+        let debugUrl = URL(fileURLWithPath: "/tmp/entexaminer_audio.log")
+        let debugLine = "\(Date()): playAudioChunk called, data size: \(data.count), format: \(format)\n"
+        if let data = debugLine.data(using: .utf8) {
+            if FileManager.default.fileExists(atPath: debugUrl.path) {
+                if let handle = try? FileHandle(forWritingTo: debugUrl) {
+                    handle.seekToEndOfFile()
+                    handle.write(data)
+                    handle.closeFile()
+                }
+            } else {
+                try? data.write(to: debugUrl)
+            }
+        }
+        
         guard let playerNode = playbackPlayerNode, let engine, engine.isRunning else {
-            throw AppError.audioEngineFailure("Audio engine is not running for playback")
+            let errorMsg = "Audio engine is not running for playback - playerNode: \(playbackPlayerNode != nil), engine: \(engine != nil), running: \(engine?.isRunning ?? false)"
+            logger.error("\(errorMsg)")
+            throw AppError.audioEngineFailure(errorMsg)
         }
 
         let pcmBuffer: AVAudioPCMBuffer

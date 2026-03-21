@@ -384,11 +384,8 @@ actor ExaminationEngine {
     private func showThinkingPause() async {
         await state.update(status: .thinking)
 
-        // Vary the pause: 0.8-2.0 seconds
-        let baseDelay = 0.8
-        let variability = Double.random(in: 0.0...1.2)
-        let delaySeconds = baseDelay + variability
-
+        // Brief pause: 0.3-0.7 seconds — just enough to feel natural
+        let delaySeconds = 0.3 + Double.random(in: 0.0...0.4)
         try? await Task.sleep(for: .seconds(delaySeconds))
     }
 

@@ -57,12 +57,12 @@ actor AppleSpeechSTTService: STTService {
     ///
     /// - Parameters:
     ///   - locale: The locale for speech recognition (default: current).
-    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 5.0).
+    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 3.0).
     ///   - energyThreshold: RMS energy below which audio is classified as silence (default: 0.008).
     ///   - audioPipeline: Optional reference to stop playback engine before capturing.
     init(
         locale: Locale = .current,
-        silenceTimeout: TimeInterval = 5.0,
+        silenceTimeout: TimeInterval = 3.0,
         energyThreshold: Float = 0.008,
         audioPipeline: AudioPipeline? = nil
     ) {
@@ -92,9 +92,8 @@ actor AppleSpeechSTTService: STTService {
         if let pipeline = audioPipeline {
             await pipeline.stopCapture()
             await pipeline.stopPlayback()
-            // CoreAudio needs time to fully release the aggregate device
-            // created by voice processing. 1.5s is conservative but reliable.
-            try? await Task.sleep(for: .milliseconds(1500))
+            // Give CoreAudio time to release the audio device
+            try? await Task.sleep(for: .milliseconds(500))
             logger.info("Stopped AudioPipeline before STT capture")
         }
 

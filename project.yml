@@ -119,6 +119,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: "VocalCards"
         INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2024 ENTExaminer. All rights reserved."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "ENTExaminer uses speech recognition to transcribe your answers"
+        UIFileSharingEnabled: true
+        INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: true
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"

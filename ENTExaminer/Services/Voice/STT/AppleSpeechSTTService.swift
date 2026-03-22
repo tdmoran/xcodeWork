@@ -52,6 +52,33 @@ actor AppleSpeechSTTService: STTService {
     private var hasAuthorized: Bool = false
     private var cachedRecognizer: SFSpeechRecognizer?
 
+    // Thread-safe stop flag — can be set from any thread/actor via requestStop()
+    private let stopFlag = StopFlag()
+
+    /// Thread-safe, non-isolated stop flag. Can be called from any context.
+    final class StopFlag: @unchecked Sendable {
+        private var _stopped = false
+        private let lock = NSLock()
+
+        var isStopped: Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            return _stopped
+        }
+
+        func stop() {
+            lock.lock()
+            _stopped = true
+            lock.unlock()
+        }
+
+        func reset() {
+            lock.lock()
+            _stopped = false
+            lock.unlock()
+        }
+    }
+
     // MARK: - VAD State
 
     private var vad: EnergyVAD
@@ -87,6 +114,9 @@ actor AppleSpeechSTTService: STTService {
         onPartialTranscript: @escaping @Sendable (String) -> Void,
         onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws -> String {
+        // Reset stop flag at the start of each listen session
+        stopFlag.reset()
+
         // Force cleanup of any stale previous session
         if isCurrentlyListening {
             logger.warning("listen() called while already listening; cleaning up previous session")
@@ -167,7 +197,13 @@ actor AppleSpeechSTTService: STTService {
     }
 
     func stopListening() async {
-        tearDown()
+        logger.info("stopListening called — setting stop flag")
+        requestStop()
+    }
+
+    /// Non-isolated: can be called from any actor/thread to request immediate stop.
+    nonisolated func requestStop() {
+        stopFlag.stop()
     }
 
     // MARK: - Authorization
@@ -271,6 +307,11 @@ actor AppleSpeechSTTService: STTService {
         self.recognitionRequest = request
         self.isCurrentlyListening = true
 
+        // Capture stop flag and a weak ref to the recognition task for the audio tap
+        let capturedStopFlag = self.stopFlag
+        weak var weakRecogTask: SFSpeechRecognitionTask?
+        var stopHandled = false
+
         // Install input tap BEFORE starting recognition so audio is flowing
         // when the recognizer begins. This prevents "No speech detected" errors.
         inputNode.installTap(
@@ -278,6 +319,15 @@ actor AppleSpeechSTTService: STTService {
             bufferSize: 1024,
             format: nativeFormat
         ) { buffer, _ in
+            // Check stop flag on every buffer (~40x/sec) — no actor hop needed
+            if capturedStopFlag.isStopped && !stopHandled {
+                stopHandled = true
+                logger.debug("Stop flag detected in audio tap — finishing recognition")
+                request.endAudio()
+                weakRecogTask?.finish()
+                return
+            }
+
             // Feed buffer to speech recognizer (thread-safe per Apple docs)
             request.append(buffer)
 
@@ -359,6 +409,7 @@ actor AppleSpeechSTTService: STTService {
             }
 
             self.recognitionTask = task
+            weakRecogTask = task
         }
     }
 

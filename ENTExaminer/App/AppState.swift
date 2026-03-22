@@ -52,6 +52,8 @@ final class AppState {
     private let audioPipeline = AudioPipeline()
     private var documentAnalyzer: DocumentAnalyzer?
     private var examinationEngine: ExaminationEngine?
+    private var currentSTTService: AppleSpeechSTTService?
+    private var currentTTSService: ElevenLabsTTSService?
 
     init() {
         Task {
@@ -448,6 +450,8 @@ final class AppState {
         )
 
         let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
+        currentSTTService = sttService
+        currentTTSService = ttsService
 
         let engine = ExaminationEngine(
             state: sessionState,
@@ -506,6 +510,8 @@ final class AppState {
         )
 
         let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
+        currentSTTService = sttService
+        currentTTSService = ttsService
 
         let engine = ExaminationEngine(
             state: sessionState,
@@ -569,7 +575,15 @@ final class AppState {
     }
 
     func skipCurrentTurn() async {
-        await examinationEngine?.skipCurrentTurn()
+        // Stop STT — non-isolated call, fires immediately
+        currentSTTService?.requestStop()
+
+        // Stop TTS playback directly — bypasses engine actor
+        await currentTTSService?.stopSpeaking()
+        await audioPipeline.stopPlayback()
+
+        // Update UI state
+        examinationState?.update(isSpeaking: false)
     }
 
     func toggleTeachingMode() async {

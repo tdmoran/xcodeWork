@@ -46,6 +46,52 @@ struct CaseBankView: View {
     // MARK: - Filters
 
     private var filters: some View {
+        #if os(iOS)
+        VStack(spacing: 12) {
+            HStack {
+                Picker("Subspecialty", selection: $selectedSubspecialty) {
+                    Text("All Subspecialties").tag(nil as ENTSubspecialty?)
+                    ForEach(ENTSubspecialty.allCases, id: \.self) { sub in
+                        Text(sub.displayName).tag(sub as ENTSubspecialty?)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Spacer()
+
+                Picker("Difficulty", selection: $selectedDifficulty) {
+                    Text("All Levels").tag(nil as CaseDifficulty?)
+                    ForEach(CaseDifficulty.allCases, id: \.self) { diff in
+                        Text(diff.displayName).tag(diff as CaseDifficulty?)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+
+            HStack {
+                Text("\(filteredCases.count) cases")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Button {
+                    if let randomCase = CaseBank.randomCase(
+                        subspecialty: selectedSubspecialty,
+                        difficulty: selectedDifficulty
+                    ) {
+                        Task { await appState.startCaseExamination(randomCase) }
+                    }
+                } label: {
+                    Label("Random Case", systemImage: "dice.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(filteredCases.isEmpty)
+            }
+        }
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        #else
         HStack(spacing: 16) {
             Picker("Subspecialty", selection: $selectedSubspecialty) {
                 Text("All Subspecialties").tag(nil as ENTSubspecialty?)
@@ -84,6 +130,7 @@ struct CaseBankView: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        #endif
     }
 
     // MARK: - Case Grid

@@ -965,6 +965,8 @@
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ENTExaminer uses speech recognition to transcribe your answers";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_FILE = ENTExaminer/Info-iOS.plist;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1118,6 +1120,8 @@
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ENTExaminer uses speech recognition to transcribe your answers";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_FILE = ENTExaminer/Info-iOS.plist;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

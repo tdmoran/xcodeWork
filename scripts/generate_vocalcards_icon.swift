@@ -4,25 +4,17 @@ import AppKit
 import CoreGraphics
 
 // MARK: - VocalCards Icon Generator
-// Design: Deep teal/navy gradient background with a bold white card
-// featuring a vibrant coral-orange waveform. Clean, modern, distinctive.
+// Design: Clean blue gradient background with white microphone and waveform bars.
+// Simple, modern, reads well at all sizes.
 
 struct IconGenerator {
 
-    // Background gradient: deep navy-teal
+    // Blue gradient colors
     static let gradientTopColor = NSColor(
-        calibratedRed: 0.05, green: 0.12, blue: 0.22, alpha: 1.0
+        calibratedRed: 0.20, green: 0.50, blue: 0.95, alpha: 1.0
     )
     static let gradientBottomColor = NSColor(
-        calibratedRed: 0.08, green: 0.38, blue: 0.42, alpha: 1.0
-    )
-
-    // Accent: vibrant coral-orange
-    static let accentColor = NSColor(
-        calibratedRed: 0.96, green: 0.38, blue: 0.27, alpha: 1.0
-    )
-    static let accentColorDeep = NSColor(
-        calibratedRed: 0.85, green: 0.25, blue: 0.18, alpha: 1.0
+        calibratedRed: 0.10, green: 0.30, blue: 0.80, alpha: 1.0
     )
 
     static func generateIcon(size: Int) -> NSImage {
@@ -45,7 +37,7 @@ struct IconGenerator {
         context.saveGState()
         bgPath.addClip()
 
-        // Draw gradient background
+        // Draw blue gradient background (bottom-left to top-right for depth)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let gradientColors = [
             gradientBottomColor.cgColor,
@@ -60,27 +52,42 @@ struct IconGenerator {
             context.drawLinearGradient(
                 gradient,
                 start: CGPoint(x: 0, y: 0),
-                end: CGPoint(x: s * 0.3, y: s),
+                end: CGPoint(x: s * 0.4, y: s),
                 options: []
             )
         }
 
-        // --- Card shape (white, bold, centered) ---
-        drawCard(in: context, size: s)
+        // --- Subtle lighter overlay at top for polish ---
+        let overlayColors = [
+            NSColor(white: 1.0, alpha: 0.12).cgColor,
+            NSColor(white: 1.0, alpha: 0.0).cgColor
+        ] as CFArray
+        if let overlayGrad = CGGradient(
+            colorsSpace: colorSpace,
+            colors: overlayColors,
+            locations: [0.0, 1.0]
+        ) {
+            context.drawLinearGradient(
+                overlayGrad,
+                start: CGPoint(x: s * 0.5, y: s),
+                end: CGPoint(x: s * 0.5, y: s * 0.4),
+                options: []
+            )
+        }
 
-        // --- Waveform bars on the card ---
-        drawWaveform(in: context, size: s)
+        // --- Microphone (white) ---
+        drawMicrophone(in: context, size: s)
 
-        // --- Small microphone icon below waveform ---
-        drawMicIcon(in: context, size: s)
+        // --- Waveform bars flanking the microphone ---
+        drawWaveformBars(in: context, size: s)
 
-        // --- Subtle inner border ---
+        // --- Subtle inner highlight border ---
         context.saveGState()
-        let innerRect = rect.insetBy(dx: s * 0.006, dy: s * 0.006)
-        let innerRadius = cornerRadius - s * 0.006
+        let innerRect = rect.insetBy(dx: s * 0.005, dy: s * 0.005)
+        let innerRadius = cornerRadius - s * 0.005
         let innerPath = NSBezierPath(roundedRect: innerRect, xRadius: innerRadius, yRadius: innerRadius)
-        NSColor(white: 1.0, alpha: 0.05).setStroke()
-        innerPath.lineWidth = s * 0.01
+        NSColor(white: 1.0, alpha: 0.08).setStroke()
+        innerPath.lineWidth = s * 0.008
         innerPath.stroke()
         context.restoreGState()
 
@@ -90,114 +97,29 @@ struct IconGenerator {
         return image
     }
 
-    static func drawCard(in context: CGContext, size s: CGFloat) {
+    static func drawMicrophone(in context: CGContext, size s: CGFloat) {
         context.saveGState()
 
-        let cardWidth = s * 0.54
-        let cardHeight = s * 0.58
-        let cardX = (s - cardWidth) / 2.0
-        let cardY = (s - cardHeight) / 2.0 + s * 0.02
-        let cardCorner = s * 0.06
-
-        // Shadow
-        context.setShadow(
-            offset: CGSize(width: 0, height: -s * 0.015),
-            blur: s * 0.07,
-            color: NSColor(white: 0.0, alpha: 0.4).cgColor
-        )
-
-        let cardRect = CGRect(x: cardX, y: cardY, width: cardWidth, height: cardHeight)
-        let cardPath = NSBezierPath(roundedRect: cardRect, xRadius: cardCorner, yRadius: cardCorner)
-        NSColor.white.setFill()
-        cardPath.fill()
-
-        context.setShadow(offset: .zero, blur: 0, color: nil)
-
-        // Subtle lined-card texture
-        NSColor(white: 0.0, alpha: 0.04).setStroke()
-        let lineStartY = cardY + s * 0.07
-        let lineEndY = cardY + cardHeight - s * 0.07
-        let lineStep = s * 0.048
-        var ly = lineStartY
-        while ly < lineEndY {
-            let linePath = NSBezierPath()
-            linePath.move(to: CGPoint(x: cardX + s * 0.045, y: ly))
-            linePath.line(to: CGPoint(x: cardX + cardWidth - s * 0.045, y: ly))
-            linePath.lineWidth = s * 0.0025
-            linePath.stroke()
-            ly += lineStep
-        }
-
-        context.restoreGState()
-    }
-
-    static func drawWaveform(in context: CGContext, size s: CGFloat) {
-        context.saveGState()
-
-        let barCount = 7
-        let barWidth = s * 0.038
-        let barSpacing = s * 0.022
-        let totalWidth = CGFloat(barCount) * barWidth + CGFloat(barCount - 1) * barSpacing
-        let startX = (s - totalWidth) / 2.0
-        let centerY = s * 0.54
-
-        // Heights (symmetric, taller in middle - audio waveform feel)
-        let barHeights: [CGFloat] = [0.045, 0.09, 0.14, 0.19, 0.14, 0.09, 0.045]
-
-        for i in 0..<barCount {
-            let h = barHeights[i] * s
-            let x = startX + CGFloat(i) * (barWidth + barSpacing)
-            let y = centerY - h / 2.0
-            let barRadius = barWidth / 2.0
-            let barRect = CGRect(x: x, y: y, width: barWidth, height: h)
-            let barPath = NSBezierPath(roundedRect: barRect, xRadius: barRadius, yRadius: barRadius)
-
-            // Gradient fill
-            context.saveGState()
-            barPath.addClip()
-            let barColors = [
-                accentColorDeep.cgColor,
-                accentColor.cgColor
-            ] as CFArray
-            if let barGrad = CGGradient(
-                colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                colors: barColors,
-                locations: [0.0, 1.0]
-            ) {
-                context.drawLinearGradient(
-                    barGrad,
-                    start: CGPoint(x: x, y: y),
-                    end: CGPoint(x: x, y: y + h),
-                    options: []
-                )
-            }
-            context.restoreGState()
-        }
-
-        context.restoreGState()
-    }
-
-    static func drawMicIcon(in context: CGContext, size s: CGFloat) {
-        context.saveGState()
+        let white = NSColor.white
 
         let centerX = s * 0.5
-        let baseY = s * 0.54 - s * 0.19 / 2.0 - s * 0.02 // just below waveform
+        // Position microphone in upper-center area
+        let micCenterY = s * 0.58
 
-        // Microphone body (rounded rectangle)
-        let micW = s * 0.032
-        let micH = s * 0.048
+        // Microphone capsule (rounded rectangle / pill shape)
+        let micW = s * 0.13
+        let micH = s * 0.20
         let micX = centerX - micW / 2.0
-        let micY = baseY - micH - s * 0.025
+        let micY = micCenterY - micH * 0.3
         let micRect = CGRect(x: micX, y: micY, width: micW, height: micH)
         let micPath = NSBezierPath(roundedRect: micRect, xRadius: micW / 2.0, yRadius: micW / 2.0)
-        accentColor.withAlphaComponent(0.75).setFill()
+        white.setFill()
         micPath.fill()
 
-        // Mic stand arc
-        let arcCenterY = micY
-        let arcRadius = s * 0.032
+        // Cradle arc (U-shape around bottom of capsule)
+        let arcCenterY = micY + s * 0.01
+        let arcRadius = s * 0.10
         let arcPath = NSBezierPath()
-        // Draw a U-shape arc below the mic body
         arcPath.appendArc(
             withCenter: CGPoint(x: centerX, y: arcCenterY),
             radius: arcRadius,
@@ -205,28 +127,72 @@ struct IconGenerator {
             endAngle: 180,
             clockwise: true
         )
-        accentColor.withAlphaComponent(0.55).setStroke()
-        arcPath.lineWidth = s * 0.007
+        white.setStroke()
+        arcPath.lineWidth = s * 0.025
+        arcPath.lineCapStyle = .round
         arcPath.stroke()
 
-        // Mic stand vertical line
+        // Stand vertical line
+        let standTop = arcCenterY - arcRadius
+        let standBottom = standTop - s * 0.10
         let standPath = NSBezierPath()
-        standPath.move(to: CGPoint(x: centerX, y: arcCenterY - arcRadius))
-        standPath.line(to: CGPoint(x: centerX, y: arcCenterY - arcRadius - s * 0.025))
-        accentColor.withAlphaComponent(0.55).setStroke()
-        standPath.lineWidth = s * 0.007
+        standPath.move(to: CGPoint(x: centerX, y: standTop))
+        standPath.line(to: CGPoint(x: centerX, y: standBottom))
+        white.setStroke()
+        standPath.lineWidth = s * 0.025
+        standPath.lineCapStyle = .round
         standPath.stroke()
 
-        // Stand base (small horizontal line)
+        // Stand base (horizontal line)
+        let baseW = s * 0.12
         let basePath = NSBezierPath()
-        let baseW = s * 0.03
-        let standBottom = arcCenterY - arcRadius - s * 0.025
         basePath.move(to: CGPoint(x: centerX - baseW / 2.0, y: standBottom))
         basePath.line(to: CGPoint(x: centerX + baseW / 2.0, y: standBottom))
-        accentColor.withAlphaComponent(0.55).setStroke()
-        basePath.lineWidth = s * 0.007
+        white.setStroke()
+        basePath.lineWidth = s * 0.025
         basePath.lineCapStyle = .round
         basePath.stroke()
+
+        context.restoreGState()
+    }
+
+    static func drawWaveformBars(in context: CGContext, size s: CGFloat) {
+        context.saveGState()
+
+        let white = NSColor(white: 1.0, alpha: 0.85)
+        let barWidth = s * 0.032
+        let barSpacing = s * 0.025
+        let centerY = s * 0.55
+
+        // Bars on the LEFT side of the microphone
+        let leftBarHeights: [CGFloat] = [0.06, 0.12, 0.18]
+        let micLeftEdge = s * 0.5 - s * 0.13 / 2.0
+        let leftStartX = micLeftEdge - s * 0.04
+
+        for i in 0..<leftBarHeights.count {
+            let h = leftBarHeights[i] * s
+            let x = leftStartX - CGFloat(i) * (barWidth + barSpacing)
+            let y = centerY - h / 2.0
+            let barRect = CGRect(x: x - barWidth, y: y, width: barWidth, height: h)
+            let barPath = NSBezierPath(roundedRect: barRect, xRadius: barWidth / 2.0, yRadius: barWidth / 2.0)
+            white.setFill()
+            barPath.fill()
+        }
+
+        // Bars on the RIGHT side of the microphone (mirrored)
+        let rightBarHeights: [CGFloat] = [0.06, 0.12, 0.18]
+        let micRightEdge = s * 0.5 + s * 0.13 / 2.0
+        let rightStartX = micRightEdge + s * 0.04
+
+        for i in 0..<rightBarHeights.count {
+            let h = rightBarHeights[i] * s
+            let x = rightStartX + CGFloat(i) * (barWidth + barSpacing)
+            let y = centerY - h / 2.0
+            let barRect = CGRect(x: x, y: y, width: barWidth, height: h)
+            let barPath = NSBezierPath(roundedRect: barRect, xRadius: barWidth / 2.0, yRadius: barWidth / 2.0)
+            white.setFill()
+            barPath.fill()
+        }
 
         context.restoreGState()
     }
@@ -283,7 +249,7 @@ if !fileManager.fileExists(atPath: outputDir) {
     try! fileManager.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
 }
 
-print("Generating VocalCards app icons...")
+print("Generating VocalCards app icons (blue + white design)...")
 print("Output: \(outputDir)\n")
 
 var allSucceeded = true

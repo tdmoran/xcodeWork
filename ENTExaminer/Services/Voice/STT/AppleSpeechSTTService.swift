@@ -47,6 +47,11 @@ actor AppleSpeechSTTService: STTService {
     private var recognitionTask: SFSpeechRecognitionTask?
     private var isCurrentlyListening: Bool = false
 
+    // MARK: - Cached State
+
+    private var hasAuthorized: Bool = false
+    private var cachedRecognizer: SFSpeechRecognizer?
+
     // MARK: - VAD State
 
     private var vad: EnergyVAD
@@ -57,13 +62,13 @@ actor AppleSpeechSTTService: STTService {
     ///
     /// - Parameters:
     ///   - locale: The locale for speech recognition (default: current).
-    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 3.0).
-    ///   - energyThreshold: RMS energy below which audio is classified as silence (default: 0.008).
+    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 1.2).
+    ///   - energyThreshold: RMS energy below which audio is classified as silence (default: 0.04).
     ///   - audioPipeline: Optional reference to stop playback engine before capturing.
     init(
         locale: Locale = .current,
-        silenceTimeout: TimeInterval = 3.0,
-        energyThreshold: Float = 0.008,
+        silenceTimeout: TimeInterval = 1.2,
+        energyThreshold: Float = 0.04,
         audioPipeline: AudioPipeline? = nil
     ) {
         self.locale = locale
@@ -92,16 +97,18 @@ actor AppleSpeechSTTService: STTService {
         if let pipeline = audioPipeline {
             await pipeline.stopCapture()
             await pipeline.stopPlayback()
-            // Give CoreAudio time to release the audio device
-            try? await Task.sleep(for: .milliseconds(500))
             logger.info("Stopped AudioPipeline before STT capture")
         }
 
-        // Step 2: Ensure authorization
-        try await requestSpeechAuthorization()
+        // Step 2: Ensure authorization (cached after first call)
+        if !hasAuthorized {
+            try await requestSpeechAuthorization()
+            hasAuthorized = true
+        }
 
         // Step 3: Validate recognizer availability
-        let recognizer = try createRecognizer()
+        let recognizer = try cachedRecognizer ?? createRecognizer()
+        if cachedRecognizer == nil { cachedRecognizer = recognizer }
 
         // Step 4: Set up audio engine and recognition
         #if os(iOS)
@@ -124,6 +131,7 @@ actor AppleSpeechSTTService: STTService {
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
+        request.addsPunctuation = true
 
         if recognizer.supportsOnDeviceRecognition {
             request.requiresOnDeviceRecognition = true
@@ -273,27 +281,9 @@ actor AppleSpeechSTTService: STTService {
             // Feed buffer to speech recognizer (thread-safe per Apple docs)
             request.append(buffer)
 
-            // Compute audio level (lightweight vDSP operation, safe on audio thread)
+            // Compute audio level for visualization
             let level = EnergyVAD.computeNormalizedLevel(buffer)
-            let rms = EnergyVAD.computeRMSEnergy(buffer)
             onAudioLevel(level)
-
-            // Log periodically (every ~50 buffers ≈ once per second)
-            if Int.random(in: 0..<50) == 0 {
-                sttLog("audio tap: rms=\(rms), level=\(level), frames=\(buffer.frameLength)")
-            }
-
-            // Dispatch VAD check off the real-time thread
-            let bufferCopy = Self.copyBuffer(buffer)
-            Task { [weak self] in
-                guard let self else { return }
-                let vadResult = await self.processVADBuffer(bufferCopy)
-
-                if case .silenceTimeout = vadResult {
-                    logger.debug("VAD silence timeout — ending recognition")
-                    await self.finishRecognitionTask()
-                }
-            }
         }
 
         // Start the audio engine BEFORE the recognition task
@@ -311,24 +301,37 @@ actor AppleSpeechSTTService: STTService {
             )
         }
 
+        // Transcript-based silence detection: if the transcript hasn't changed
+        // for silenceTimeout seconds after speech was detected, finish recognition.
+        // This is far more reliable than energy-based VAD on mobile devices where
+        // voice processing skews RMS levels.
+        let timeout = self.silenceTimeout
+
         // Now start recognition — audio is already flowing
         return try await withCheckedThrowingContinuation { continuation in
-            let task = recognizer.recognitionTask(with: request) { result, error in
+            var silenceTimer: Timer?
+
+            let task = recognizer.recognitionTask(with: request) { [weak self] result, error in
                 if let result {
                     let text = result.bestTranscription.formattedString
                     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
                     sttLog("partial transcript: \(text.prefix(80)), isFinal=\(result.isFinal)")
 
-                    // Only update if the new text is meaningful — when finish()
-                    // is called, Apple sometimes sends a final callback with an
-                    // empty or degraded transcript that would overwrite good text.
+                    // Only update if the new text is meaningful
                     if !trimmed.isEmpty {
                         transcriptHolder.update(text)
-                        // Show the full accumulated transcript (not just the current segment)
                         onPartialTranscript(transcriptHolder.current)
+
+                        // Reset the silence timer — transcript just changed
+                        silenceTimer?.invalidate()
+                        silenceTimer = Timer.scheduledTimer(withTimeInterval: timeout, repeats: false) { _ in
+                            logger.debug("Transcript silence timeout — ending recognition")
+                            self?.recognitionTask?.finish()
+                        }
                     }
 
                     if result.isFinal {
+                        silenceTimer?.invalidate()
                         let finalText = transcriptHolder.current
                         logger.info("Recognition finalized: \(finalText.prefix(80))...")
                         transcriptHolder.finalize(with: continuation, transcript: finalText)
@@ -336,13 +339,12 @@ actor AppleSpeechSTTService: STTService {
                 }
 
                 if let error {
+                    silenceTimer?.invalidate()
                     sttLog("recognition error: \(error.localizedDescription)")
-                    // Ignore cancellation errors during teardown
                     let nsError = error as NSError
                     let isCancellation = nsError.domain == "kAFAssistantErrorDomain" && nsError.code == 216
 
                     if isCancellation {
-                        // Return whatever transcript we have so far
                         let currentText = transcriptHolder.current
                         logger.info("Recognition cancelled; returning partial transcript")
                         transcriptHolder.finalize(with: continuation, transcript: currentText)

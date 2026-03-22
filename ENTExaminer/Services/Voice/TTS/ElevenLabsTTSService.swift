@@ -12,7 +12,7 @@ actor ElevenLabsTTSService: TTSService {
     private static let modelId = "eleven_flash_v2_5"
     private static let defaultStability: Double = 0.7
     private static let defaultSimilarityBoost: Double = 0.8
-    private static let streamChunkSize = 4096
+    private static let streamChunkSize = 8192
 
     // MARK: - Dependencies
 
@@ -82,23 +82,24 @@ actor ElevenLabsTTSService: TTSService {
 
             try Self.validateResponse(response)
 
+            // Buffer incoming bytes and flush in chunks for smooth playback
+            let chunkSize = Self.streamChunkSize
             var accumulatedData = Data()
-            accumulatedData.reserveCapacity(Self.streamChunkSize * 4)
+            accumulatedData.reserveCapacity(chunkSize * 2)
+            var totalBytes = 0
 
             for try await byte in bytes {
                 if Task.isCancelled { break }
-
                 accumulatedData.append(byte)
 
-                // Flush accumulated bytes as a playable chunk once we have enough
-                if accumulatedData.count >= Self.streamChunkSize {
+                if accumulatedData.count >= chunkSize {
                     let chunk = accumulatedData
                     accumulatedData = Data()
-                    accumulatedData.reserveCapacity(Self.streamChunkSize * 4)
+                    accumulatedData.reserveCapacity(chunkSize * 2)
+                    totalBytes += chunk.count
 
                     try await audioPipeline.playAudioChunk(chunk, format: .pcm24kHz)
 
-                    // Report a simple level based on audio data energy
                     let level = Self.estimateAudioLevel(from: chunk)
                     onAudioLevel(level)
                 }
@@ -106,16 +107,18 @@ actor ElevenLabsTTSService: TTSService {
 
             // Play any remaining bytes
             if !accumulatedData.isEmpty, !Task.isCancelled {
-                let finalChunk = accumulatedData
-                try await audioPipeline.playAudioChunk(finalChunk, format: .pcm24kHz)
-
-                let level = Self.estimateAudioLevel(from: finalChunk)
+                totalBytes += accumulatedData.count
+                try await audioPipeline.playAudioChunk(accumulatedData, format: .pcm24kHz)
+                let level = Self.estimateAudioLevel(from: accumulatedData)
                 onAudioLevel(level)
             }
 
+            // Wait for all queued audio to finish playing
+            await audioPipeline.waitForPlaybackCompletion()
+
             // Signal silence when done
             onAudioLevel(0)
-            logger.info("TTS stream completed")
+            logger.info("TTS stream completed (\(totalBytes) bytes)")
         }
 
         activeStreamTask = streamTask

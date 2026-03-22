@@ -875,7 +875,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "ENT Examiner";
+				INFOPLIST_KEY_CFBundleDisplayName = VocalCards;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 ENTExaminer. All rights reserved.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
@@ -960,7 +960,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "ENT Examiner";
+				INFOPLIST_KEY_CFBundleDisplayName = VocalCards;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 ENTExaminer. All rights reserved.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ENTExaminer uses speech recognition to transcribe your answers";
@@ -991,7 +991,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "ENT Examiner";
+				INFOPLIST_KEY_CFBundleDisplayName = VocalCards;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 ENTExaminer. All rights reserved.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
@@ -1113,7 +1113,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "ENT Examiner";
+				INFOPLIST_KEY_CFBundleDisplayName = VocalCards;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 ENTExaminer. All rights reserved.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ENTExaminer needs microphone access for voice examination";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ENTExaminer uses speech recognition to transcribe your answers";

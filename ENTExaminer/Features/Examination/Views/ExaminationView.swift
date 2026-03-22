@@ -327,6 +327,20 @@ struct ExaminationView: View {
             .buttonStyle(.bordered)
             .tint(sessionState.isTeachingMode ? .blue : .orange)
 
+            // Skip button — visible while examiner is speaking or listening for response
+            if sessionState.isSpeaking || sessionState.isListening {
+                Button {
+                    Task { await appState.skipCurrentTurn() }
+                } label: {
+                    #if os(iOS)
+                    Image(systemName: "forward.fill")
+                    #else
+                    Label("Skip", systemImage: "forward.fill")
+                    #endif
+                }
+                .buttonStyle(.bordered)
+            }
+
             Spacer()
 
             Button {
@@ -552,6 +566,20 @@ struct ExaminationView: View {
                         Task { await appState.pauseExamination() }
                     } label: {
                         Label("Pause", systemImage: "pause.fill")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                // Skip button for legacy mode
+                if sessionState.isSpeaking || sessionState.isListening {
+                    Button {
+                        Task { await appState.skipCurrentTurn() }
+                    } label: {
+                        #if os(iOS)
+                        Image(systemName: "forward.fill")
+                        #else
+                        Label("Skip", systemImage: "forward.fill")
+                        #endif
                     }
                     .buttonStyle(.bordered)
                 }

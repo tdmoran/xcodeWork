@@ -83,7 +83,7 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "ENTExaminer needs microphone access for voice examination"
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.education"
-        INFOPLIST_KEY_CFBundleDisplayName: "ENT Examiner"
+        INFOPLIST_KEY_CFBundleDisplayName: "VocalCards"
         INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2024 ENTExaminer. All rights reserved."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "ENTExaminer uses speech recognition to transcribe your answers"
         CODE_SIGN_ENTITLEMENTS: ENTExaminer/ENTExaminer.entitlements
@@ -116,7 +116,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "ENTExaminer needs microphone access for voice examination"
-        INFOPLIST_KEY_CFBundleDisplayName: "ENT Examiner"
+        INFOPLIST_KEY_CFBundleDisplayName: "VocalCards"
         INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2024 ENTExaminer. All rights reserved."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "ENTExaminer uses speech recognition to transcribe your answers"
         INFOPLIST_KEY_UILaunchScreen_Generation: true

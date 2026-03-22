@@ -70,7 +70,7 @@ struct OnboardingView: View {
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Color.accentColor)
 
-            Text("Welcome to ENTExaminer")
+            Text("Welcome to VocalCards")
                 .font(.largeTitle)
                 .fontWeight(.bold)
 

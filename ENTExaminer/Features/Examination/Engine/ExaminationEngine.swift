@@ -391,6 +391,27 @@ actor ExaminationEngine {
         await state.update(isSpeaking: false)
     }
 
+    /// Skips the current turn entirely.
+    /// If the examiner is speaking, triggers barge-in and stops listening so an empty
+    /// response is submitted.  If the trainee is being listened to, stops STT immediately
+    /// so the loop receives an empty/skip response and the examiner moves on.
+    func skipCurrentTurn() async {
+        let currentStatus = await state.status
+        let currentlyListening = await state.isListening
+        let currentlySpeaking = await state.isSpeaking
+
+        if currentlySpeaking {
+            // Stop examiner speech (barge-in)
+            await pipelinedSpeaker.bargeIn()
+            await state.update(isSpeaking: false)
+        }
+
+        if currentlyListening {
+            // Stop listening — STT will return whatever partial text it has (or empty)
+            await sttService.stopListening()
+        }
+    }
+
     /// Shows a brief "thinking" state before the examiner responds.
     /// Varies the delay to feel natural — shorter for follow-ups, longer for topic changes.
     private func showThinkingPause() async {
@@ -849,7 +870,7 @@ actor ExaminationEngine {
         )
 
         await capturedState.update(isSpeaking: false)
-        try await Task.sleep(for: .seconds(1))
+        try await Task.sleep(for: .milliseconds(300))
     }
 
     private func speakIntroduction() async throws {
@@ -872,7 +893,7 @@ actor ExaminationEngine {
 
         await capturedState.update(isSpeaking: false)
 
-        try await Task.sleep(for: .seconds(1))
+        try await Task.sleep(for: .milliseconds(300))
     }
 
     private func processAction(_ action: FlowController.NextAction) async throws {
@@ -943,7 +964,7 @@ actor ExaminationEngine {
         )
         await capturedState.update(turns: allTurns, performance: performance, status: .transitioning)
 
-        try await Task.sleep(for: .milliseconds(800))
+        try await Task.sleep(for: .milliseconds(300))
     }
 
     private func buildQuestionPrompt(for action: FlowController.NextAction) -> (ExamTopic, String) {

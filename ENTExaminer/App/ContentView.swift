@@ -238,7 +238,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle("Examiner")
+        .navigationTitle("VocalCards")
     }
 
     private func isSectionEnabled(_ section: AppSection) -> Bool {

@@ -5,8 +5,10 @@ struct DocumentLibraryView: View {
     @Environment(AppState.self) private var appState
     @State private var searchText = ""
     @State private var showFilePicker = false
+    @State private var showCloudPicker = false
     @State private var isDropTargeted = false
     @State private var sortOrder: SortOrder = .dateAdded
+    @State private var showImportProgress = false
 
     enum SortOrder: String, CaseIterable {
         case dateAdded = "Date Added"
@@ -47,17 +49,42 @@ struct DocumentLibraryView: View {
             allowedContentTypes: supportedTypes,
             allowsMultipleSelection: true
         ) { result in
-            if case .success(let urls) = result {
-                for url in urls {
-                    Task { await appState.importDocument(from: url) }
-                }
+            handleFileImportResult(result)
+        }
+        #if os(iOS)
+        .fileImporter(
+            isPresented: $showCloudPicker,
+            allowedContentTypes: supportedTypes,
+            allowsMultipleSelection: true
+        ) { result in
+            handleFileImportResult(result)
+        }
+        .sheet(isPresented: $showImportProgress) {
+            ImportProgressView()
+                .environment(appState)
+        }
+        .onChange(of: appState.isImporting) { _, newValue in
+            if newValue {
+                showImportProgress = true
             }
         }
+        #endif
         #if os(macOS)
         .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
             handleDrop(providers)
         }
         #endif
+    }
+
+    // MARK: - File Import Handling
+
+    private func handleFileImportResult(_ result: Result<[URL], Error>) {
+        guard case .success(let urls) = result else { return }
+        if urls.count == 1 {
+            Task { await appState.importDocument(from: urls[0]) }
+        } else if urls.count > 1 {
+            Task { await appState.importDocuments(from: urls) }
+        }
     }
 
     // MARK: - Empty State
@@ -87,6 +114,38 @@ struct DocumentLibraryView: View {
                     .foregroundStyle(.tertiary)
             }
 
+            #if os(iOS)
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    Button {
+                        showFilePicker = true
+                    } label: {
+                        Label("Browse Files", systemImage: "folder.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityLabel("Browse files to import")
+
+                    Button {
+                        showCloudPicker = true
+                    } label: {
+                        Label("Import from Cloud", systemImage: "cloud.fill")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .accessibilityLabel("Import documents from cloud storage")
+                }
+
+                if !appState.libraryDocuments.contains(where: { $0.isPreloaded }) {
+                    Button("Load Sample Cases") {
+                        Task { await appState.loadSampleDocuments() }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .accessibilityLabel("Load sample clinical cases")
+                }
+            }
+            #else
             HStack(spacing: 12) {
                 Button("Browse Files") {
                     showFilePicker = true
@@ -102,6 +161,7 @@ struct DocumentLibraryView: View {
                     .controlSize(.large)
                 }
             }
+            #endif
 
             Spacer()
         }
@@ -141,12 +201,22 @@ struct DocumentLibraryView: View {
                     Spacer()
 
                     Button {
+                        showCloudPicker = true
+                    } label: {
+                        Label("Cloud", systemImage: "cloud.fill")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .accessibilityLabel("Import from cloud storage")
+
+                    Button {
                         showFilePicker = true
                     } label: {
                         Label("Add Document", systemImage: "plus")
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .accessibilityLabel("Add Document")
                 }
             }
             .padding(.horizontal, 16)
@@ -173,6 +243,7 @@ struct DocumentLibraryView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .accessibilityLabel("Add Document")
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -228,6 +299,106 @@ struct DocumentLibraryView: View {
     }
 }
 
+// MARK: - Import Progress View
+
+struct ImportProgressView: View {
+    @Environment(AppState.self) private var appState
+    @Environment(\.dismiss) private var dismiss
+
+    private var completedCount: Int {
+        appState.importingFiles.filter { $0.status == .done }.count
+    }
+
+    private var totalCount: Int {
+        appState.importingFiles.count
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                // Overall progress header
+                VStack(spacing: 8) {
+                    Text("Importing Documents")
+                        .font(.headline)
+
+                    if totalCount > 0 {
+                        ProgressView(value: Double(completedCount), total: Double(totalCount))
+                            .progressViewStyle(.linear)
+                            .accessibilityLabel("Import progress: \(completedCount) of \(totalCount) documents")
+
+                        Text("\(completedCount) of \(totalCount)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+                // File list
+                List {
+                    ForEach(appState.importingFiles) { entry in
+                        HStack(spacing: 12) {
+                            importStatusIcon(for: entry.status)
+
+                            Text(entry.name)
+                                .font(.body)
+                                .lineLimit(1)
+
+                            Spacer()
+
+                            if case .importing = entry.status {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                        }
+                        .accessibilityLabel("\(entry.name), \(accessibilityStatusText(for: entry.status))")
+                    }
+                }
+                .listStyle(.plain)
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .disabled(appState.isImporting)
+                    .accessibilityLabel("Dismiss import progress")
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled(appState.isImporting)
+    }
+
+    @ViewBuilder
+    private func importStatusIcon(for status: ImportFileStatus) -> some View {
+        switch status {
+        case .pending:
+            Image(systemName: "circle")
+                .foregroundStyle(.tertiary)
+        case .importing:
+            Image(systemName: "arrow.down.circle.fill")
+                .foregroundStyle(.blue)
+                .symbolEffect(.pulse)
+        case .done:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        case .failed:
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundStyle(.red)
+        }
+    }
+
+    private func accessibilityStatusText(for status: ImportFileStatus) -> String {
+        switch status {
+        case .pending: return "pending"
+        case .importing: return "importing"
+        case .done: return "completed"
+        case .failed(let msg): return "failed: \(msg)"
+        }
+    }
+}
+
 // MARK: - Document Card
 
 struct DocumentCard: View {
@@ -249,10 +420,10 @@ struct DocumentCard: View {
 
                     HStack(spacing: 6) {
                         Text(document.format.displayName)
-                        Text("·")
+                        Text("\u{00B7}")
                         Text(document.fileSizeFormatted)
                         if let pages = document.pageCount {
-                            Text("·")
+                            Text("\u{00B7}")
                             Text("\(pages) pages")
                         }
                     }
@@ -304,7 +475,7 @@ struct DocumentCard: View {
                 }
 
                 if document.examCount > 0 {
-                    Text("· \(document.examCount)x")
+                    Text("\u{00B7} \(document.examCount)x")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -316,10 +487,13 @@ struct DocumentCard: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .accessibilityLabel("Examine \(document.title)")
             }
         }
         .padding(14)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Document: \(document.title)")
         .contextMenu {
             Button("Examine") {
                 Task { await appState.selectAndExamine(document) }

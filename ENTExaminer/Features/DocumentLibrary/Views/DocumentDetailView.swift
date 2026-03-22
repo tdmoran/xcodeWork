@@ -1,6 +1,8 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
 
 struct DocumentDetailView: View {
@@ -9,6 +11,10 @@ struct DocumentDetailView: View {
 
     @State private var selectedExamMode: ExamMode = .conversational
     @State private var previousSessions: [ExamSessionRecord] = []
+    #if os(iOS)
+    @State private var shareURL: URL?
+    @State private var showShareSheet = false
+    #endif
 
     var body: some View {
         ScrollView {
@@ -21,7 +27,11 @@ struct DocumentDetailView: View {
                 examHistorySection
                 actionSection
             }
+            #if os(iOS)
+            .padding(16)
+            #else
             .padding(32)
+            #endif
         }
         .task {
             await loadPreviousSessions()
@@ -331,13 +341,15 @@ struct DocumentDetailView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                     .frame(maxWidth: .infinity)
+                    .accessibilityLabel("Examine")
                 }
 
                 HStack(spacing: 10) {
                     if hasExportableSummary {
                         Button {
                             if let url = appState.saveTranscriptToFile(asMarkdown: true) {
-                                // On iOS, the file is saved; a share sheet could be presented here
+                                shareURL = url
+                                showShareSheet = true
                             }
                         } label: {
                             Label("Export", systemImage: "square.and.arrow.up")
@@ -345,6 +357,7 @@ struct DocumentDetailView: View {
                         .buttonStyle(.bordered)
                         .controlSize(.large)
                         .frame(maxWidth: .infinity)
+                        .accessibilityLabel("Export transcript")
                     }
 
                     Button("Back to Library") {
@@ -353,6 +366,12 @@ struct DocumentDetailView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.large)
                     .frame(maxWidth: .infinity)
+                    .accessibilityLabel("Back to Library")
+                }
+            }
+            .sheet(isPresented: $showShareSheet) {
+                if let shareURL {
+                    ShareSheet(activityItems: [shareURL])
                 }
             }
             #else
@@ -370,6 +389,7 @@ struct DocumentDetailView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    .accessibilityLabel("Examine")
                 }
 
                 if hasExportableSummary {
@@ -382,6 +402,7 @@ struct DocumentDetailView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.large)
+                    .accessibilityLabel("Export transcript")
                 }
 
                 Button("Back to Library") {
@@ -389,6 +410,7 @@ struct DocumentDetailView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
+                .accessibilityLabel("Back to Library")
             }
             #endif
         }
@@ -485,3 +507,21 @@ enum ExamMode: String, CaseIterable, Identifiable {
         }
     }
 }
+
+// MARK: - Share Sheet
+
+#if os(iOS)
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    var applicationActivities: [UIActivity]? = nil
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(
+            activityItems: activityItems,
+            applicationActivities: applicationActivities
+        )
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+#endif

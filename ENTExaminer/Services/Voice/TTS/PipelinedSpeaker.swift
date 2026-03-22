@@ -3,22 +3,6 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.entexaminer", category: "PipelinedSpeaker")
 
-private func speakerLog(_ message: String) {
-    let url = URL(fileURLWithPath: "/tmp/entexaminer_engine.log")
-    let line = "\(Date()): [Speaker] \(message)\n"
-    if let data = line.data(using: .utf8) {
-        if FileManager.default.fileExists(atPath: url.path) {
-            if let handle = try? FileHandle(forWritingTo: url) {
-                handle.seekToEndOfFile()
-                handle.write(data)
-                handle.closeFile()
-            }
-        } else {
-            try? data.write(to: url)
-        }
-    }
-}
-
 /// Bridges Claude streaming output to text-to-speech by accumulating text deltas,
 /// splitting on sentence boundaries, and speaking each sentence as soon as it is
 /// complete. Sentences are queued and played in order for natural pacing.
@@ -81,14 +65,12 @@ actor PipelinedSpeaker {
         var pendingSentences: [String] = []
 
         logger.info("Starting pipelined speech from Claude stream")
-        speakerLog("Starting pipelined speech")
 
         for try await event in stream {
             switch event {
             case .textDelta(let delta):
                 buffer += delta
                 fullText += delta
-                speakerLog("textDelta: \(delta.prefix(80))")
 
                 // If barged in, keep consuming stream for full text but don't speak
                 guard !bargedIn else { continue }
@@ -108,7 +90,6 @@ actor PipelinedSpeaker {
 
             case .error(let message):
                 logger.error("Stream error during pipelined speech: \(message)")
-                speakerLog("STREAM ERROR: \(message)")
                 throw AppError.apiServerError(statusCode: 0, message: message)
             }
         }
@@ -159,7 +140,6 @@ actor PipelinedSpeaker {
         onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws {
         logger.debug("Speaking sentence: \(sentence.prefix(60))...")
-        speakerLog("speakSentence: \(sentence.prefix(80))")
 
         let task = Task {
             try await ttsService.speak(

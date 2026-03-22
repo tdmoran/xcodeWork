@@ -4,22 +4,6 @@ import Speech
 
 private let logger = Logger(subsystem: "com.entexaminer", category: "AppleSpeechSTT")
 
-private func sttLog(_ message: String) {
-    let url = URL(fileURLWithPath: "/tmp/entexaminer_engine.log")
-    let line = "\(Date()): [STT] \(message)\n"
-    if let data = line.data(using: .utf8) {
-        if FileManager.default.fileExists(atPath: url.path) {
-            if let handle = try? FileHandle(forWritingTo: url) {
-                handle.seekToEndOfFile()
-                handle.write(data)
-                handle.closeFile()
-            }
-        } else {
-            try? data.write(to: url)
-        }
-    }
-}
-
 // MARK: - Apple Speech STT Service
 
 /// A speech-to-text service using Apple's `Speech` framework.
@@ -365,7 +349,6 @@ actor AppleSpeechSTTService: STTService {
                 if let result {
                     let text = result.bestTranscription.formattedString
                     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
-                    sttLog("partial transcript: \(text.prefix(80)), isFinal=\(result.isFinal)")
 
                     // Only update if the new text is meaningful
                     if !trimmed.isEmpty {
@@ -390,7 +373,6 @@ actor AppleSpeechSTTService: STTService {
 
                 if let error {
                     silenceTimer?.invalidate()
-                    sttLog("recognition error: \(error.localizedDescription)")
                     let nsError = error as NSError
                     let isCancellation = nsError.domain == "kAFAssistantErrorDomain" && nsError.code == 216
 

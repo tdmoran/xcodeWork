@@ -53,23 +53,6 @@ actor ElevenLabsTTSService: TTSService {
         cancelActiveStream()
 
         // Ensure audio engine is running for playback
-        NSLog("[ElevenLabsTTS] speak() called with text: %@", String(text.prefix(60)))
-        
-        // Write to debug log
-        let debugUrl = URL(fileURLWithPath: "/tmp/entexaminer_audio.log")
-        let debugLine = "\(Date()): TTS speak() called: \(text.prefix(50))\n"
-        if let data = debugLine.data(using: .utf8) {
-            if FileManager.default.fileExists(atPath: debugUrl.path) {
-                if let handle = try? FileHandle(forWritingTo: debugUrl) {
-                    handle.seekToEndOfFile()
-                    handle.write(data)
-                    handle.closeFile()
-                }
-            } else {
-                try? data.write(to: debugUrl)
-            }
-        }
-        
         try await audioPipeline.startPlayback()
 
         let apiKey = try await requireAPIKey()

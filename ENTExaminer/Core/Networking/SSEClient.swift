@@ -3,22 +3,6 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.entexaminer", category: "SSEClient")
 
-private func sseLog(_ message: String) {
-    let url = URL(fileURLWithPath: "/tmp/entexaminer_engine.log")
-    let line = "\(Date()): [SSE] \(message)\n"
-    if let data = line.data(using: .utf8) {
-        if FileManager.default.fileExists(atPath: url.path) {
-            if let handle = try? FileHandle(forWritingTo: url) {
-                handle.seekToEndOfFile()
-                handle.write(data)
-                handle.closeFile()
-            }
-        } else {
-            try? data.write(to: url)
-        }
-    }
-}
-
 struct SSEEvent: Sendable {
     let event: String?
     let data: String
@@ -70,7 +54,6 @@ struct SSEClient: Sendable {
                     var currentEvent: String?
                     var currentData = ""
 
-                    sseLog("Starting to read SSE lines, status=\(httpResponse.statusCode)")
                     // Note: bytes.lines skips empty lines, so we cannot rely on
                     // blank-line dispatch per the SSE spec. Instead, dispatch the
                     // previous event whenever a new "event:" line arrives (which
@@ -85,7 +68,6 @@ struct SSEClient: Sendable {
                                     event: currentEvent,
                                     data: currentData.trimmingCharacters(in: .whitespacesAndNewlines)
                                 )
-                                sseLog("Dispatching event: \(currentEvent ?? "nil")")
                                 continuation.yield(event)
                             }
                             currentEvent = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
@@ -106,7 +88,6 @@ struct SSEClient: Sendable {
                             event: currentEvent,
                             data: currentData.trimmingCharacters(in: .whitespacesAndNewlines)
                         )
-                        sseLog("Dispatching final event: \(currentEvent ?? "nil")")
                         continuation.yield(event)
                     }
 

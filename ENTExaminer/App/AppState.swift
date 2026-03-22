@@ -4,22 +4,6 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.examiner", category: "AppState")
 
-private func debugLog(_ message: String) {
-    let url = URL(fileURLWithPath: "/tmp/entexaminer_debug.log")
-    let line = "\(Date()): \(message)\n"
-    if let data = line.data(using: .utf8) {
-        if FileManager.default.fileExists(atPath: url.path) {
-            if let handle = try? FileHandle(forWritingTo: url) {
-                handle.seekToEndOfFile()
-                handle.write(data)
-                handle.closeFile()
-            }
-        } else {
-            try? data.write(to: url)
-        }
-    }
-}
-
 @MainActor
 @Observable
 final class AppState {
@@ -42,6 +26,10 @@ final class AppState {
     var dialogueSummary: DialogueSummary?
     var selectedCase: ClinicalCase?
 
+    // Import tracking
+    var importingFiles: [ImportFileEntry] = []
+    var isImporting: Bool = false
+
     // Settings
     var selectedModel: ClaudeModel = .haiku
     var selectedVoiceId: String?
@@ -59,12 +47,8 @@ final class AppState {
         Task {
             let hasAnthropicKey = await KeychainManager.shared.hasKey(account: KeychainManager.anthropicAccount)
             let hasElevenLabsKey = await KeychainManager.shared.hasKey(account: KeychainManager.elevenLabsAccount)
-            debugLog("init: hasAnthropicKey=\(hasAnthropicKey), hasElevenLabsKey=\(hasElevenLabsKey)")
             if !hasAnthropicKey || !hasElevenLabsKey {
                 showOnboarding = true
-                debugLog("init: showing onboarding because keys missing")
-            } else {
-                debugLog("init: keys found, skipping onboarding")
             }
 
             // Load persisted library
@@ -90,7 +74,7 @@ final class AppState {
             do {
                 try await DocumentStore.shared.saveLibrary(libraryDocuments)
             } catch {
-                debugLog("Failed to persist library: \(error.localizedDescription)")
+                logger.warning("Failed to persist library: \(error.localizedDescription)")
             }
         }
     }
@@ -305,6 +289,34 @@ final class AppState {
         return sections.joined(separator: "\n")
     }
 
+    // MARK: - Batch Import
+
+    /// Imports multiple documents sequentially, updating per-file progress.
+    func importDocuments(from urls: [URL]) async {
+        isImporting = true
+        importingFiles = urls.map { ImportFileEntry(name: $0.lastPathComponent, status: .pending) }
+
+        for (index, url) in urls.enumerated() {
+            importingFiles[index].status = .importing
+            do {
+                let savedPhase = currentPhase
+                await importDocument(from: url)
+                // If importDocument set an error, treat it as a failure
+                if let appError = error {
+                    importingFiles[index].status = .failed(appError.localizedDescription)
+                    error = nil
+                    showError = false
+                } else {
+                    importingFiles[index].status = .done
+                }
+                currentPhase = savedPhase
+            }
+        }
+
+        currentPhase = .idle
+        isImporting = false
+    }
+
     // MARK: - Web URL Import
 
     func importWebURL(_ urlString: String) async {
@@ -427,10 +439,8 @@ final class AppState {
 
     func startExamination() async {
         guard let document, let analysis else {
-            debugLog("startExamination: document or analysis is nil, returning")
             return
         }
-        debugLog("startExamination: starting with document")
 
         let sessionState = ExaminationSessionState()
         examinationState = sessionState
@@ -474,11 +484,9 @@ final class AppState {
             currentPhase = .complete
             selectedSection = .results
         } catch let appError as AppError {
-            debugLog("startExamination error: \(appError.localizedDescription)")
             presentError(appError)
             currentPhase = .idle
         } catch {
-            debugLog("startExamination unexpected error: \(error.localizedDescription)")
             presentError(.examinationInterrupted(reason: error.localizedDescription))
             currentPhase = .idle
         }
@@ -487,10 +495,8 @@ final class AppState {
     /// Starts a conversational Socratic examination using the current document.
     func startConversation() async {
         guard let document, let analysis else {
-            debugLog("startConversation: document or analysis is nil, returning")
             return
         }
-        debugLog("startConversation: starting with document")
 
         let sessionState = ExaminationSessionState()
         examinationState = sessionState
@@ -527,9 +533,7 @@ final class AppState {
         currentPhase = .examining
 
         do {
-            debugLog("calling engine.startConversation()")
             try await engine.startConversation()
-            debugLog("engine.startConversation() completed")
             let summary = await engine.buildDialogueSummary()
             dialogueSummary = summary
             examSummary = summary.asLegacySummary()
@@ -537,11 +541,9 @@ final class AppState {
             currentPhase = .complete
             selectedSection = .results
         } catch let appError as AppError {
-            debugLog("startConversation AppError: \(appError.localizedDescription)")
             presentError(appError)
             currentPhase = .idle
         } catch {
-            debugLog("startConversation error: \(error.localizedDescription)")
             presentError(.examinationInterrupted(reason: error.localizedDescription))
             currentPhase = .idle
         }
@@ -549,7 +551,6 @@ final class AppState {
 
     /// Starts a conversational examination from a pre-built clinical case.
     func startCaseExamination(_ clinicalCase: ClinicalCase) async {
-        debugLog("startCaseExamination: \(clinicalCase.title)")
         let caseAnalysis = clinicalCase.toAnalysis()
         let caseParsedDoc = ParsedDocument(
             text: clinicalCase.clinicalVignette,
@@ -677,6 +678,21 @@ enum AppPhase: Equatable {
     case analyzing
     case examining
     case complete
+}
+
+// MARK: - Import File Tracking
+
+enum ImportFileStatus: Equatable {
+    case pending
+    case importing
+    case done
+    case failed(String)
+}
+
+struct ImportFileEntry: Identifiable, Equatable {
+    let id = UUID()
+    let name: String
+    var status: ImportFileStatus
 }
 
 // MARK: - Sidebar Sections

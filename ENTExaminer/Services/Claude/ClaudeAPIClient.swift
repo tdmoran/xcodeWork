@@ -40,13 +40,6 @@ struct ClaudeAPIClient: Sendable {
             outputConfig: nil
         )
 
-        // Debug: dump request to file for troubleshooting
-        if let debugData = try? JSONEncoder().encode(request) {
-            let debugURL = FileManager.default.temporaryDirectory.appendingPathComponent("claude_request_debug.json")
-            try? debugData.write(to: debugURL)
-            logger.info("Debug request written to \(debugURL.path)")
-        }
-
         return try await httpClient.request(
             url: baseURL.appendingPathComponent("messages"),
             method: .post,
@@ -117,7 +110,7 @@ struct ClaudeAPIClient: Sendable {
                     )
 
                     let body = try JSONEncoder().encode(request)
-                    NSLog("[ClaudeAPI] Streaming request to model: %@", model.rawValue)
+                    logger.debug("Streaming request to model: \(model.rawValue)")
 
                     let events = sseClient.stream(
                         url: baseURL.appendingPathComponent("messages"),
@@ -135,7 +128,7 @@ struct ClaudeAPIClient: Sendable {
 
                     continuation.finish()
                 } catch {
-                    NSLog("[ClaudeAPI] STREAM ERROR: %@", "\(error)")
+                    logger.error("Stream error: \(error)")
                     if !Task.isCancelled {
                         continuation.finish(throwing: error)
                     }

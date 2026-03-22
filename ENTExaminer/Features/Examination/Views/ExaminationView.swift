@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct ExaminationView: View {
     @Environment(AppState.self) private var appState
@@ -74,6 +77,23 @@ struct ExaminationView: View {
             // Controls
             controlBar
         }
+        #if os(iOS)
+        .onChange(of: sessionState.isSpeaking) { _, newValue in
+            if newValue {
+                triggerHaptic(.light)
+            }
+        }
+        .onChange(of: sessionState.isListening) { _, newValue in
+            if newValue {
+                triggerHaptic(.medium)
+            }
+        }
+        .onChange(of: sessionState.status) { _, newValue in
+            if newValue == .finished {
+                triggerNotificationHaptic(.success)
+            }
+        }
+        #endif
     }
 
     private var documentContextHeader: some View {
@@ -156,6 +176,31 @@ struct ExaminationView: View {
                         )
                         .opacity(0.6)
                         .id("live-transcript")
+                    }
+
+                    // Thinking indicator
+                    if sessionState.status == .thinking {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "stethoscope")
+                                .font(.callout)
+                                .foregroundStyle(.white)
+                                .frame(width: 32, height: 32)
+                                .background(Color.blue.gradient, in: Circle())
+
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text("Mr. Gogarty is thinking...")
+                                    .font(.callout)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(10)
+                            .background(Color.blue.opacity(0.08), in: ChatBubbleShape(isFromUser: false))
+
+                            Spacer(minLength: 60)
+                        }
+                        .transition(.opacity)
+                        .id("thinking-indicator")
                     }
                 }
                 .padding(16)
@@ -330,6 +375,9 @@ struct ExaminationView: View {
             // Skip button — visible while examiner is speaking or listening for response
             if sessionState.isSpeaking || sessionState.isListening {
                 Button {
+                    #if os(iOS)
+                    triggerHaptic(.light)
+                    #endif
                     Task { await appState.skipCurrentTurn() }
                 } label: {
                     #if os(iOS)
@@ -681,6 +729,18 @@ struct ExaminationView: View {
         let secs = Int(seconds) % 60
         return String(format: "%d:%02d", mins, secs)
     }
+
+    #if os(iOS)
+    private func triggerHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        let generator = UIImpactFeedbackGenerator(style: style)
+        generator.impactOccurred()
+    }
+
+    private func triggerNotificationHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(type)
+    }
+    #endif
 
     private func scrollToLatest(proxy: ScrollViewProxy) {
         if let lastId = sessionState.dialogueMessages.last?.id {

@@ -3,22 +3,6 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.entexaminer", category: "ExaminationEngine")
 
-private func engineLog(_ message: String) {
-    let url = URL(fileURLWithPath: "/tmp/entexaminer_engine.log")
-    let line = "\(Date()): \(message)\n"
-    if let data = line.data(using: .utf8) {
-        if FileManager.default.fileExists(atPath: url.path) {
-            if let handle = try? FileHandle(forWritingTo: url) {
-                handle.seekToEndOfFile()
-                handle.write(data)
-                handle.closeFile()
-            }
-        } else {
-            try? data.write(to: url)
-        }
-    }
-}
-
 @MainActor
 @Observable
 final class ExaminationSessionState {
@@ -127,8 +111,8 @@ actor ExaminationEngine {
         self.claudeClient = claudeClient
         self.ttsService = ttsService
         self.sttService = sttService
-        self.voiceId = config.voiceId ?? "21m00Tcm4TlvDq8ikWAM"
-        self.pipelinedSpeaker = PipelinedSpeaker(ttsService: ttsService, voiceId: config.voiceId ?? "21m00Tcm4TlvDq8ikWAM")
+        self.voiceId = config.voiceId ?? "JBFqnCBsd6RMkjVDRZzb"
+        self.pipelinedSpeaker = PipelinedSpeaker(ttsService: ttsService, voiceId: config.voiceId ?? "JBFqnCBsd6RMkjVDRZzb")
         self.flowController = FlowController()
         self.dialogueFlowController = DialogueFlowController()
         self.performanceCalculator = PerformanceCalculator()
@@ -167,6 +151,7 @@ actor ExaminationEngine {
         }
 
         timerTask?.cancel()
+        assessmentTask?.cancel()
         await state.update(status: .finished)
         logger.info("Examination complete: \(self.allTurns.count) questions asked")
     }
@@ -177,7 +162,6 @@ actor ExaminationEngine {
     /// Instead of rigid question→answer→evaluate cycles, this creates a flowing
     /// conversation where the examiner responds to what the trainee actually says.
     func startConversation() async throws {
-        engineLog("startConversation called with model: \(self.config.model.rawValue)")
         logger.info("Starting conversational examination with \(self.config.model.displayName)")
 
         startTime = Date()
@@ -208,7 +192,6 @@ actor ExaminationEngine {
 
             // 2. Check if trainee wants to end the conversation
             if isStopRequest(traineeText) {
-                engineLog("Trainee requested stop: \(traineeText.prefix(40))")
                 let closingText = "Grand, we'll leave it there. Well done — good session."
                 let capturedState = state
                 await capturedState.update(currentQuestion: .some(closingText), isSpeaking: true)
@@ -267,7 +250,6 @@ actor ExaminationEngine {
     func setTeachingMode(_ enabled: Bool) async {
         isTeachingMode = enabled
         await state.update(isTeachingMode: enabled)
-        engineLog("Teaching mode: \(enabled)")
     }
 
     func pause() async {
@@ -342,9 +324,7 @@ actor ExaminationEngine {
         lastBargeInText = nil
 
         // Build the Claude prompt for this conversational move
-        engineLog("speakExaminerMove: intent=\(move.intent)")
         let stream = generateConversationalStream(move: move)
-        engineLog("Stream created, calling pipelinedSpeaker.speakStream")
 
         let examinerText = try await pipelinedSpeaker.speakStream(
             stream,
@@ -356,7 +336,6 @@ actor ExaminationEngine {
             }
         )
 
-        engineLog("speakStream returned: \(examinerText.prefix(80))")
         let wasInterrupted = await pipelinedSpeaker.wasBargedIn
 
         await capturedState.update(
@@ -424,7 +403,6 @@ actor ExaminationEngine {
 
     /// Listens for the trainee's response with live transcript updates.
     private func listenToTrainee() async throws -> String {
-        engineLog("listenToTrainee: starting")
         let capturedState = state
 
         await capturedState.update(
@@ -448,7 +426,6 @@ actor ExaminationEngine {
         )
 
         await capturedState.update(isListening: false, userTranscript: traineeText)
-        engineLog("listenToTrainee: got text: \(traineeText.prefix(80))")
 
         // Record in Claude conversation history
         conversationHistory = conversationHistory + [
@@ -488,10 +465,19 @@ actor ExaminationEngine {
         // Allow longer responses in teaching mode
         let tokens = isTeachingMode ? 512 : 150
 
+        // Trim conversation history sent to API: keep first 2 + last 18 messages
+        // to limit payload size while preserving opening context and recent exchanges.
+        let trimmedHistory: [ClaudeMessage]
+        if conversationHistory.count > 20 {
+            trimmedHistory = Array(conversationHistory.prefix(2)) + Array(conversationHistory.suffix(18))
+        } else {
+            trimmedHistory = conversationHistory
+        }
+
         return claudeClient.stream(
             model: config.model,
             system: systemPrompt,
-            messages: conversationHistory + [guidance],
+            messages: trimmedHistory + [guidance],
             maxTokens: tokens
         )
     }
@@ -854,7 +840,6 @@ actor ExaminationEngine {
         let intro = "Right, today we're covering \(topicName). " +
             "Structure your answers in clear points, like a real viva. Let's go."
 
-        engineLog("speakIntroductionForConversation: \(intro.prefix(80))")
         let capturedState = state
         await capturedState.update(currentQuestion: .some(intro), isSpeaking: true)
 
@@ -875,7 +860,6 @@ actor ExaminationEngine {
 
     private func speakIntroduction() async throws {
         let intro = "Welcome to your examination on \(analysis.documentSummary)."
-        NSLog("[ExamEngine] speakIntroduction: %@", String(intro.prefix(80)))
 
         let capturedState = state
         await capturedState.update(currentQuestion: .some(intro), isSpeaking: true)

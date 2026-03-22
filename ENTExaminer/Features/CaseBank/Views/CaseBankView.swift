@@ -87,6 +87,7 @@ struct CaseBankView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(filteredCases.isEmpty)
+                .accessibilityLabel("Random Case")
             }
         }
         .padding()
@@ -127,6 +128,7 @@ struct CaseBankView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(filteredCases.isEmpty)
+            .accessibilityLabel("Random Case")
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
@@ -168,6 +170,7 @@ struct CaseBankView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .accessibilityLabel("Start Viva for \(clinicalCase.title)")
             }
 
             // Vignette

@@ -1,30 +1,7 @@
 import SwiftUI
-import OSLog
-
-private let logger = Logger(subsystem: "com.entexaminer", category: "ContentView")
-
-private func debugLog(_ message: String) {
-    let url = URL(fileURLWithPath: "/tmp/entexaminer_debug.log")
-    let line = "\(Date()): \(message)\n"
-    if let data = line.data(using: .utf8) {
-        if FileManager.default.fileExists(atPath: url.path) {
-            if let handle = try? FileHandle(forWritingTo: url) {
-                handle.seekToEndOfFile()
-                handle.write(data)
-                handle.closeFile()
-            }
-        } else {
-            try? data.write(to: url)
-        }
-    }
-}
 
 struct ContentView: View {
     @Environment(AppState.self) private var appState
-
-    init() {
-        debugLog("ContentView initialized")
-    }
 
     var body: some View {
         @Bindable var state = appState
@@ -76,7 +53,6 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detailView: some View {
-        let _ = debugLog("detailView: selectedSection = \(String(describing: appState.selectedSection))")
         Group {
             switch appState.selectedSection ?? .library {
             case .library:
@@ -156,6 +132,7 @@ struct ContentView: View {
                 Image(systemName: examState.status == .paused ? "play.circle.fill" : "pause.circle.fill")
                     .symbolRenderingMode(.hierarchical)
             }
+            .accessibilityLabel(examState.status == .paused ? "Resume examination" : "Pause examination")
 
             Button {
                 Task { await appState.stopExamination() }
@@ -164,6 +141,7 @@ struct ContentView: View {
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(.red)
             }
+            .accessibilityLabel("Stop examination")
         }
 
         Button {
@@ -175,12 +153,14 @@ struct ContentView: View {
         } label: {
             Label("Quick Start", systemImage: "play.fill")
         }
+        .accessibilityLabel("Quick Start with random case")
 
         Button {
             appState.showSettings = true
         } label: {
             Image(systemName: "gearshape")
         }
+        .accessibilityLabel("Settings")
     }
 
     #if os(macOS)
@@ -210,13 +190,8 @@ struct ContentView: View {
 struct SidebarView: View {
     @Environment(AppState.self) private var appState
 
-    init() {
-        debugLog("SidebarView initialized")
-    }
-
     var body: some View {
         @Bindable var state = appState
-        let _ = debugLog("SidebarView body computed")
 
         List(selection: $state.selectedSection) {
             ForEach(AppSection.sidebarSections) { section in
@@ -235,6 +210,7 @@ struct SidebarView: View {
                 }
                 .tag(section)
                 .disabled(!isSectionEnabled(section))
+                .accessibilityLabel(section.title)
             }
         }
         .listStyle(.sidebar)

@@ -5,7 +5,6 @@ struct DocumentLibraryView: View {
     @Environment(AppState.self) private var appState
     @State private var searchText = ""
     @State private var showFilePicker = false
-    @State private var showCloudPicker = false
     @State private var isDropTargeted = false
     @State private var sortOrder: SortOrder = .dateAdded
     @State private var showImportProgress = false
@@ -52,13 +51,6 @@ struct DocumentLibraryView: View {
             handleFileImportResult(result)
         }
         #if os(iOS)
-        .fileImporter(
-            isPresented: $showCloudPicker,
-            allowedContentTypes: supportedTypes,
-            allowsMultipleSelection: true
-        ) { result in
-            handleFileImportResult(result)
-        }
         .sheet(isPresented: $showImportProgress) {
             ImportProgressView()
                 .environment(appState)
@@ -127,7 +119,7 @@ struct DocumentLibraryView: View {
                     .accessibilityLabel("Browse files to import")
 
                     Button {
-                        showCloudPicker = true
+                        showFilePicker = true
                     } label: {
                         Label("Import from Cloud", systemImage: "cloud.fill")
                     }
@@ -201,7 +193,7 @@ struct DocumentLibraryView: View {
                     Spacer()
 
                     Button {
-                        showCloudPicker = true
+                        showFilePicker = true
                     } label: {
                         Label("Cloud", systemImage: "cloud.fill")
                     }

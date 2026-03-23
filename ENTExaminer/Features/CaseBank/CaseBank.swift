@@ -10,6 +10,7 @@ enum ENTSubspecialty: String, Codable, CaseIterable, Sendable {
     case laryngology = "Laryngology"
     case generalKnowledge = "General Knowledge"
     case infectiousDiseases = "Infectious Diseases"
+    case generalSurgery = "General Surgery"
 }
 
 // MARK: - Case Difficulty
@@ -141,6 +142,7 @@ struct CaseBank {
         + pediatricENTCases
         + generalKnowledgeCases
         + infectiousDiseasesCases
+        + generalSurgeryCases
 
     // MARK: - Head & Neck Cases
 
@@ -1789,6 +1791,300 @@ struct CaseBank {
                 patients on effective ART with undetectable viral load do not transmit sexually.
                 """,
             tags: ["HIV", "seroconversion", "STI", "antiretroviral", "sexual health"]
+        )
+    ]
+
+    // MARK: - General Surgery Cases
+
+    private static let generalSurgeryCases: [ClinicalCase] = [
+        ClinicalCase(
+            id: UUID(uuidString: "D0000001-0001-0001-0001-000000000001")!,
+            title: "Acute Appendicitis",
+            subspecialty: .generalSurgery,
+            difficulty: .straightforward,
+            clinicalVignette: """
+                A 19-year-old woman presents with a 24-hour history of central abdominal \
+                pain that has migrated to the right iliac fossa. She has anorexia, nausea, \
+                and one episode of vomiting. Temperature is 37.8°C. She is tender in the \
+                right iliac fossa with guarding on examination.
+                """,
+            keyHistoryPoints: [
+                "Pain migration from periumbilical to RIF — classic visceral to somatic transition",
+                "Anorexia is almost always present — its absence should make you question the diagnosis",
+                "Nausea/vomiting typically follows pain onset (unlike gastroenteritis where vomiting comes first)",
+                "Duration of symptoms — >48 hours raises concern for perforation",
+                "Menstrual history and possibility of pregnancy — must exclude ectopic",
+                "Previous similar episodes — grumbling appendicitis"
+            ],
+            examinationFindings: [
+                "RIF tenderness maximal at McBurney's point (two-thirds from umbilicus to ASIS)",
+                "Guarding and rebound tenderness — peritoneal irritation",
+                "Rovsing's sign positive (palpation of LIF causes RIF pain)",
+                "Psoas sign (pain on extension of right hip — retrocaecal appendix)",
+                "Low-grade fever 37.5–38.5°C",
+                "Tachycardia but usually haemodynamically stable"
+            ],
+            investigations: [
+                "FBC — raised WCC with neutrophilia",
+                "CRP — elevated, helps track progression",
+                "Urinalysis — exclude UTI (may show mild pyuria if inflamed appendix near ureter)",
+                "Pregnancy test — mandatory in women of childbearing age",
+                "USS abdomen — first-line imaging, especially in women and children",
+                "CT abdomen/pelvis — gold standard sensitivity >95%, use if diagnosis uncertain"
+            ],
+            managementPlan: [
+                "Appendicectomy — laparoscopic preferred (less pain, faster recovery, better cosmesis)",
+                "IV antibiotics pre-operatively (co-amoxiclav or cefuroxime + metronidazole)",
+                "NBM, IV fluids, analgesia",
+                "If perforated with abscess — may need percutaneous drainage first, interval appendicectomy later",
+                "Histology of specimen — exclude carcinoid or other pathology",
+                "Antibiotics alone is an option in uncomplicated cases (but 25-30% recurrence)"
+            ],
+            criticalPoints: [
+                "Always do a pregnancy test in women of childbearing age",
+                "Alvarado score (MANTRELS) helps clinical decision-making",
+                "Perforation risk increases significantly after 36-48 hours",
+                "A normal WCC does not exclude appendicitis"
+            ],
+            teachingNotes: """
+                Appendicitis is the most common surgical emergency. The Alvarado score \
+                uses the mnemonic MANTRELS: Migration of pain, Anorexia, Nausea/vomiting, \
+                Tenderness in RIF, Rebound, Elevation of temperature, Leukocytosis, Shift \
+                to left (neutrophilia). A score ≥7 strongly suggests appendicitis.
+                """,
+            tags: ["appendicitis", "acute abdomen", "surgery", "laparoscopy", "emergency"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "D0000001-0002-0001-0001-000000000002")!,
+            title: "Small Bowel Obstruction",
+            subspecialty: .generalSurgery,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 72-year-old woman presents with a 2-day history of colicky abdominal \
+                pain, absolute constipation (no flatus or faeces), progressive abdominal \
+                distension, and bilious vomiting. She has a midline laparotomy scar from \
+                a hysterectomy 15 years ago.
+                """,
+            keyHistoryPoints: [
+                "Classic tetrad: colicky pain, vomiting, distension, absolute constipation",
+                "Previous abdominal surgery — adhesions are the commonest cause (60-75%)",
+                "Bilious vomiting — suggests proximal obstruction",
+                "Absolute constipation (no flatus) — suggests complete obstruction",
+                "Duration and progression — worsening distension concerning for closed loop",
+                "History of hernias, malignancy, inflammatory bowel disease"
+            ],
+            examinationFindings: [
+                "Abdominal distension — may be marked",
+                "High-pitched tinkling bowel sounds — classically described",
+                "Diffuse tenderness but no peritonism initially",
+                "Check all hernial orifices (inguinal, femoral, incisional) — easily missed cause",
+                "Dehydration — dry mucous membranes, tachycardia, reduced urine output",
+                "If peritonism develops — suggests strangulation or perforation"
+            ],
+            investigations: [
+                "Abdominal X-ray — dilated small bowel loops >3cm, valvulae conniventes visible across full width",
+                "CT abdomen with contrast — gold standard, shows transition point, cause, and complications",
+                "Bloods: FBC, U&E (dehydration, hypokalaemia), lactate (strangulation), amylase",
+                "VBG — metabolic alkalosis from vomiting, or acidosis if strangulated",
+                "Group and save — in case surgery needed",
+                "Erect CXR — to exclude perforation (free air under diaphragm)"
+            ],
+            managementPlan: [
+                "Drip and suck: IV fluids (aggressive resuscitation) + NG tube decompression",
+                "Catheterise and monitor fluid balance strictly",
+                "Correct electrolyte abnormalities (especially K+ and Na+)",
+                "Conservative management trial for 24-48 hours if adhesional and no signs of strangulation",
+                "Water-soluble contrast (Gastrografin) — both diagnostic and therapeutic in adhesional SBO",
+                "Surgery if: strangulation suspected, closed loop, failure to resolve in 48-72 hours, or hernia"
+            ],
+            criticalPoints: [
+                "ALWAYS examine hernial orifices — an obstructed/strangulated hernia needs emergency surgery",
+                "Rising lactate, peritonism, or fever suggests strangulation — urgent surgery needed",
+                "Distinguish small bowel (central, valvulae conniventes) from large bowel (peripheral, haustra) on X-ray",
+                "Never give Gastrografin if perforation suspected"
+            ],
+            teachingNotes: """
+                The rule of 3s for bowel diameters on X-ray: small bowel >3cm, large bowel >6cm, \
+                caecum >9cm is abnormal. Adhesional small bowel obstruction accounts for about \
+                60-75% of cases. Gastrografin follow-through at 24h is both diagnostic (if contrast \
+                reaches colon, likely to resolve) and therapeutic (hyperosmolar, draws fluid into lumen).
+                """,
+            tags: ["bowel obstruction", "adhesions", "acute abdomen", "surgery", "emergency"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "D0000001-0003-0001-0001-000000000003")!,
+            title: "Perforated Duodenal Ulcer",
+            subspecialty: .generalSurgery,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 55-year-old man presents with sudden-onset severe epigastric pain that \
+                began 6 hours ago while at work. The pain rapidly became generalised across \
+                the abdomen. He takes regular NSAIDs for back pain and smokes 20 cigarettes \
+                per day. He is lying very still, tachycardic at 110 bpm, and the abdomen \
+                is rigid on examination.
+                """,
+            keyHistoryPoints: [
+                "Sudden-onset severe epigastric pain — 'thunderclap' presentation",
+                "Pain rapidly generalising — peritoneal contamination",
+                "NSAID use — major risk factor for peptic ulcer disease",
+                "Smoking — impairs mucosal healing",
+                "Previous dyspepsia or known ulcer disease",
+                "Helicobacter pylori status if known"
+            ],
+            examinationFindings: [
+                "Patient lying very still — movement worsens peritoneal pain",
+                "Board-like rigidity — generalised peritonitis",
+                "Absent bowel sounds — paralytic ileus from peritonitis",
+                "Tachycardia, hypotension — third-space fluid losses and sepsis",
+                "Percussion tenderness throughout",
+                "Loss of liver dullness — suggests free intraperitoneal gas"
+            ],
+            investigations: [
+                "Erect CXR — free gas under diaphragm (pneumoperitoneum) in 75% of cases",
+                "CT abdomen — most sensitive for free gas and fluid, shows site of perforation",
+                "Bloods: FBC, U&E, amylase (may be mildly raised), lactate, CRP",
+                "VBG — assess acid-base status",
+                "Group and save / crossmatch",
+                "ECG — to exclude MI (epigastric pain differential)"
+            ],
+            managementPlan: [
+                "Emergency laparotomy or laparoscopic repair",
+                "Omental patch repair (Graham patch) — standard technique",
+                "Aggressive IV fluid resuscitation pre-operatively",
+                "IV PPI (high-dose omeprazole infusion)",
+                "Broad-spectrum antibiotics (peritoneal contamination)",
+                "Post-operatively: H. pylori eradication, stop NSAIDs, PPI long-term"
+            ],
+            criticalPoints: [
+                "Board-like rigidity + free air = perforation until proven otherwise — do not delay surgery",
+                "Absent free air on CXR does NOT exclude perforation (25% have no free air)",
+                "Always check amylase — pancreatitis is a key differential",
+                "Elderly and immunosuppressed patients may have minimal signs despite serious pathology"
+            ],
+            teachingNotes: """
+                Perforated peptic ulcer is the second most common cause of emergency laparotomy \
+                after appendicitis. The classic CXR finding of air under the diaphragm is present \
+                in only 75% of cases — CT is much more sensitive. The differential for sudden \
+                severe epigastric pain includes pancreatitis, MI, AAA rupture, and mesenteric ischaemia.
+                """,
+            tags: ["perforation", "peptic ulcer", "peritonitis", "acute abdomen", "emergency surgery"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "D0000001-0004-0001-0001-000000000004")!,
+            title: "Acute Cholecystitis",
+            subspecialty: .generalSurgery,
+            difficulty: .straightforward,
+            clinicalVignette: """
+                A 45-year-old woman presents with a 3-day history of constant right upper \
+                quadrant pain radiating to the right shoulder tip. She has fever of 38.2°C, \
+                nausea, and has vomited twice. She describes previous episodes of intermittent \
+                RUQ pain after fatty meals that resolved spontaneously. She has a BMI of 34.
+                """,
+            keyHistoryPoints: [
+                "Constant RUQ pain (not colicky) — distinguishes cholecystitis from biliary colic",
+                "Radiation to right shoulder tip — diaphragmatic irritation (phrenic nerve C3-5)",
+                "Previous episodes of biliary colic — suggests gallstones predating this",
+                "Fatty food trigger — fat stimulates CCK, gallbladder contraction",
+                "Risk factors: Female, Forty, Fat, Fertile, Fair (the 5 Fs — though not all are evidence-based)",
+                "Duration >6 hours distinguishes cholecystitis from biliary colic"
+            ],
+            examinationFindings: [
+                "Murphy's sign positive — inspiratory arrest on palpation of RUQ",
+                "RUQ tenderness with guarding",
+                "Low-grade fever 38-38.5°C",
+                "Palpable gallbladder in some cases (usually not palpable if chronically fibrosed)",
+                "Mild jaundice — suspect CBD stone (Mirizzi syndrome or choledocholithiasis)",
+                "Check for signs of peritonism — suggests perforation or gangrenous cholecystitis"
+            ],
+            investigations: [
+                "USS abdomen — first-line: gallstones, thickened gallbladder wall >3mm, pericholecystic fluid",
+                "Bloods: FBC (raised WCC), CRP, LFTs (ALP/GGT may be raised), amylase",
+                "If jaundiced: bilirubin, MRCP to assess CBD for stones",
+                "Blood cultures if septic",
+                "HIDA scan if diagnosis uncertain (non-filling gallbladder confirms cystic duct obstruction)",
+                "ECG — RUQ pain differential includes inferior MI"
+            ],
+            managementPlan: [
+                "IV antibiotics (co-amoxiclav or cefuroxime + metronidazole)",
+                "IV fluids, NBM, analgesia (NSAIDs + opioids)",
+                "Early laparoscopic cholecystectomy — within 72 hours ('hot cholecystectomy') is now recommended",
+                "If unfit for surgery: percutaneous cholecystostomy drainage",
+                "Intraoperative cholangiogram if CBD stones suspected",
+                "ERCP pre-operatively if confirmed CBD stone with jaundice"
+            ],
+            criticalPoints: [
+                "Murphy's sign is the most useful clinical sign — sensitivity ~65%",
+                "Distinguish from ascending cholangitis (Charcot's triad: RUQ pain, jaundice, fever)",
+                "Reynolds' pentad adds confusion and hypotension — life-threatening cholangitis",
+                "Gallstone ileus — rare but important: air in biliary tree + SBO on X-ray"
+            ],
+            teachingNotes: """
+                The trend has shifted towards early ('hot') cholecystectomy within 72 hours \
+                rather than waiting 6 weeks ('cold'). Multiple RCTs show early surgery is safe, \
+                reduces total hospital stay, and avoids the 20% readmission rate while waiting. \
+                Courvoisier's law: a palpable gallbladder with painless jaundice is unlikely to \
+                be gallstones — think pancreatic head malignancy.
+                """,
+            tags: ["cholecystitis", "gallstones", "biliary", "surgery", "Murphy's sign"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "D0000001-0005-0001-0001-000000000005")!,
+            title: "Strangulated Inguinal Hernia",
+            subspecialty: .generalSurgery,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 68-year-old man presents to A&E with a 12-hour history of severe pain \
+                in the right groin and a tense, tender lump that he cannot push back. He \
+                has known about a reducible right inguinal hernia for 2 years but declined \
+                elective repair. He has been vomiting and has not passed flatus for 8 hours. \
+                The lump is erythematous and exquisitely tender.
+                """,
+            keyHistoryPoints: [
+                "Previously reducible hernia now irreducible — incarceration",
+                "Severe pain, erythema, tenderness — suggests strangulation (vascular compromise)",
+                "Vomiting and absent flatus — obstructed bowel within the hernia",
+                "Duration of irreducibility — >6 hours with pain = likely strangulation",
+                "Previous hernia repair — recurrence is possible",
+                "Bilateral hernias — check both sides"
+            ],
+            examinationFindings: [
+                "Tense, tender, irreducible lump in right groin — above and medial to pubic tubercle (inguinal)",
+                "Erythematous overlying skin — suggests strangulation",
+                "No cough impulse — contents trapped",
+                "Absent bowel sounds or tinkling sounds — obstruction",
+                "Abdominal distension if prolonged obstruction",
+                "Signs of systemic sepsis: tachycardia, fever, hypotension if bowel necrosis"
+            ],
+            investigations: [
+                "Clinical diagnosis — do not delay surgery for investigations",
+                "Bloods: FBC, U&E, lactate (raised = ischaemic bowel), VBG",
+                "Group and crossmatch — in case bowel resection needed",
+                "Abdominal X-ray — may show dilated loops of bowel",
+                "CT if diagnosis uncertain — shows hernia contents, bowel wall thickening",
+                "ECG and chest X-ray — pre-operative assessment"
+            ],
+            managementPlan: [
+                "EMERGENCY surgery — do not delay (bowel viability at risk)",
+                "Adequate resuscitation: IV fluids, NG tube if obstructed, catheter",
+                "One gentle attempt at reduction may be tried (Taxis) — but NOT if strangulation suspected",
+                "Open or laparoscopic hernia repair — inspect bowel viability",
+                "If bowel non-viable: segmental resection with primary anastomosis",
+                "Mesh repair if no bowel contamination; tissue repair (Shouldice/Bassini) if contaminated field"
+            ],
+            criticalPoints: [
+                "A strangulated hernia is a SURGICAL EMERGENCY — bowel necrosis occurs within 6 hours",
+                "Do NOT attempt to reduce if signs of strangulation (risk of reducing dead bowel into abdomen)",
+                "Always distinguish inguinal from femoral hernias — femoral hernias have higher strangulation risk",
+                "Femoral hernia: below and lateral to pubic tubercle; inguinal: above and medial"
+            ],
+            teachingNotes: """
+                The key distinction is: incarcerated (irreducible but viable) vs strangulated \
+                (irreducible with vascular compromise). Femoral hernias are much more likely to \
+                strangulate than inguinal (40% vs 3%). All femoral hernias should be repaired \
+                when diagnosed. The Richter's hernia is a dangerous variant where only part of \
+                the bowel wall is trapped — it can strangulate without causing obstruction.
+                """,
+            tags: ["hernia", "strangulation", "emergency surgery", "bowel obstruction", "groin"]
         )
     ]
 }

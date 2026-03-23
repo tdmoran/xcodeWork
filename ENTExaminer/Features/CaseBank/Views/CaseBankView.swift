@@ -308,6 +308,7 @@ extension ENTSubspecialty {
         case .laryngology: return .purple
         case .generalKnowledge: return .teal
         case .infectiousDiseases: return .pink
+        case .generalSurgery: return .indigo
         }
     }
 }

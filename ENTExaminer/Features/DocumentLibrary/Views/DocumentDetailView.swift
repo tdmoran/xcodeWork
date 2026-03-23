@@ -207,6 +207,11 @@ struct DocumentDetailView: View {
                     Text("Previous Sessions")
                         .font(.headline)
 
+                    // Score history chart
+                    if previousSessions.count >= 2 {
+                        SessionHistoryChart(sessions: previousSessions)
+                    }
+
                     ForEach(previousSessions) { session in
                         sessionRow(session)
                     }
@@ -504,6 +509,146 @@ enum ExamMode: String, CaseIterable, Identifiable {
         switch self {
         case .conversational: return "bubble.left.and.bubble.right"
         case .questionAndAnswer: return "list.number"
+        }
+    }
+}
+
+// MARK: - Session History Chart
+
+struct SessionHistoryChart: View {
+    let sessions: [ExamSessionRecord]
+
+    /// Sessions sorted chronologically (oldest first) for charting.
+    private var chronological: [ExamSessionRecord] {
+        sessions.sorted { $0.date < $1.date }
+    }
+
+    private var averageScore: Double {
+        guard !sessions.isEmpty else { return 0 }
+        return sessions.map(\.overallScore).reduce(0, +) / Double(sessions.count)
+    }
+
+    private var trendLabel: (text: String, color: Color) {
+        let sorted = chronological
+        guard sorted.count >= 2 else { return ("Stable", .secondary) }
+        let half = sorted.count / 2
+        let earlierAvg = sorted.prefix(half).map(\.overallScore).reduce(0, +) / Double(half)
+        let laterAvg = sorted.suffix(half).map(\.overallScore).reduce(0, +) / Double(sorted.suffix(half).count)
+        let diff = laterAvg - earlierAvg
+        if diff > 0.05 {
+            return ("Improving", .green)
+        } else if diff < -0.05 {
+            return ("Declining", .red)
+        } else {
+            return ("Stable", .orange)
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Summary row
+            HStack(spacing: 16) {
+                HStack(spacing: 4) {
+                    Text("Avg:")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(Int(averageScore * 100))%")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .monospacedDigit()
+                }
+
+                HStack(spacing: 4) {
+                    Text("Trend:")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(trendLabel.text)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(trendLabel.color)
+                }
+
+                Spacer()
+            }
+
+            // Chart
+            Canvas { context, size in
+                let data = chronological
+                guard data.count >= 2 else { return }
+
+                let padding: CGFloat = 28
+                let chartWidth = size.width - padding * 2
+                let chartHeight = size.height - padding * 2
+                let stepX = chartWidth / CGFloat(data.count - 1)
+
+                // Grid lines at 25%, 50%, 75%
+                for pct in [0.25, 0.5, 0.75] {
+                    let y = padding + chartHeight * (1.0 - pct)
+                    var gridPath = Path()
+                    gridPath.move(to: CGPoint(x: padding, y: y))
+                    gridPath.addLine(to: CGPoint(x: size.width - padding, y: y))
+                    context.stroke(gridPath, with: .color(.secondary.opacity(0.15)), lineWidth: 0.5)
+
+                    // Y-axis label
+                    let label = Text("\(Int(pct * 100))%").font(.system(size: 8)).foregroundColor(.secondary)
+                    context.draw(context.resolve(label), at: CGPoint(x: padding - 4, y: y), anchor: .trailing)
+                }
+
+                // Build points
+                var points: [CGPoint] = []
+                for (i, session) in data.enumerated() {
+                    let x = padding + stepX * CGFloat(i)
+                    let y = padding + chartHeight * (1.0 - session.overallScore)
+                    points.append(CGPoint(x: x, y: y))
+                }
+
+                // Line
+                var linePath = Path()
+                linePath.move(to: points[0])
+                for pt in points.dropFirst() {
+                    linePath.addLine(to: pt)
+                }
+                context.stroke(linePath, with: .color(.accentColor), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+
+                // Fill area under line
+                var areaPath = linePath
+                areaPath.addLine(to: CGPoint(x: points.last!.x, y: padding + chartHeight))
+                areaPath.addLine(to: CGPoint(x: points.first!.x, y: padding + chartHeight))
+                areaPath.closeSubpath()
+                context.fill(areaPath, with: .linearGradient(
+                    Gradient(colors: [Color.accentColor.opacity(0.25), Color.accentColor.opacity(0.02)]),
+                    startPoint: CGPoint(x: 0, y: padding),
+                    endPoint: CGPoint(x: 0, y: padding + chartHeight)
+                ))
+
+                // Points and score labels
+                for (i, pt) in points.enumerated() {
+                    let score = data[i].overallScore
+                    let dotColor: Color = score < 0.4 ? .red : score < 0.7 ? .orange : .green
+                    let dotRect = CGRect(x: pt.x - 4, y: pt.y - 4, width: 8, height: 8)
+                    context.fill(Path(ellipseIn: dotRect), with: .color(dotColor))
+
+                    // Score label above dot
+                    let scoreText = Text("\(Int(score * 100))").font(.system(size: 9, weight: .semibold)).foregroundColor(.primary)
+                    context.draw(context.resolve(scoreText), at: CGPoint(x: pt.x, y: pt.y - 10), anchor: .bottom)
+                }
+
+                // Date labels on x-axis (show first, last, and middle if > 4 sessions)
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "d MMM"
+                let labelIndices: [Int]
+                if data.count <= 4 {
+                    labelIndices = Array(0..<data.count)
+                } else {
+                    labelIndices = [0, data.count / 2, data.count - 1]
+                }
+                for i in labelIndices {
+                    let dateLabel = Text(dateFormatter.string(from: data[i].date)).font(.system(size: 8)).foregroundColor(.secondary)
+                    context.draw(context.resolve(dateLabel), at: CGPoint(x: points[i].x, y: size.height - 4), anchor: .bottom)
+                }
+            }
+            .frame(height: 160)
+            .background(Color.secondary.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
         }
     }
 }

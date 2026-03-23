@@ -56,12 +56,73 @@ struct ExaminationView: View {
         #endif
     }
 
+    // MARK: - Performance Bar
+
+    private var performanceBar: some View {
+        let score = sessionState.performance.overallScore
+        let completed = sessionState.performance.turnsCompleted
+        let total = completed + sessionState.performance.turnsRemaining
+        let streak = sessionState.performance.streak
+        let scorePercent = Int(score * 100)
+        let barColor: Color = score < 0.4 ? .red : score < 0.7 ? .orange : .green
+
+        return HStack(spacing: 12) {
+            // Score progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(barColor.opacity(0.18))
+                    Capsule()
+                        .fill(barColor)
+                        .frame(width: max(0, geo.size.width * score))
+                        .animation(.easeInOut(duration: 0.4), value: score)
+                }
+            }
+            .frame(height: 6)
+            .frame(maxWidth: .infinity)
+
+            // Score percentage
+            Text("\(scorePercent)%")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundStyle(barColor)
+                .monospacedDigit()
+
+            // Question counter
+            Text("Q \(completed)/\(total)")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+
+            // Streak indicator
+            if streak > 0 {
+                HStack(spacing: 2) {
+                    Text("\u{1F525}")
+                        .font(.caption2)
+                    Text("\(streak)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.orange)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .frame(height: 40)
+        .background(.ultraThinMaterial)
+    }
+
     // MARK: - Conversational Mode Panel
 
     private var conversationalPanel: some View {
         VStack(spacing: 0) {
             // Document context header
             documentContextHeader
+
+            // Real-time performance bar
+            performanceBar
 
             // Topic indicator bar
             topicBar

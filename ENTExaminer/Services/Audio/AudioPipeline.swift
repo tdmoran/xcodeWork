@@ -184,6 +184,12 @@ actor AudioPipeline {
         logger.info("Audio engine stopped (playback-only mode)")
     }
 
+    // MARK: - Volume Control
+
+    func setPlaybackVolume(_ volume: Float) {
+        playbackMixerNode?.outputVolume = max(0, min(1, volume))
+    }
+
     // MARK: - Capture Control
 
     func startCapture() async throws {
@@ -703,7 +709,7 @@ actor AudioPipeline {
         do {
             try session.setCategory(
                 .playAndRecord,
-                mode: .voiceChat,
+                mode: .default,
                 options: [.defaultToSpeaker, .allowBluetooth]
             )
             try session.setPreferredSampleRate(Self.captureRate)

@@ -1127,7 +1127,7 @@ struct CaseBank {
 
     private static let generalKnowledgeCases: [ClinicalCase] = [
         ClinicalCase(
-            id: UUID(uuidString: "B0000001-GK01-0001-0001-000000000001")!,
+            id: UUID(uuidString: "B0000001-0001-0001-0001-000000000001")!,
             title: "World War II",
             subspecialty: .generalKnowledge,
             difficulty: .intermediate,
@@ -1188,7 +1188,7 @@ struct CaseBank {
         ),
 
         ClinicalCase(
-            id: UUID(uuidString: "B0000001-GK02-0001-0001-000000000002")!,
+            id: UUID(uuidString: "B0000001-0002-0001-0001-000000000002")!,
             title: "The Solar System",
             subspecialty: .generalKnowledge,
             difficulty: .straightforward,
@@ -1250,7 +1250,7 @@ struct CaseBank {
         ),
 
         ClinicalCase(
-            id: UUID(uuidString: "B0000001-GK03-0001-0001-000000000003")!,
+            id: UUID(uuidString: "B0000001-0003-0001-0001-000000000003")!,
             title: "Shakespeare's Major Plays",
             subspecialty: .generalKnowledge,
             difficulty: .intermediate,
@@ -1313,7 +1313,7 @@ struct CaseBank {
         ),
 
         ClinicalCase(
-            id: UUID(uuidString: "B0000001-GK04-0001-0001-000000000004")!,
+            id: UUID(uuidString: "B0000001-0004-0001-0001-000000000004")!,
             title: "How the Internet Works",
             subspecialty: .generalKnowledge,
             difficulty: .intermediate,
@@ -1376,7 +1376,7 @@ struct CaseBank {
         ),
 
         ClinicalCase(
-            id: UUID(uuidString: "B0000001-GK05-0001-0001-000000000005")!,
+            id: UUID(uuidString: "B0000001-0005-0001-0001-000000000005")!,
             title: "Climate Change",
             subspecialty: .generalKnowledge,
             difficulty: .challenging,
@@ -1439,7 +1439,7 @@ struct CaseBank {
         ),
 
         ClinicalCase(
-            id: UUID(uuidString: "B0000001-GK06-0001-0001-000000000006")!,
+            id: UUID(uuidString: "B0000001-0006-0001-0001-000000000006")!,
             title: "The Human Body",
             subspecialty: .generalKnowledge,
             difficulty: .straightforward,

@@ -74,9 +74,13 @@ struct ContentView: View {
                     )
                 }
             case .cases:
-                CaseBankView()
+                CaseBankView(filter: .medical)
                     .environment(appState)
                     .id(AppSection.cases)
+            case .generalKnowledge:
+                CaseBankView(filter: .generalKnowledge)
+                    .environment(appState)
+                    .id(AppSection.generalKnowledge)
             case .examination:
                 if let examState = appState.examinationState {
                     ExaminationView(sessionState: examState)
@@ -106,6 +110,10 @@ struct ContentView: View {
                 ArchiveView()
                     .environment(appState)
                     .id(AppSection.archive)
+            case .settings:
+                SettingsView()
+                    .environment(appState)
+                    .id(AppSection.settings)
             }
         }
         .transition(.opacity.animation(.easeInOut(duration: 0.2)))
@@ -222,9 +230,11 @@ struct SidebarView: View {
         case .library: return true
         case .documentDetail: return appState.selectedLibraryDocument != nil || appState.document != nil
         case .cases: return true
+        case .generalKnowledge: return true
         case .examination: return appState.examinationState != nil
         case .results: return appState.examSummary != nil || appState.dialogueSummary != nil
         case .archive: return true
+        case .settings: return true
         }
     }
 

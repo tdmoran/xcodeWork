@@ -128,7 +128,7 @@ actor AppleSpeechSTTService: STTService {
         #if os(iOS)
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
             try session.setActive(true)
         } catch {
             throw AppError.audioEngineFailure("Audio session configuration failed: \(error.localizedDescription)")

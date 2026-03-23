@@ -33,11 +33,12 @@ final class AppState {
     // Settings
     var selectedModel: ClaudeModel = .haiku
     var selectedVoiceId: String?
+    var examinerVolume: Float = 0.8
 
     // Services
     private let documentParser = CompositeDocumentParser()
     private let webFetcher = WebDocumentFetcher()
-    private let audioPipeline = AudioPipeline()
+    let audioPipeline = AudioPipeline()
     private var documentAnalyzer: DocumentAnalyzer?
     private var examinationEngine: ExaminationEngine?
     private var currentSTTService: AppleSpeechSTTService?
@@ -701,9 +702,11 @@ enum AppSection: String, CaseIterable, Identifiable {
     case library
     case documentDetail
     case cases
+    case generalKnowledge
     case examination
     case results
     case archive
+    case settings
 
     var id: String { rawValue }
 
@@ -711,10 +714,12 @@ enum AppSection: String, CaseIterable, Identifiable {
         switch self {
         case .library: return "Library"
         case .documentDetail: return "Document"
-        case .cases: return "Case Library"
+        case .cases: return "Medical Case Library"
+        case .generalKnowledge: return "General Knowledge"
         case .examination: return "Examination"
         case .results: return "Results"
         case .archive: return "Archive"
+        case .settings: return "Settings"
         }
     }
 
@@ -723,14 +728,16 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .library: return "books.vertical.fill"
         case .documentDetail: return "doc.text.magnifyingglass"
         case .cases: return "cross.case.fill"
+        case .generalKnowledge: return "lightbulb.fill"
         case .examination: return "waveform.circle.fill"
         case .results: return "chart.bar.fill"
         case .archive: return "archivebox.fill"
+        case .settings: return "gearshape.fill"
         }
     }
 
     /// Sections shown in the sidebar.
     static var sidebarSections: [AppSection] {
-        [.library, .cases, .examination, .results, .archive]
+        [.library, .cases, .generalKnowledge, .examination, .results, .archive, .settings]
     }
 }

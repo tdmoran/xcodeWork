@@ -1,13 +1,28 @@
 import SwiftUI
 
 struct CaseBankView: View {
+    enum Filter {
+        case medical
+        case generalKnowledge
+    }
+
     @Environment(AppState.self) private var appState
+    var filter: Filter = .medical
     @State private var selectedSubspecialty: ENTSubspecialty?
     @State private var selectedDifficulty: CaseDifficulty?
     @State private var expandedCaseId: UUID?
 
+    private var baseCases: [ClinicalCase] {
+        switch filter {
+        case .medical:
+            return CaseBank.allCases.filter { $0.subspecialty != .generalKnowledge }
+        case .generalKnowledge:
+            return CaseBank.allCases.filter { $0.subspecialty == .generalKnowledge }
+        }
+    }
+
     private var filteredCases: [ClinicalCase] {
-        CaseBank.allCases.filter { clinicalCase in
+        baseCases.filter { clinicalCase in
             let matchesSubspecialty = selectedSubspecialty.map { clinicalCase.subspecialty == $0 } ?? true
             let matchesDifficulty = selectedDifficulty.map { clinicalCase.difficulty == $0 } ?? true
             return matchesSubspecialty && matchesDifficulty
@@ -29,15 +44,17 @@ struct CaseBankView: View {
 
     private var header: some View {
         VStack(spacing: 8) {
-            Image(systemName: "cross.case.fill")
+            Image(systemName: filter == .medical ? "cross.case.fill" : "lightbulb.fill")
                 .font(.system(size: 40))
-                .foregroundStyle(.blue)
+                .foregroundStyle(filter == .medical ? .blue : .teal)
 
-            Text("Case Library")
+            Text(filter == .medical ? "Medical Case Library" : "General Knowledge")
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            Text("Clinical scenarios and general knowledge topics")
+            Text(filter == .medical
+                 ? "Clinical scenarios for examination practice"
+                 : "General topics to try out the examiner")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }

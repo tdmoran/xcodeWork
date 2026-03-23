@@ -8,17 +8,6 @@ struct SettingsView: View {
         @Bindable var state = appState
 
         VStack(spacing: 0) {
-            // Close button bar
-            HStack {
-                Spacer()
-                Button("Done") {
-                    appState.showSettings = false
-                    dismiss()
-                }
-                .keyboardShortcut(.defaultAction)
-                .padding(12)
-            }
-
             TabView {
                 GeneralSettingsView()
                     .environment(appState)
@@ -32,6 +21,7 @@ struct SettingsView: View {
                     }
 
                 VoiceSettingsView()
+                    .environment(appState)
                     .tabItem {
                         Label("Voice", systemImage: "waveform")
                     }
@@ -219,24 +209,148 @@ struct APIKeysSettingsView: View {
 // MARK: - Voice Settings
 
 struct VoiceSettingsView: View {
-    @State private var selectedVoice = "default"
+    @Environment(AppState.self) private var appState
+    @State private var isTesting = false
+    @State private var micLevel: Float = 0
+    @State private var micTestTask: Task<Void, Never>?
 
     var body: some View {
+        @Bindable var state = appState
+
         Form {
-            Section("Examiner Voice") {
-                Picker("Voice", selection: $selectedVoice) {
-                    Text("Default (Rachel)").tag("default")
-                    Text("George").tag("george")
-                    Text("Emily").tag("emily")
-                    Text("Adam").tag("adam")
+            Section("Examiner Volume") {
+                HStack {
+                    Image(systemName: "speaker.fill")
+                        .foregroundStyle(.secondary)
+                    Slider(value: $state.examinerVolume, in: 0...1, step: 0.05)
+                        .accessibilityLabel("Examiner volume")
+                    Image(systemName: "speaker.wave.3.fill")
+                        .foregroundStyle(.secondary)
                 }
 
-                Text("Voice selection requires an active ElevenLabs API key.")
+                Text("Volume: \(Int(appState.examinerVolume * 100))%")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            .onChange(of: appState.examinerVolume) { _, newValue in
+                Task { await appState.audioPipeline.setPlaybackVolume(newValue) }
+            }
+
+            Section("Microphone Test") {
+                HStack {
+                    Button {
+                        if isTesting {
+                            stopMicTest()
+                        } else {
+                            startMicTest()
+                        }
+                    } label: {
+                        Label(isTesting ? "Stop Test" : "Test Microphone",
+                              systemImage: isTesting ? "stop.circle.fill" : "mic.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(isTesting ? .red : .blue)
+                    .accessibilityLabel(isTesting ? "Stop microphone test" : "Start microphone test")
+
+                    Spacer()
+
+                    if isTesting {
+                        MicLevelBar(level: micLevel)
+                            .frame(height: 20)
+                    }
+                }
+
+                if isTesting {
+                    Text("Speak now — you should see the level bar respond")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Test your microphone before starting an examination")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .formStyle(.grouped)
         .padding()
+        .onDisappear {
+            stopMicTest()
+        }
+    }
+
+    private func startMicTest() {
+        isTesting = true
+        micTestTask = Task {
+            do {
+                let engine = AVAudioEngine()
+                #if os(iOS)
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+                try session.setActive(true)
+                #endif
+
+                let inputNode = engine.inputNode
+                let format = inputNode.outputFormat(forBus: 0)
+                guard format.channelCount > 0 else {
+                    await MainActor.run { isTesting = false }
+                    return
+                }
+
+                inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+                    let level = EnergyVAD.computeNormalizedLevel(buffer)
+                    Task { @MainActor in
+                        micLevel = level
+                    }
+                }
+
+                engine.prepare()
+                try engine.start()
+
+                // Run until cancelled
+                while !Task.isCancelled {
+                    try await Task.sleep(for: .milliseconds(100))
+                }
+
+                inputNode.removeTap(onBus: 0)
+                engine.stop()
+            } catch {
+                await MainActor.run { isTesting = false }
+            }
+        }
+    }
+
+    private func stopMicTest() {
+        micTestTask?.cancel()
+        micTestTask = nil
+        isTesting = false
+        micLevel = 0
+    }
+}
+
+// MARK: - Mic Level Bar
+
+import AVFoundation
+
+struct MicLevelBar: View {
+    let level: Float
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.secondary.opacity(0.2))
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(barColor)
+                    .frame(width: geo.size.width * CGFloat(level))
+                    .animation(.easeOut(duration: 0.08), value: level)
+            }
+        }
+    }
+
+    private var barColor: Color {
+        if level > 0.7 { return .red }
+        if level > 0.4 { return .orange }
+        return .green
     }
 }

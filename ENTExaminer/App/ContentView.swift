@@ -220,6 +220,14 @@ struct SidebarView: View {
                 .disabled(!isSectionEnabled(section))
                 .accessibilityLabel(section.title)
             }
+
+            Section("Examiner Persona") {
+                ForEach(ExaminerPersona.allCases) { persona in
+                    PersonaRow(persona: persona, isSelected: appState.selectedPersona == persona) {
+                        appState.selectedPersona = persona
+                    }
+                }
+            }
         }
         .listStyle(.sidebar)
         .navigationTitle("VocalCards")
@@ -247,6 +255,52 @@ struct SidebarView: View {
         default:
             return 0
         }
+    }
+}
+
+// MARK: - Persona Row
+
+struct PersonaRow: View {
+    let persona: ExaminerPersona
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 10) {
+                Image(systemName: persona.systemImage)
+                    .font(.title3)
+                    .foregroundColor(isSelected ? .white : .accentColor)
+                    .frame(width: 30, height: 30)
+                    .background(
+                        isSelected
+                            ? Color.accentColor
+                            : Color.accentColor.opacity(0.15),
+                        in: RoundedRectangle(cornerRadius: 6)
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(persona.name)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.primary)
+                    Text(persona.subtitle)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.accentColor)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(persona.name) — \(persona.subtitle)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

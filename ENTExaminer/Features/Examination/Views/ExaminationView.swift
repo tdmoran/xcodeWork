@@ -190,7 +190,7 @@ struct ExaminationView: View {
                             HStack(spacing: 8) {
                                 ProgressView()
                                     .controlSize(.small)
-                                Text("Mr. Gogarty is thinking...")
+                                Text("\(sessionState.personaName) is thinking...")
                                     .font(.callout)
                                     .foregroundStyle(.secondary)
                             }
@@ -312,7 +312,7 @@ struct ExaminationView: View {
             case .thinking:
                 ProgressView()
                     .controlSize(.small)
-                Text("Mr. Gogarty is thinking...")
+                Text("\(sessionState.personaName) is thinking...")
             case .paused:
                 Image(systemName: "pause.circle.fill")
                     .foregroundStyle(.orange)

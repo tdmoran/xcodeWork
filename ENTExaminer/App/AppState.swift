@@ -4,6 +4,65 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.examiner", category: "AppState")
 
+// MARK: - Examiner Persona
+
+enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
+    case gogarty
+    case wilde
+    case lynn
+
+    var id: String { rawValue }
+
+    var name: String {
+        switch self {
+        case .gogarty: return "Mr. Gogarty"
+        case .wilde: return "Dr. William Wilde"
+        case .lynn: return "Dr. Kathleen Lynn"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .gogarty: return "Warm, rigorous examiner with dry wit"
+        case .wilde: return "Friendly Socratic tutor — patient and encouraging"
+        case .lynn: return "Sharp, rapid-fire examiner — direct and efficient"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .gogarty: return "theatermasks.fill"
+        case .wilde: return "book.fill"
+        case .lynn: return "bolt.fill"
+        }
+    }
+
+    var voiceGender: String {
+        switch self {
+        case .gogarty: return "male"
+        case .wilde: return "male"
+        case .lynn: return "female"
+        }
+    }
+
+    /// Preferred ElevenLabs voice ID for this persona.
+    var preferredVoiceId: String {
+        switch self {
+        case .gogarty: return "JBFqnCBsd6RMkjVDRZzb"  // George — warm male
+        case .wilde: return "IKne3meq5aSn9XLyUdCD"    // Charlie — deep confident male
+        case .lynn: return "EXAVITQu4vr4xnSDxMaL"     // Sarah — mature female
+        }
+    }
+
+    var preferredVoiceName: String {
+        switch self {
+        case .gogarty: return "George"
+        case .wilde: return "Charlie"
+        case .lynn: return "Sarah"
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class AppState {
@@ -36,6 +95,7 @@ final class AppState {
     var examinerVolume: Float = 0.8
     var voiceEngine: VoiceEngine = .elevenLabs
     var selectedAppleVoiceId: String = ""
+    var selectedPersona: ExaminerPersona = .gogarty
 
     // Services
     private let documentParser = CompositeDocumentParser()
@@ -446,14 +506,16 @@ final class AppState {
         }
 
         let sessionState = ExaminationSessionState()
+        sessionState.personaName = selectedPersona.name
         examinationState = sessionState
         selectedSection = .examination
 
-        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedVoiceId
+        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedPersona.preferredVoiceId
         let config = ExamConfiguration(
             model: selectedModel,
             maxQuestions: analysis.suggestedQuestionCount,
-            voiceId: effectiveVoiceId
+            voiceId: effectiveVoiceId,
+            persona: selectedPersona
         )
 
         let ttsService: any TTSService = switch voiceEngine {
@@ -508,14 +570,16 @@ final class AppState {
         }
 
         let sessionState = ExaminationSessionState()
+        sessionState.personaName = selectedPersona.name
         examinationState = sessionState
         selectedSection = .examination
 
-        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedVoiceId
+        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedPersona.preferredVoiceId
         let config = ExamConfiguration(
             model: selectedModel,
             maxQuestions: analysis.suggestedQuestionCount,
-            voiceId: effectiveVoiceId
+            voiceId: effectiveVoiceId,
+            persona: selectedPersona
         )
 
         let ttsService: any TTSService = switch voiceEngine {

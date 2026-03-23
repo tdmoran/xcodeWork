@@ -141,11 +141,13 @@ struct ExamConfiguration: Sendable, Equatable {
     let model: ClaudeModel
     let maxQuestions: Int
     let voiceId: String?
+    let persona: ExaminerPersona
 
     static let `default` = ExamConfiguration(
         model: .haiku,
         maxQuestions: 15,
-        voiceId: nil
+        voiceId: nil,
+        persona: .gogarty
     )
 }
 

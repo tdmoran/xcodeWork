@@ -213,11 +213,48 @@ struct VoiceSettingsView: View {
     @State private var isTesting = false
     @State private var micLevel: Float = 0
     @State private var micTestTask: Task<Void, Never>?
+    @State private var appleVoices: [AVSpeechSynthesisVoice] = []
 
     var body: some View {
         @Bindable var state = appState
 
         Form {
+            Section("Voice Engine") {
+                Picker("Engine", selection: $state.voiceEngine) {
+                    ForEach(VoiceEngine.allCases, id: \.self) { engine in
+                        Label(engine.displayName, systemImage: engine.systemImage)
+                            .tag(engine)
+                    }
+                }
+                #if os(macOS)
+                .pickerStyle(.radioGroup)
+                #endif
+
+                if appState.voiceEngine == .apple {
+                    if !appleVoices.isEmpty {
+                        Picker("System Voice", selection: $state.selectedAppleVoiceId) {
+                            Text("Default (Best Available)")
+                                .tag("")
+                            ForEach(appleVoices, id: \.identifier) { voice in
+                                Text("\(voice.name) (\(qualityLabel(voice.quality)))")
+                                    .tag(voice.identifier)
+                            }
+                        }
+                    }
+
+                    Text("Uses Apple's built-in speech synthesis. No API key required.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Requires an ElevenLabs API key configured in the API Keys tab.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .onAppear {
+                appleVoices = AppleTTSService.availableEnglishVoices()
+            }
+
             Section("Examiner Volume") {
                 HStack {
                     Image(systemName: "speaker.fill")
@@ -324,6 +361,14 @@ struct VoiceSettingsView: View {
         micTestTask = nil
         isTesting = false
         micLevel = 0
+    }
+
+    private func qualityLabel(_ quality: AVSpeechSynthesisVoiceQuality) -> String {
+        switch quality {
+        case .premium: return "Premium"
+        case .enhanced: return "Enhanced"
+        default: return "Standard"
+        }
     }
 }
 

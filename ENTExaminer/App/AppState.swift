@@ -34,6 +34,8 @@ final class AppState {
     var selectedModel: ClaudeModel = .haiku
     var selectedVoiceId: String?
     var examinerVolume: Float = 0.8
+    var voiceEngine: VoiceEngine = .elevenLabs
+    var selectedAppleVoiceId: String = ""
 
     // Services
     private let documentParser = CompositeDocumentParser()
@@ -42,7 +44,7 @@ final class AppState {
     private var documentAnalyzer: DocumentAnalyzer?
     private var examinationEngine: ExaminationEngine?
     private var currentSTTService: AppleSpeechSTTService?
-    private var currentTTSService: ElevenLabsTTSService?
+    private var currentTTSService: (any TTSService)?
 
     init() {
         Task {
@@ -447,18 +449,24 @@ final class AppState {
         examinationState = sessionState
         selectedSection = .examination
 
+        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedVoiceId
         let config = ExamConfiguration(
             model: selectedModel,
             maxQuestions: analysis.suggestedQuestionCount,
-            voiceId: selectedVoiceId
+            voiceId: effectiveVoiceId
         )
 
-        let ttsService = ElevenLabsTTSService(
-            apiKeyProvider: { @Sendable in
-                try? await KeychainManager.shared.retrieve(account: KeychainManager.elevenLabsAccount)
-            },
-            audioPipeline: audioPipeline
-        )
+        let ttsService: any TTSService = switch voiceEngine {
+        case .apple:
+            AppleTTSService()
+        case .elevenLabs:
+            ElevenLabsTTSService(
+                apiKeyProvider: { @Sendable in
+                    try? await KeychainManager.shared.retrieve(account: KeychainManager.elevenLabsAccount)
+                },
+                audioPipeline: audioPipeline
+            )
+        }
 
         let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
         currentSTTService = sttService
@@ -503,18 +511,24 @@ final class AppState {
         examinationState = sessionState
         selectedSection = .examination
 
+        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedVoiceId
         let config = ExamConfiguration(
             model: selectedModel,
             maxQuestions: analysis.suggestedQuestionCount,
-            voiceId: selectedVoiceId
+            voiceId: effectiveVoiceId
         )
 
-        let ttsService = ElevenLabsTTSService(
-            apiKeyProvider: { @Sendable in
-                try? await KeychainManager.shared.retrieve(account: KeychainManager.elevenLabsAccount)
-            },
-            audioPipeline: audioPipeline
-        )
+        let ttsService: any TTSService = switch voiceEngine {
+        case .apple:
+            AppleTTSService()
+        case .elevenLabs:
+            ElevenLabsTTSService(
+                apiKeyProvider: { @Sendable in
+                    try? await KeychainManager.shared.retrieve(account: KeychainManager.elevenLabsAccount)
+                },
+                audioPipeline: audioPipeline
+            )
+        }
 
         let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
         currentSTTService = sttService
@@ -694,6 +708,27 @@ struct ImportFileEntry: Identifiable, Equatable {
     let id = UUID()
     let name: String
     var status: ImportFileStatus
+}
+
+// MARK: - Voice Engine
+
+enum VoiceEngine: String, CaseIterable {
+    case apple
+    case elevenLabs
+
+    var displayName: String {
+        switch self {
+        case .apple: return "On-Device (Free)"
+        case .elevenLabs: return "ElevenLabs (Premium)"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .apple: return "iphone"
+        case .elevenLabs: return "cloud"
+        }
+    }
 }
 
 // MARK: - Sidebar Sections

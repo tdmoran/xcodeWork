@@ -15,6 +15,15 @@ actor KeychainManager {
     static let anthropicAccount = "anthropic-api-key"
     static let elevenLabsAccount = "elevenlabs-api-key"
 
+    // Embedded defaults — loaded from bundled DefaultKeys.plist (gitignored)
+    private static let defaultKeys: [String: String] = {
+        guard let url = Bundle.main.url(forResource: "DefaultKeys", withExtension: "plist"),
+              let data = try? Data(contentsOf: url),
+              let dict = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: String]
+        else { return [:] }
+        return dict
+    }()
+
     private let storageURL: URL
 
     private init() {
@@ -46,12 +55,15 @@ actor KeychainManager {
     func retrieve(account: String) throws -> String? {
         let fileURL = storageURL.appendingPathComponent(account)
 
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return nil
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            let data = try Data(contentsOf: fileURL)
+            if let key = String(data: data, encoding: .utf8), !key.isEmpty {
+                return key
+            }
         }
 
-        let data = try Data(contentsOf: fileURL)
-        return String(data: data, encoding: .utf8)
+        // Fall back to embedded default
+        return Self.defaultKeys[account]
     }
 
     func delete(account: String) throws {
@@ -67,7 +79,7 @@ actor KeychainManager {
 
     func hasKey(account: String) -> Bool {
         let fileURL = storageURL.appendingPathComponent(account)
-        return FileManager.default.fileExists(atPath: fileURL.path)
+        return FileManager.default.fileExists(atPath: fileURL.path) || Self.defaultKeys[account] != nil
     }
 }
 

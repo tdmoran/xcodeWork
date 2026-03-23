@@ -711,7 +711,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         switch self {
         case .library: return "Library"
         case .documentDetail: return "Document"
-        case .cases: return "Sample Cases"
+        case .cases: return "Case Library"
         case .examination: return "Examination"
         case .results: return "Results"
         case .archive: return "Archive"

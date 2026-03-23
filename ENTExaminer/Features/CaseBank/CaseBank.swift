@@ -8,6 +8,7 @@ enum ENTSubspecialty: String, Codable, CaseIterable, Sendable {
     case rhinology = "Rhinology"
     case pediatricENT = "Pediatric ENT"
     case laryngology = "Laryngology"
+    case generalKnowledge = "General Knowledge"
 }
 
 // MARK: - Case Difficulty
@@ -137,6 +138,7 @@ struct CaseBank {
         + otologyCases
         + rhinologyCases
         + pediatricENTCases
+        + generalKnowledgeCases
 
     // MARK: - Head & Neck Cases
 
@@ -1118,6 +1120,385 @@ struct CaseBank {
                 history is the most important diagnostic tool.
                 """,
             tags: ["foreign body", "bronchoscopy", "choking", "paediatric airway", "emergency", "peanut"]
+        )
+    ]
+
+    // MARK: - General Knowledge Cases
+
+    private static let generalKnowledgeCases: [ClinicalCase] = [
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-GK01-0001-0001-000000000001")!,
+            title: "World War II",
+            subspecialty: .generalKnowledge,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                World War II (1939–1945) was the deadliest and most widespread conflict \
+                in human history, involving over 30 countries and resulting in an estimated \
+                70–85 million fatalities. The war was fought between the Allied Powers \
+                (primarily the United Kingdom, the Soviet Union, the United States, and China) \
+                and the Axis Powers (Nazi Germany, Imperial Japan, and Fascist Italy). It \
+                reshaped the political, social, and economic landscape of the entire world.
+                """,
+            keyHistoryPoints: [
+                "Germany invaded Poland on 1 September 1939, prompting Britain and France to declare war",
+                "The Fall of France in June 1940 left Britain standing alone against Nazi Germany in Western Europe",
+                "Operation Barbarossa (June 1941) — Germany's invasion of the Soviet Union opened the vast Eastern Front",
+                "The attack on Pearl Harbor (7 December 1941) brought the United States into the war",
+                "The Battle of Stalingrad (1942–1943) was a decisive turning point on the Eastern Front",
+                "D-Day (6 June 1944) — the Allied invasion of Normandy opened a second front in Western Europe"
+            ],
+            examinationFindings: [
+                "The Battle of Britain (1940) was the first major campaign fought entirely by air forces and prevented a German invasion",
+                "The Holocaust resulted in the systematic murder of approximately six million Jewish people and millions of others",
+                "The Battle of Midway (June 1942) shifted the balance of naval power in the Pacific to the Allies",
+                "The Manhattan Project developed atomic weapons, culminating in the bombings of Hiroshima and Nagasaki in August 1945",
+                "The war in Europe ended with Germany's unconditional surrender on 8 May 1945 (VE Day)",
+                "Japan surrendered on 15 August 1945 (VJ Day) following the atomic bombings and Soviet declaration of war"
+            ],
+            investigations: [
+                "The war accelerated technological advances including radar, jet engines, rocketry, and nuclear energy",
+                "Bletchley Park codebreakers, including Alan Turing, cracked the Enigma machine and shortened the war significantly",
+                "Penicillin was mass-produced for the first time to treat wounded soldiers, revolutionising medicine",
+                "The Nuremberg Trials (1945–1946) established precedents for prosecuting crimes against humanity",
+                "The United Nations was founded in 1945 to prevent future global conflicts"
+            ],
+            managementPlan: [
+                "The Marshall Plan (1948) provided American economic aid to rebuild Western Europe and counter Soviet influence",
+                "The war led directly to the Cold War between the United States and the Soviet Union",
+                "Decolonisation accelerated as European empires weakened — India, Indonesia, and many African nations gained independence",
+                "The Geneva Conventions were updated (1949) to strengthen protections for civilians and prisoners of war",
+                "NATO was formed in 1949 as a collective defence alliance against potential Soviet aggression",
+                "The European Coal and Steel Community (1951), a forerunner of the EU, aimed to make future European wars impossible"
+            ],
+            criticalPoints: [
+                "The war caused an estimated 70–85 million deaths, making it the deadliest conflict in history",
+                "The Holocaust represents one of the most systematic genocides ever perpetrated",
+                "The use of atomic weapons on Hiroshima and Nagasaki remains the only use of nuclear weapons in warfare",
+                "The war fundamentally redrew national borders across Europe, Asia, and the Middle East",
+                "The conflict established the United States and the Soviet Union as the two global superpowers"
+            ],
+            teachingNotes: """
+                Winston Churchill, Franklin D. Roosevelt, and Joseph Stalin — the 'Big Three' — \
+                shaped Allied strategy through conferences at Tehran, Yalta, and Potsdam. \
+                The war produced enduring cultural touchstones: Churchill's 'We shall fight on the beaches' \
+                speech, Rosie the Riveter symbolising women's contribution to industry, and the phrase \
+                'Never again' as a response to the Holocaust.
+                """,
+            tags: ["history", "war", "20th century", "global conflict", "politics"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-GK02-0001-0001-000000000002")!,
+            title: "The Solar System",
+            subspecialty: .generalKnowledge,
+            difficulty: .straightforward,
+            clinicalVignette: """
+                Our solar system formed approximately 4.6 billion years ago from a collapsing \
+                cloud of gas and dust known as a solar nebula. It consists of a central star \
+                (the Sun), eight major planets, dwarf planets, moons, asteroids, comets, and \
+                vast amounts of interplanetary dust and gas. The system spans roughly 287 billion \
+                kilometres to the edge of the Oort Cloud and is located in the Orion Arm of the \
+                Milky Way galaxy.
+                """,
+            keyHistoryPoints: [
+                "The eight planets in order from the Sun: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune",
+                "The inner four planets (Mercury, Venus, Earth, Mars) are rocky terrestrial planets",
+                "The outer four planets (Jupiter, Saturn, Uranus, Neptune) are gas and ice giants",
+                "Pluto was reclassified as a dwarf planet by the International Astronomical Union in 2006",
+                "The asteroid belt lies between Mars and Jupiter, containing millions of rocky bodies",
+                "The Kuiper Belt extends beyond Neptune and contains icy bodies including Pluto and Eris"
+            ],
+            examinationFindings: [
+                "The Sun contains 99.86% of all mass in the solar system and is composed primarily of hydrogen and helium",
+                "Jupiter is the largest planet — over 1,300 Earths could fit inside it, and its Great Red Spot is a storm larger than Earth",
+                "Saturn's ring system is made of billions of particles of ice and rock, spanning up to 282,000 km but only about 10 metres thick",
+                "Earth is the only known planet to support liquid water on its surface and harbour life",
+                "Venus has a runaway greenhouse effect with surface temperatures of about 465°C, hotter than Mercury despite being further from the Sun",
+                "Mars has the tallest volcano in the solar system — Olympus Mons at 21.9 km high, nearly three times the height of Everest"
+            ],
+            investigations: [
+                "Light from the Sun takes approximately 8 minutes and 20 seconds to reach Earth",
+                "The Voyager 1 spacecraft, launched in 1977, is the most distant human-made object and has entered interstellar space",
+                "Jupiter's moon Europa and Saturn's moon Enceladus have subsurface oceans and are candidates for extraterrestrial life",
+                "The gravitational influence of the Sun extends to the Oort Cloud, approximately 1–2 light-years away",
+                "Tidal forces from Jupiter prevented the asteroid belt from forming into a planet",
+                "The planets all orbit the Sun in roughly the same plane (the ecliptic) due to the original solar nebula's rotation"
+            ],
+            managementPlan: [
+                "NASA's Artemis programme aims to return humans to the Moon and establish a sustained lunar presence",
+                "Mars exploration missions (Perseverance rover, Mars Sample Return) are searching for signs of ancient life",
+                "The James Webb Space Telescope studies exoplanets and the earliest galaxies, advancing understanding of planetary formation",
+                "Planetary defence programmes like DART (Double Asteroid Redirection Test) aim to protect Earth from asteroid impacts",
+                "Space agencies are studying the feasibility of crewed missions to Mars, potentially in the 2030s–2040s",
+                "International cooperation through the ISS demonstrates how nations can collaborate in space exploration"
+            ],
+            criticalPoints: [
+                "Earth is the only known planet with conditions suitable for liquid water and life as we know it",
+                "The Sun will eventually expand into a red giant in about 5 billion years, engulfing the inner planets",
+                "Jupiter's massive gravity acts as a cosmic shield, deflecting many asteroids and comets away from the inner solar system",
+                "The solar system is approximately 4.6 billion years old, determined by radiometric dating of meteorites",
+                "Understanding our solar system is fundamental to the search for habitable exoplanets around other stars"
+            ],
+            teachingNotes: """
+                A handy mnemonic for planet order is 'My Very Educated Mother Just Served Us Nachos.' \
+                Saturn is less dense than water — it would float if you could find a bathtub large enough. \
+                A day on Venus is longer than its year: Venus takes 243 Earth days to rotate but only \
+                225 Earth days to orbit the Sun. Neptune's winds are the fastest in the solar system, \
+                reaching speeds of over 2,000 km/h.
+                """,
+            tags: ["astronomy", "space", "planets", "science", "solar system"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-GK03-0001-0001-000000000003")!,
+            title: "Shakespeare's Major Plays",
+            subspecialty: .generalKnowledge,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                William Shakespeare (1564–1616) is widely regarded as the greatest writer in \
+                the English language and the world's pre-eminent dramatist. Born in Stratford-upon-Avon, \
+                he wrote approximately 37 plays, 154 sonnets, and several longer poems. His works \
+                span tragedy, comedy, history, and romance, and have been translated into every \
+                major language. His plays continue to be performed more often than those of any \
+                other playwright.
+                """,
+            keyHistoryPoints: [
+                "Shakespeare's four great tragedies are Hamlet, Othello, King Lear, and Macbeth",
+                "Romeo and Juliet (c.1597) tells of star-crossed lovers from feuding families in Verona",
+                "A Midsummer Night's Dream is one of his most popular comedies, blending fairy magic with human love",
+                "The Tempest (c.1611) is believed to be the last play Shakespeare wrote alone, featuring the magician Prospero",
+                "Henry V depicts the Battle of Agincourt and contains the famous 'Once more unto the breach' speech",
+                "The Merchant of Venice raises complex questions about justice, mercy, and prejudice through the character of Shylock"
+            ],
+            examinationFindings: [
+                "Hamlet's 'To be or not to be' soliloquy is perhaps the most famous passage in all of English literature",
+                "Macbeth explores ambition, guilt, and the corrupting nature of power — 'Out, damned spot!' is Lady Macbeth's cry of guilt",
+                "Othello examines jealousy and manipulation through Iago's scheming against the Moorish general Othello",
+                "King Lear deals with ageing, madness, and the consequences of vanity as an elderly king divides his kingdom",
+                "The comedies often feature disguise, mistaken identity, and marriages — Much Ado About Nothing and Twelfth Night are prime examples",
+                "Shakespeare's history plays (Richard II, Henry IV Parts 1 & 2, Henry V) form a connected tetralogy covering English dynastic conflict"
+            ],
+            investigations: [
+                "Shakespeare coined or popularised over 1,700 words including 'assassination,' 'eyeball,' 'lonely,' and 'generous'",
+                "The Globe Theatre, where many of his plays were first performed, was built in 1599 and reconstructed in 1997 near its original site",
+                "Scholars debate whether Shakespeare wrote all plays attributed to him — the 'authorship question' has proposed candidates like Marlowe and Bacon",
+                "The First Folio (1623), published seven years after Shakespeare's death, preserved 36 of his plays, 18 of which had never been printed",
+                "Shakespeare wrote during the Elizabethan and Jacobean eras, when theatre was a popular entertainment for all social classes",
+                "His plays reflect contemporary concerns: the divine right of kings, religious conflict, colonialism, and the nature of power"
+            ],
+            managementPlan: [
+                "Shakespeare's works form the foundation of English literature curricula worldwide",
+                "Modern adaptations include films (Baz Luhrmann's Romeo + Juliet, Kenneth Branagh's Henry V), musicals (West Side Story), and novels",
+                "His plays continue to be reinterpreted through diverse casting, contemporary settings, and cross-cultural productions",
+                "The Royal Shakespeare Company in Stratford-upon-Avon remains dedicated to performing and promoting his works",
+                "Shakespeare's influence extends to everyday language — phrases like 'break the ice,' 'wild goose chase,' and 'heart of gold' originate from his plays",
+                "Understanding Shakespeare develops skills in close reading, rhetorical analysis, and appreciation of dramatic structure"
+            ],
+            criticalPoints: [
+                "Shakespeare wrote approximately 37 plays across four genres: tragedies, comedies, histories, and romances",
+                "His works have been in continuous performance for over 400 years and are staged in virtually every country",
+                "The First Folio is one of the most important books in English literature — without it, half his plays would have been lost",
+                "Shakespeare's exploration of universal human themes — love, jealousy, ambition, mortality — explains his enduring relevance",
+                "He is credited with profoundly shaping the English language itself through new words and expressions"
+            ],
+            teachingNotes: """
+                Shakespeare's shortest play is The Comedy of Errors; his longest is Hamlet. \
+                All female roles were originally played by boys, as women were not permitted to \
+                act on the English stage until 1660. The curse of 'the Scottish play' (Macbeth) is a \
+                famous theatrical superstition — actors avoid saying the name in a theatre for fear \
+                of bad luck. Shakespeare left his wife Anne Hathaway his 'second-best bed' in his will, \
+                which scholars have debated for centuries.
+                """,
+            tags: ["literature", "theatre", "English", "drama", "poetry"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-GK04-0001-0001-000000000004")!,
+            title: "How the Internet Works",
+            subspecialty: .generalKnowledge,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                The Internet is a global network of interconnected computer networks that \
+                communicate using standardised protocols. Originating from ARPANET in the late \
+                1960s, it has grown to connect billions of devices worldwide. The Internet \
+                underpins modern communication, commerce, entertainment, and information access, \
+                and its architecture is built on layered protocols that enable diverse applications \
+                from email to video streaming to cloud computing.
+                """,
+            keyHistoryPoints: [
+                "ARPANET, funded by the US Department of Defense, sent its first message in 1969 between UCLA and Stanford",
+                "TCP/IP (Transmission Control Protocol/Internet Protocol) became the standard networking protocol in 1983",
+                "Tim Berners-Lee invented the World Wide Web at CERN in 1989, creating HTML, URLs, and HTTP",
+                "The first web browser (Mosaic, 1993) made the Internet accessible to the general public",
+                "The dot-com boom of the late 1990s saw explosive growth in Internet-based businesses",
+                "Today over 5 billion people use the Internet, roughly 65% of the world's population"
+            ],
+            examinationFindings: [
+                "Data travels as packets — small chunks of information that are independently routed and reassembled at the destination",
+                "DNS (Domain Name System) translates human-readable domain names (e.g., google.com) into numerical IP addresses",
+                "Routers direct data packets between networks, using routing tables to find the most efficient path",
+                "HTTP (HyperText Transfer Protocol) and HTTPS (its encrypted version) govern how web browsers communicate with servers",
+                "Undersea fibre-optic cables carry over 95% of international Internet traffic across ocean floors",
+                "ISPs (Internet Service Providers) connect individual users and organisations to the broader Internet backbone"
+            ],
+            investigations: [
+                "The Internet uses a layered model: physical, data link, network (IP), transport (TCP/UDP), and application layers",
+                "Encryption via TLS/SSL secures data in transit — the padlock icon in browsers indicates an HTTPS connection",
+                "BGP (Border Gateway Protocol) manages routing between large autonomous networks that make up the Internet",
+                "Content Delivery Networks (CDNs) cache copies of content at geographically distributed servers to reduce latency",
+                "IPv4 addresses (e.g., 192.168.1.1) are being replaced by IPv6 due to address exhaustion — IPv6 provides 340 undecillion addresses",
+                "Cloud computing (AWS, Azure, Google Cloud) provides on-demand computing resources over the Internet"
+            ],
+            managementPlan: [
+                "Net neutrality principles advocate that ISPs should treat all Internet traffic equally without discrimination",
+                "Cybersecurity measures include firewalls, encryption, multi-factor authentication, and regular software updates",
+                "Internet governance involves organisations like ICANN (domain names), IETF (technical standards), and W3C (web standards)",
+                "Digital literacy education helps people navigate online safely, recognise misinformation, and protect their privacy",
+                "The digital divide — unequal access to the Internet — remains a major global challenge, particularly in developing nations",
+                "Emerging technologies like 5G, satellite Internet (Starlink), and mesh networks aim to expand global connectivity"
+            ],
+            criticalPoints: [
+                "The Internet and the World Wide Web are not the same thing — the Internet is the infrastructure, the Web is a service that runs on it",
+                "DNS is sometimes called 'the phonebook of the Internet' and is essential for translating domain names to IP addresses",
+                "Data packets can take different routes across the network and arrive out of order — TCP reassembles them correctly",
+                "Over 95% of international data travels through undersea fibre-optic cables, making them critical infrastructure",
+                "HTTPS encryption is essential for secure online transactions, passwords, and personal data"
+            ],
+            teachingNotes: """
+                The first ARPANET message was supposed to be 'LOGIN' but the system crashed after \
+                transmitting just 'LO', making the first Internet message an unintentionally poetic \
+                'Lo' — as in 'Lo and behold.' An estimated 4.9 billion emails are sent every day, \
+                though roughly 45% are spam. The Internet weighs about 50 grams — that is the combined \
+                mass of all the electrons in motion carrying data at any given moment. A single Google \
+                search uses about 0.3 watt-hours of energy.
+                """,
+            tags: ["technology", "computing", "networks", "digital", "communication"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-GK05-0001-0001-000000000005")!,
+            title: "Climate Change",
+            subspecialty: .generalKnowledge,
+            difficulty: .challenging,
+            clinicalVignette: """
+                Climate change refers to long-term shifts in global temperatures and weather \
+                patterns. While natural climate variations have occurred throughout Earth's history, \
+                since the mid-20th century human activities — primarily the burning of fossil fuels — \
+                have been the dominant driver of rapid global warming. The concentration of carbon \
+                dioxide in the atmosphere has risen from about 280 ppm before the Industrial Revolution \
+                to over 420 ppm today, a level unprecedented in at least 800,000 years.
+                """,
+            keyHistoryPoints: [
+                "The greenhouse effect was first described by Joseph Fourier in the 1820s and experimentally confirmed by John Tyndall in 1859",
+                "Svante Arrhenius predicted in 1896 that burning fossil fuels could lead to global warming",
+                "Charles David Keeling began continuous CO2 measurements at Mauna Loa in 1958 — the 'Keeling Curve' shows a steady rise",
+                "The Intergovernmental Panel on Climate Change (IPCC) was established in 1988 to assess climate science",
+                "The Paris Agreement (2015) set the goal of limiting warming to 1.5°C above pre-industrial levels",
+                "Global average temperature has already risen approximately 1.1°C above pre-industrial levels as of the 2020s"
+            ],
+            examinationFindings: [
+                "Arctic sea ice has declined by about 13% per decade since satellite records began in 1979",
+                "Sea levels have risen approximately 20 cm since 1900 and the rate of rise is accelerating",
+                "Extreme weather events — heatwaves, droughts, floods, and intense storms — are increasing in frequency and severity",
+                "Coral reefs are experiencing mass bleaching events due to ocean warming; the Great Barrier Reef has had multiple severe events",
+                "Permafrost in the Arctic is thawing, releasing stored methane and CO2 — a dangerous positive feedback loop",
+                "Ocean acidification (a 30% increase in acidity since pre-industrial times) threatens marine ecosystems and shell-forming organisms"
+            ],
+            investigations: [
+                "Ice cores from Antarctica and Greenland provide a record of atmospheric CO2 and temperature going back 800,000 years",
+                "Climate models use physics-based simulations to project future warming under different emission scenarios",
+                "The carbon cycle describes how carbon moves between the atmosphere, oceans, soil, and living organisms",
+                "The IPCC's Sixth Assessment Report (2021–2023) states that human influence on the climate system is 'unequivocal'",
+                "Methane (CH4) is over 80 times more potent than CO2 as a greenhouse gas over a 20-year period",
+                "Satellite observations track ice sheet mass loss, sea level rise, and atmospheric greenhouse gas concentrations globally"
+            ],
+            managementPlan: [
+                "Transitioning from fossil fuels to renewable energy sources (solar, wind, hydroelectric, nuclear) is the primary mitigation strategy",
+                "Energy efficiency improvements in buildings, transport, and industry can significantly reduce emissions",
+                "Carbon capture and storage (CCS) technologies aim to remove CO2 from industrial emissions or directly from the atmosphere",
+                "Reforestation and protecting existing forests act as natural carbon sinks, absorbing CO2 from the atmosphere",
+                "Adaptation strategies include building sea walls, developing drought-resistant crops, and updating infrastructure for extreme weather",
+                "International cooperation through agreements like the Paris Agreement is essential for coordinated global action"
+            ],
+            criticalPoints: [
+                "The scientific consensus is overwhelming: over 97% of climate scientists agree that human activities are causing global warming",
+                "Crossing the 1.5°C warming threshold risks triggering irreversible tipping points such as ice sheet collapse and Amazon dieback",
+                "Climate change disproportionately affects vulnerable populations and developing nations that have contributed least to emissions",
+                "The window for limiting warming to 1.5°C is rapidly closing — substantial emission reductions are needed by 2030",
+                "Methane emissions from agriculture, fossil fuel extraction, and thawing permafrost represent a critical and often underestimated threat"
+            ],
+            teachingNotes: """
+                If all of Greenland's ice sheet melted, global sea levels would rise by approximately \
+                7 metres. The five warmest years on record have all occurred since 2015. Trees are \
+                natural carbon capture machines — a single mature tree absorbs roughly 22 kg of CO2 \
+                per year. The term 'greenhouse effect' is somewhat misleading: actual greenhouses work \
+                by trapping warm air, while the atmospheric greenhouse effect works by absorbing and \
+                re-emitting infrared radiation.
+                """,
+            tags: ["environment", "science", "climate", "energy", "sustainability"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-GK06-0001-0001-000000000006")!,
+            title: "The Human Body",
+            subspecialty: .generalKnowledge,
+            difficulty: .straightforward,
+            clinicalVignette: """
+                The human body is an extraordinarily complex biological system composed of \
+                approximately 37 trillion cells organised into tissues, organs, and organ systems. \
+                These systems work together to maintain homeostasis — a stable internal environment — \
+                despite constantly changing external conditions. Understanding the basics of human \
+                anatomy and physiology is fundamental to appreciating how we live, move, think, \
+                and heal.
+                """,
+            keyHistoryPoints: [
+                "The skeletal system comprises 206 bones in adults, providing structure, protection, and enabling movement",
+                "The heart beats approximately 100,000 times per day, pumping about 7,500 litres of blood through the body",
+                "The brain contains roughly 86 billion neurons and consumes about 20% of the body's energy despite being only 2% of body weight",
+                "The largest organ is the skin, which covers about 1.7 square metres in an average adult",
+                "The small intestine is approximately 6 metres long and is the primary site of nutrient absorption",
+                "Humans have 23 pairs of chromosomes containing approximately 20,000–25,000 protein-coding genes"
+            ],
+            examinationFindings: [
+                "The circulatory system consists of the heart, arteries, veins, and capillaries — laid end to end, blood vessels would stretch about 100,000 km",
+                "The respiratory system exchanges gases: oxygen is absorbed in the alveoli of the lungs, while carbon dioxide is expelled",
+                "The digestive system breaks down food through mechanical and chemical processes, from mouth to large intestine",
+                "The immune system defends against pathogens using innate immunity (immediate) and adaptive immunity (specific, memory-based)",
+                "The endocrine system uses hormones — chemical messengers — to regulate metabolism, growth, reproduction, and mood",
+                "The nervous system is divided into the central nervous system (brain and spinal cord) and peripheral nervous system"
+            ],
+            investigations: [
+                "Red blood cells carry oxygen using haemoglobin and live for approximately 120 days before being recycled in the spleen",
+                "The liver performs over 500 functions including detoxification, bile production, and protein synthesis",
+                "The kidneys filter approximately 180 litres of blood per day, producing about 1–2 litres of urine",
+                "Muscles make up roughly 40% of body weight and are classified as skeletal (voluntary), smooth (involuntary), and cardiac",
+                "DNA replication occurs with remarkable accuracy — the error rate is approximately 1 in 10 billion base pairs copied",
+                "The gut microbiome contains trillions of microorganisms that aid digestion, produce vitamins, and support immune function"
+            ],
+            managementPlan: [
+                "A balanced diet including proteins, carbohydrates, fats, vitamins, and minerals is essential for optimal body function",
+                "Regular physical exercise strengthens the cardiovascular system, builds muscle, improves mental health, and reduces disease risk",
+                "Adequate sleep (7–9 hours for adults) is critical for memory consolidation, immune function, and cellular repair",
+                "Staying hydrated is vital — the body is approximately 60% water and needs 2–3 litres of fluid intake per day",
+                "Vaccination trains the adaptive immune system to recognise and fight specific pathogens before infection occurs",
+                "Preventive health measures include regular health screenings, dental care, sun protection, and avoiding tobacco and excessive alcohol"
+            ],
+            criticalPoints: [
+                "The brain can survive only about 4–6 minutes without oxygen before irreversible damage begins",
+                "The heart is the only muscle that never rests — it works continuously from before birth until death",
+                "Blood types (A, B, AB, O) and the Rh factor are critical for safe blood transfusions",
+                "The body maintains core temperature within a narrow range (36.1–37.2°C) — deviation outside this range can be life-threatening",
+                "Homeostasis — the body's ability to maintain stable internal conditions — is fundamental to survival"
+            ],
+            teachingNotes: """
+                Stomach acid (hydrochloric acid) has a pH of 1.5–3.5 and is strong enough to dissolve \
+                metal — the stomach lining replaces itself every 3–4 days to avoid being digested. \
+                The human nose can detect over 1 trillion different scents. Nerve impulses travel at \
+                speeds of up to 120 metres per second. If you unravelled all the DNA in a single human \
+                cell and stretched it out, it would be about 2 metres long — the total DNA in your body \
+                would stretch to the Sun and back about 600 times.
+                """,
+            tags: ["biology", "anatomy", "health", "science", "medicine"]
         )
     ]
 }

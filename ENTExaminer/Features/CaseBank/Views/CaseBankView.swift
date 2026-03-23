@@ -33,11 +33,11 @@ struct CaseBankView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.blue)
 
-            Text("Sample Cases")
+            Text("Case Library")
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            Text("Pre-loaded clinical scenarios to try out the examiner")
+            Text("Clinical scenarios and general knowledge topics")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -289,6 +289,7 @@ extension ENTSubspecialty {
         case .rhinology: return .green
         case .pediatricENT: return .orange
         case .laryngology: return .purple
+        case .generalKnowledge: return .teal
         }
     }
 }

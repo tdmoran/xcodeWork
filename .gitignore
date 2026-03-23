@@ -42,3 +42,6 @@ Pods/
 .env
 *.key
 ENTExaminer.app/
+
+# API keys config
+ENTExaminer/Resources/DefaultKeys.plist

@@ -778,7 +778,7 @@ actor ExaminationEngine {
             """
             conversationRules = """
             CONVERSATION RULES — BREVITY IS CRITICAL:
-            - YOUR RESPONSES MUST BE 1-2 SENTENCES MAX. Never more. This is a rapid-fire viva.
+            - YOUR RESPONSES MUST BE 1-2 SENTENCES MAX. Never more. This is a rapid-fire oral exam.
             - Your job is to EXTRACT FACTS from the trainee, not to teach during the exam.
             - Acknowledge briefly ("Good", "Right", "Yes"), then immediately ask the next question.
             - If they're wrong, correct in ONE sentence, then move on: "Actually it's X. Now, what about Y?"
@@ -806,7 +806,7 @@ actor ExaminationEngine {
             """
             conversationRules = """
             CONVERSATION RULES:
-            - YOUR RESPONSES SHOULD BE 2-4 SENTENCES. More explanatory than a strict viva.
+            - YOUR RESPONSES SHOULD BE 2-4 SENTENCES. More explanatory than a strict exam.
             - You are a teacher first — give context and guide the student toward understanding.
             - Use Socratic questioning: ask leading questions that help the student reason through it.
             - Celebrate correct answers enthusiastically before moving on.
@@ -840,10 +840,37 @@ actor ExaminationEngine {
             - Cover as much ground as possible. Speed is everything.
             - Ask questions based on the DOCUMENT CONTENT, not general knowledge.
             """
+
+        case .caroline:
+            personaBlock = """
+            YOUR PERSONA:
+            - You are Caroline, a friendly and encouraging general knowledge tutor
+            - You are warm, approachable, and genuinely enthusiastic about learning
+            - You make every topic feel interesting and accessible — no question is too basic
+            - You use everyday examples and analogies to explain concepts
+            - You celebrate effort as much as correct answers: "Great thinking!", "I love that you considered that!"
+            - When someone gets something wrong, you're gentle and supportive: "Not quite, but you're on the right track..."
+            - You share fun facts and trivia to keep things engaging
+            - You encourage curiosity: "That's a great question to ask!"
+            - You're patient and never make anyone feel silly for not knowing something
+            - You adapt your language to be clear and jargon-free
+            """
+            conversationRules = """
+            CONVERSATION RULES — FRIENDLY AND ENCOURAGING:
+            - YOUR RESPONSES SHOULD BE 2-3 SENTENCES. Warm and conversational.
+            - Be encouraging and supportive — make learning feel fun and safe.
+            - Use everyday language and analogies to explain concepts.
+            - Celebrate correct answers enthusiastically before moving on.
+            - If they're wrong, be gentle: "Not quite — here's a hint..." then guide them.
+            - Share interesting facts or context that makes the topic come alive.
+            - Ask questions that invite thinking, not just recall: "Why do you think that is?"
+            - Keep the tone light and engaging — this should feel like a fun conversation.
+            - Ask questions based on the DOCUMENT CONTENT, not unrelated topics.
+            """
         }
 
         return """
-        You are \(config.persona.name) conducting a viva voce oral examination on a specific document.
+        You are \(config.persona.name) conducting an oral examination on a specific document.
 
         DOCUMENT CONTEXT:
         \(analysis.documentSummary)
@@ -882,7 +909,7 @@ actor ExaminationEngine {
         TEACHING RULES:
         - Answer the student's questions thoroughly but concisely.
         - Explain concepts clearly, using examples from the document.
-        - Connect ideas to clinical practice where relevant.
+        - Connect ideas to real-world examples where relevant.
         - If the student asks "why", go deeper into the mechanism or reasoning.
         - Use analogies to make complex concepts accessible.
         - Keep explanations spoken-friendly — 3-5 sentences is ideal.
@@ -901,8 +928,17 @@ actor ExaminationEngine {
     /// to happen, before the conversational examination begins.
     private func speakIntroductionForConversation() async throws {
         let topicName = analysis.topics.first?.name ?? "the material"
-        let intro = "Right, today we're covering \(topicName). " +
-            "Structure your answers in clear points, like a real viva. Let's go."
+        let intro: String
+        switch config.persona {
+        case .gogarty:
+            intro = "Right, today we're covering \(topicName). Structure your answers in clear points. Let's go."
+        case .wilde:
+            intro = "Good to see you. Let's have a look at \(topicName) together. Take your time with your answers."
+        case .lynn:
+            intro = "\(topicName). Let's begin. Be precise."
+        case .caroline:
+            intro = "Hi there! Today we're going to explore \(topicName). Just relax and have fun with it — there's no wrong answers here."
+        }
 
         let capturedState = state
         await capturedState.update(currentQuestion: .some(intro), isSpeaking: true)
@@ -923,7 +959,13 @@ actor ExaminationEngine {
     }
 
     private func speakIntroduction() async throws {
-        let intro = "Welcome to your examination on \(analysis.documentSummary)."
+        let intro: String
+        switch config.persona {
+        case .caroline:
+            intro = "Hi! Let's explore \(analysis.documentSummary) together. This is going to be fun!"
+        default:
+            intro = "Welcome to your examination on \(analysis.documentSummary)."
+        }
 
         let capturedState = state
         await capturedState.update(currentQuestion: .some(intro), isSpeaking: true)

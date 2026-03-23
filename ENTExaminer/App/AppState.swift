@@ -10,14 +10,16 @@ enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
     case gogarty
     case wilde
     case lynn
+    case caroline
 
     var id: String { rawValue }
 
     var name: String {
         switch self {
-        case .gogarty: return "Mr. Gogarty"
+        case .gogarty: return "Mr. Oliver St. John Gogarty"
         case .wilde: return "Dr. William Wilde"
         case .lynn: return "Dr. Kathleen Lynn"
+        case .caroline: return "Caroline"
         }
     }
 
@@ -26,14 +28,16 @@ enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
         case .gogarty: return "Warm, rigorous examiner with dry wit"
         case .wilde: return "Friendly Socratic tutor — patient and encouraging"
         case .lynn: return "Sharp, rapid-fire examiner — direct and efficient"
+        case .caroline: return "Friendly general knowledge tutor — warm and encouraging"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .gogarty: return "theatermasks.fill"
-        case .wilde: return "book.fill"
-        case .lynn: return "bolt.fill"
+        case .gogarty: return "stethoscope"
+        case .wilde: return "heart.text.clipboard.fill"
+        case .lynn: return "cross.circle.fill"
+        case .caroline: return "lightbulb.fill"
         }
     }
 
@@ -42,6 +46,7 @@ enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
         case .gogarty: return "male"
         case .wilde: return "male"
         case .lynn: return "female"
+        case .caroline: return "female"
         }
     }
 
@@ -49,16 +54,18 @@ enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
     var preferredVoiceId: String {
         switch self {
         case .gogarty: return "JBFqnCBsd6RMkjVDRZzb"  // George — warm male
-        case .wilde: return "IKne3meq5aSn9XLyUdCD"    // Charlie — deep confident male
+        case .wilde: return "onwK4e9ZLuTAKqWW03F9"    // Daniel — steady British broadcaster
         case .lynn: return "EXAVITQu4vr4xnSDxMaL"     // Sarah — mature female
+        case .caroline: return "Xb7hH8MSUJpSbSDYk0k2"  // Alice — clear, engaging British educator
         }
     }
 
     var preferredVoiceName: String {
         switch self {
         case .gogarty: return "George"
-        case .wilde: return "Charlie"
+        case .wilde: return "Daniel"
         case .lynn: return "Sarah"
+        case .caroline: return "Alice"
         }
     }
 }
@@ -67,7 +74,7 @@ enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
 @Observable
 final class AppState {
     var currentPhase: AppPhase = .idle
-    var selectedSection: AppSection? = .library
+    var selectedSection: AppSection? = nil
     var error: AppError?
     var showError: Bool = false
     var showSettings: Bool = false

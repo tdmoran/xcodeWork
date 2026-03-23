@@ -220,11 +220,11 @@ struct CaseBankView: View {
                 Button {
                     Task { await appState.startCaseExamination(clinicalCase) }
                 } label: {
-                    Label("Start Viva", systemImage: "play.fill")
+                    Label("Start Exam", systemImage: "play.fill")
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .accessibilityLabel("Start Viva for \(clinicalCase.title)")
+                .accessibilityLabel("Start Exam for \(clinicalCase.title)")
             }
 
             // Vignette

@@ -1555,6 +1555,126 @@ struct CaseBank {
                 would stretch to the Sun and back about 600 times.
                 """,
             tags: ["biology", "anatomy", "health", "science", "medicine"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-0007-0001-0001-000000000007")!,
+            title: "The Irish Famine (1845–1852)",
+            subspecialty: .generalKnowledge,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                The Great Famine, also known as An Gorta Mór, was a period of mass starvation, \
+                disease, and emigration in Ireland between 1845 and 1852. It was caused by \
+                potato blight (Phytophthora infestans) which destroyed the staple crop that \
+                the majority of the Irish population depended upon. The famine resulted in \
+                approximately one million deaths and forced over a million more to emigrate, \
+                reducing Ireland's population by roughly 25%.
+                """,
+            keyHistoryPoints: [
+                "Potato blight (Phytophthora infestans) arrived in Ireland in 1845, destroying successive harvests",
+                "Ireland's population before the famine was approximately 8.2 million — by 1851 it had fallen to 6.5 million",
+                "The rural poor were disproportionately affected — many were tenant farmers paying rent to absentee landlords",
+                "The Corn Laws and their repeal in 1846 were directly linked to the famine crisis",
+                "Charles Trevelyan, head of the British Treasury's famine relief, infamously called it 'the judgement of God'",
+                "Soup kitchens (Temporary Relief Act 1847) fed up to 3 million people daily at their peak"
+            ],
+            examinationFindings: [
+                "Mass emigration — 'coffin ships' to North America with mortality rates of 20-30% on some voyages",
+                "Workhouses were overwhelmed — designed for 100,000 but over 250,000 were crammed in by 1849",
+                "Diseases including typhus, relapsing fever, and dysentery killed as many as starvation itself",
+                "The Gregory Clause (1847) forced tenants to surrender all but a quarter-acre to receive relief",
+                "Landlord evictions accelerated — an estimated 500,000 people were evicted during the famine years",
+                "The Choctaw Nation, themselves survivors of the Trail of Tears, donated $170 to Irish famine relief"
+            ],
+            investigations: [
+                "The famine accelerated the decline of the Irish language — many Irish-speaking areas were worst hit",
+                "Land ownership patterns changed dramatically — consolidation of small holdings into larger farms",
+                "The famine fuelled Irish nationalist movements and lasting resentment toward British rule",
+                "Emigration patterns established during the famine continued for over a century",
+                "The Irish diaspora — by 1890 there were more Irish-born people living abroad than in Ireland",
+                "Modern population of Ireland (Republic + NI) is still below pre-famine levels"
+            ],
+            managementPlan: [
+                "British government response widely criticised — initial relief under Peel was more effective than under Russell",
+                "Public works schemes employed hundreds of thousands but paid too little to buy inflated food prices",
+                "Food continued to be exported from Ireland throughout the famine — a deeply controversial fact",
+                "Private charity played a significant role — the Society of Friends (Quakers) were particularly active",
+                "The famine led to major land reform movements culminating in the Land Acts of 1870-1903",
+                "In 1997, Tony Blair expressed regret for Britain's role, though stopped short of a formal apology"
+            ],
+            criticalPoints: [
+                "The famine was not simply a natural disaster — government policy decisions made it far worse",
+                "Ireland was a net exporter of food during the famine — enough food to feed the population was being shipped out",
+                "The population of Ireland has never recovered to pre-famine levels (8.2 million in 1841 vs ~7 million today)",
+                "The famine fundamentally shaped Irish identity, politics, and the relationship with Britain"
+            ],
+            teachingNotes: """
+                The Kindred Spirits sculpture in Midleton, County Cork, commemorates the Choctaw Nation's \
+                donation during the famine. In 2020, during COVID-19, Irish people donated over $3 million \
+                to Navajo and Hopi communities in return — a gesture spanning 173 years. The famine remains \
+                one of the most significant events in Irish history and continues to influence Irish politics \
+                and culture to this day.
+                """,
+            tags: ["Ireland", "famine", "history", "emigration", "British Empire"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "B0000001-0008-0001-0001-000000000008")!,
+            title: "Daniel O'Connell — The Liberator",
+            subspecialty: .generalKnowledge,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                Daniel O'Connell (1775–1847) was an Irish political leader who campaigned for \
+                Catholic Emancipation and the repeal of the Act of Union between Great Britain \
+                and Ireland. Known as 'The Liberator' and 'The Emancipator', he is widely regarded \
+                as one of the most important figures in Irish history. He achieved Catholic \
+                Emancipation in 1829 through mass peaceful mobilisation, fundamentally changing \
+                the political landscape of Ireland and the United Kingdom.
+                """,
+            keyHistoryPoints: [
+                "Born in Cahersiveen, County Kerry in 1775 into a wealthy Catholic family",
+                "Educated in France during the Revolution — witnessed revolutionary violence which shaped his lifelong commitment to peaceful methods",
+                "Called to the Irish Bar in 1798 — one of the first Catholics to practise law after the relaxation of Penal Laws",
+                "Founded the Catholic Association in 1823 — collected the 'Catholic Rent' (a penny a month) to fund the movement",
+                "Won the Clare by-election in 1828 despite being legally barred as a Catholic from taking his seat",
+                "His election forced the British government's hand — leading to the Roman Catholic Relief Act 1829"
+            ],
+            examinationFindings: [
+                "Catholic Emancipation (1829) allowed Catholics to sit in Parliament and hold most public offices",
+                "O'Connell became the first Catholic MP to sit in Westminster in modern times",
+                "He served as Lord Mayor of Dublin in 1841 — the first Catholic to hold the office in 150 years",
+                "The Repeal Association (founded 1840) aimed to repeal the 1800 Act of Union",
+                "Monster Meetings — mass gatherings of up to 500,000-1,000,000 people at sites like Tara and Clontarf",
+                "The cancelled Clontarf meeting (1843) — British government banned it and O'Connell complied to avoid bloodshed"
+            ],
+            investigations: [
+                "O'Connell's methods influenced later peaceful movements — Gandhi and Martin Luther King Jr. acknowledged his influence",
+                "His legal career was legendary — he was known as 'The Counsellor' and fought numerous cases defending Catholics",
+                "He fought a duel in 1815 with John D'Esterre, killing him — O'Connell was deeply affected and wore a black glove on his right hand for years",
+                "His relationship with the Young Ireland movement was complex — they split over the use of physical force",
+                "O'Connell was imprisoned in 1844 for conspiracy but the House of Lords overturned the conviction",
+                "He died in Genoa, Italy in 1847 while on pilgrimage to Rome — his heart was sent to Rome and his body returned to Dublin"
+            ],
+            managementPlan: [
+                "O'Connell's legacy is commemorated in O'Connell Street, Dublin's main thoroughfare",
+                "The O'Connell Monument at the south end of O'Connell Street was unveiled in 1882",
+                "His home at Derrynane, County Kerry is now a national historic property and museum",
+                "He demonstrated that mass peaceful mobilisation could achieve political change against a powerful empire",
+                "His model of popular democratic politics — organising ordinary people — was revolutionary for its time",
+                "Historians debate his later career — the failure of the Repeal movement and his declining health overshadowed his achievements"
+            ],
+            criticalPoints: [
+                "O'Connell achieved Catholic Emancipation through entirely peaceful means — a remarkable achievement in an era of revolution",
+                "His 'Monster Meetings' were the largest peaceful political gatherings the world had ever seen",
+                "He fundamentally changed British politics — the Catholic Relief Act transformed the composition of Parliament",
+                "His commitment to non-violence, even at the cost of the Repeal movement, remains his most debated decision"
+            ],
+            teachingNotes: """
+                Frederick Douglass, the American abolitionist, visited Ireland in 1845 and met O'Connell, \
+                who was a passionate opponent of slavery. O'Connell once said: 'The man who commits an \
+                injustice is ever the sternest judge of the one who calls attention to it.' His influence \
+                extended far beyond Ireland — Balzac called him 'the Napoleon of Ireland' and he was one \
+                of the most famous political figures in 19th-century Europe.
+                """,
+            tags: ["Ireland", "politics", "Catholic Emancipation", "history", "civil rights"]
         )
     ]
 

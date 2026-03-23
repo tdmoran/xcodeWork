@@ -11,6 +11,56 @@ enum ENTSubspecialty: String, Codable, CaseIterable, Sendable {
     case generalKnowledge = "General Knowledge"
     case infectiousDiseases = "Infectious Diseases"
     case generalSurgery = "General Surgery"
+    case generalMedicine = "General Medicine"
+    case ophthalmology = "Ophthalmology"
+
+    /// The broad medical category this subspecialty belongs to.
+    var category: MedicalCategory {
+        switch self {
+        case .headAndNeck, .otology, .rhinology, .pediatricENT, .laryngology:
+            return .otolaryngology
+        case .generalSurgery:
+            return .generalSurgery
+        case .infectiousDiseases:
+            return .infectiousDiseases
+        case .generalMedicine:
+            return .generalMedicine
+        case .ophthalmology:
+            return .ophthalmology
+        case .generalKnowledge:
+            return .generalKnowledge
+        }
+    }
+}
+
+enum MedicalCategory: String, CaseIterable, Sendable {
+    case otolaryngology = "Otolaryngology"
+    case generalSurgery = "General Surgery"
+    case generalMedicine = "General Medicine"
+    case infectiousDiseases = "Infectious Diseases"
+    case ophthalmology = "Ophthalmology"
+    case generalKnowledge = "General Knowledge"
+
+    var systemImage: String {
+        switch self {
+        case .otolaryngology: return "ear.fill"
+        case .generalSurgery: return "scissors"
+        case .generalMedicine: return "stethoscope"
+        case .infectiousDiseases: return "microbe.fill"
+        case .ophthalmology: return "eye.fill"
+        case .generalKnowledge: return "lightbulb.fill"
+        }
+    }
+
+    /// The subspecialties that belong to this category.
+    var subspecialties: [ENTSubspecialty] {
+        ENTSubspecialty.allCases.filter { $0.category == self }
+    }
+
+    /// Medical categories only (excludes general knowledge).
+    static var medicalCategories: [MedicalCategory] {
+        allCases.filter { $0 != .generalKnowledge }
+    }
 }
 
 // MARK: - Case Difficulty
@@ -143,6 +193,8 @@ struct CaseBank {
         + generalKnowledgeCases
         + infectiousDiseasesCases
         + generalSurgeryCases
+        + generalMedicineCases
+        + ophthalmologyCases
 
     // MARK: - Head & Neck Cases
 
@@ -2085,6 +2137,609 @@ struct CaseBank {
                 the bowel wall is trapped — it can strangulate without causing obstruction.
                 """,
             tags: ["hernia", "strangulation", "emergency surgery", "bowel obstruction", "groin"]
+        )
+    ]
+
+    // MARK: - General Medicine Cases
+
+    private static let generalMedicineCases: [ClinicalCase] = [
+        ClinicalCase(
+            id: UUID(uuidString: "E0000001-0001-0001-0001-000000000001")!,
+            title: "Diabetic Ketoacidosis",
+            subspecialty: .generalMedicine,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 22-year-old woman with type 1 diabetes presents to A&E with a 24-hour \
+                history of vomiting, abdominal pain, and increasing confusion. Her blood \
+                glucose is 32 mmol/L. She smells of ketones and is breathing deeply and \
+                rapidly. Her boyfriend reports she ran out of insulin 2 days ago.
+                """,
+            keyHistoryPoints: [
+                "Known type 1 diabetes — insulin-dependent; missed insulin is a common precipitant",
+                "Duration of symptoms — vomiting, abdominal pain, and confusion suggest severe DKA",
+                "Precipitating cause — missed insulin, intercurrent infection, new diagnosis",
+                "Usual insulin regimen and adherence — assess baseline control",
+                "Fluid intake — assess degree of dehydration",
+                "Previous episodes of DKA — recurrent DKA suggests adherence issues or psychosocial factors"
+            ],
+            examinationFindings: [
+                "Kussmaul respiration — deep, rapid breathing to compensate for metabolic acidosis",
+                "Dehydration — dry mucous membranes, reduced skin turgor, tachycardia, hypotension",
+                "Ketotic breath — fruity/acetone smell",
+                "Altered GCS — drowsiness or confusion indicates severe DKA",
+                "Abdominal tenderness — may mimic acute abdomen (DKA itself causes abdominal pain)",
+                "Check for source of infection: chest, urine, skin, feet"
+            ],
+            investigations: [
+                "Venous blood gas — pH <7.3, bicarbonate <15 mmol/L confirms DKA",
+                "Blood glucose — typically >11 mmol/L (often >20 mmol/L)",
+                "Serum ketones — >3 mmol/L (or urine ketones ≥2+)",
+                "U&E — potassium may be high initially but total body potassium is depleted",
+                "FBC, CRP, blood cultures — look for infective precipitant",
+                "ECG — check for hyperkalaemia/hypokalaemia changes"
+            ],
+            managementPlan: [
+                "Follow local DKA protocol (e.g. Joint British Diabetes Societies guideline)",
+                "IV 0.9% saline — aggressive fluid resuscitation: 1L in first hour, then 1L over 2 hours",
+                "Fixed-rate insulin infusion at 0.1 units/kg/hour — do NOT bolus",
+                "Potassium replacement — add 40 mmol KCl per litre once K+ <5.5 mmol/L",
+                "Monitor blood glucose, ketones, and potassium hourly",
+                "Switch to variable rate insulin and oral intake once ketones <0.6 and patient eating"
+            ],
+            criticalPoints: [
+                "Cerebral oedema risk — avoid rapid correction of glucose or sodium, especially in young patients",
+                "Potassium must be monitored hourly — hypokalaemia during insulin therapy can cause fatal arrhythmias",
+                "Do NOT stop long-acting basal insulin — continue background insulin throughout",
+                "Identify and treat the precipitant — infection is the most common trigger in known diabetics"
+            ],
+            teachingNotes: """
+                DKA is a medical emergency with a mortality of 2–5% even in experienced centres. \
+                The pathophysiology is absolute insulin deficiency leading to unrestrained \
+                lipolysis, hepatic ketogenesis, and severe metabolic acidosis. The key management \
+                principles are: fluids first, then insulin, with meticulous potassium monitoring. \
+                Cerebral oedema is the leading cause of death in children with DKA.
+                """,
+            tags: ["diabetes", "DKA", "metabolic acidosis", "insulin", "emergency medicine"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0000001-0002-0001-0001-000000000002")!,
+            title: "Acute Myocardial Infarction (STEMI)",
+            subspecialty: .generalMedicine,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 58-year-old man presents to A&E with crushing central chest pain radiating \
+                to the left arm and jaw, ongoing for 45 minutes. He is sweaty, pale, and \
+                nauseated. He has a history of hypertension, hyperlipidaemia, and smokes 20 \
+                cigarettes per day. His ECG shows ST elevation in leads II, III, and aVF.
+                """,
+            keyHistoryPoints: [
+                "Nature of chest pain — central, crushing, radiating to arm/jaw is classic for MI",
+                "Duration — pain >20 minutes unresponsive to GTN suggests infarction rather than angina",
+                "Cardiovascular risk factors — smoking, hypertension, diabetes, hyperlipidaemia, family history",
+                "Previous cardiac history — prior MI, PCI, or CABG",
+                "Current medications — especially anticoagulants (relevant for PCI decisions)",
+                "Time of symptom onset — critical for determining reperfusion strategy"
+            ],
+            examinationFindings: [
+                "Diaphoresis, pallor — sympathetic activation",
+                "Hypotension or hypertension — inferior STEMI may cause bradycardia and hypotension",
+                "Auscultation — S3 gallop, new murmur (mitral regurgitation from papillary muscle dysfunction)",
+                "Check for signs of heart failure — raised JVP, bibasal crackles, peripheral oedema",
+                "Peripheral pulses — assess for cardiogenic shock"
+            ],
+            investigations: [
+                "12-lead ECG — ST elevation ≥2 mm in two contiguous leads (inferior: II, III, aVF)",
+                "Serial troponin — high-sensitivity troponin will be elevated (but do not wait for result before PCI)",
+                "FBC, U&E, glucose, lipid profile, coagulation screen",
+                "Chest X-ray — assess for pulmonary oedema, aortic dissection",
+                "Echocardiography — regional wall motion abnormalities, assess LV function"
+            ],
+            managementPlan: [
+                "Activate primary PCI pathway — door-to-balloon time <90 minutes is the target",
+                "Dual antiplatelet therapy — aspirin 300 mg + ticagrelor 180 mg (or prasugrel/clopidogrel)",
+                "Anticoagulation — unfractionated heparin at time of PCI",
+                "Morphine 5–10 mg IV for pain + antiemetic (metoclopramide 10 mg IV)",
+                "High-flow oxygen only if SpO2 <94% (routine O2 not recommended)",
+                "Post-PCI: cardiac rehabilitation, secondary prevention (statin, ACE inhibitor, beta-blocker, DAPT)"
+            ],
+            criticalPoints: [
+                "Time is myocardium — every 30-minute delay in reperfusion increases mortality",
+                "Do NOT delay PCI for troponin results — ECG diagnosis is sufficient to activate the pathway",
+                "Check right-sided ECG leads (V4R) in inferior STEMI — RV infarction contraindicates GTN and nitrates",
+                "Watch for arrhythmias — VF is the leading cause of pre-hospital death in STEMI"
+            ],
+            teachingNotes: """
+                STEMI management is one of the most time-critical pathways in medicine. Primary \
+                PCI is the gold standard if available within 120 minutes of first medical contact. \
+                If PCI is not available, thrombolysis should be given within 12 hours of symptom \
+                onset. Inferior STEMIs (RCA territory) may present with bradycardia and hypotension \
+                due to vagal stimulation and right ventricular involvement.
+                """,
+            tags: ["cardiology", "STEMI", "PCI", "troponin", "chest pain", "emergency medicine"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0000001-0003-0001-0001-000000000003")!,
+            title: "Acute Exacerbation of COPD",
+            subspecialty: .generalMedicine,
+            difficulty: .straightforward,
+            clinicalVignette: """
+                A 72-year-old man with known severe COPD (FEV1 35% predicted) presents with \
+                a 3-day history of worsening breathlessness, increased sputum volume, and \
+                purulent green sputum. He is using his accessory muscles at rest, his \
+                respiratory rate is 28, and his SpO2 is 86% on air. He has a 50 pack-year \
+                smoking history.
+                """,
+            keyHistoryPoints: [
+                "Increased dyspnoea, sputum volume, and sputum purulence — Anthonisen criteria for exacerbation",
+                "Baseline exercise tolerance — establish how far from normal this presentation is",
+                "Previous exacerbations and hospital admissions — especially previous NIV or ITU admissions",
+                "Current medications — inhalers (LAMA, LABA, ICS), home oxygen, home nebulisers",
+                "Smoking status — current or ex-smoker, pack-year history"
+            ],
+            examinationFindings: [
+                "Tachypnoea (RR 28), accessory muscle use, pursed-lip breathing",
+                "Widespread expiratory wheeze and reduced air entry bilaterally",
+                "Hyperinflated chest — barrel-shaped, reduced cricosternal distance",
+                "Cyanosis — central and peripheral if severe hypoxia",
+                "Check for signs of cor pulmonale — peripheral oedema, raised JVP, loud P2"
+            ],
+            investigations: [
+                "ABG on air — assess for type 1 or type 2 respiratory failure (PaCO2 >6 kPa = type 2)",
+                "Chest X-ray — exclude pneumonia, pneumothorax, pulmonary oedema",
+                "FBC — raised WCC suggests infection; polycythaemia suggests chronic hypoxia",
+                "CRP — elevated in infective exacerbations",
+                "Sputum culture — if purulent, to guide antibiotic choice",
+                "ECG — exclude arrhythmia, right heart strain"
+            ],
+            managementPlan: [
+                "Controlled oxygen therapy — target SpO2 88–92% (risk of CO2 retention in COPD)",
+                "Nebulised salbutamol 5 mg + ipratropium 500 mcg driven by air (not oxygen)",
+                "Prednisolone 30 mg orally for 5 days (or IV hydrocortisone if unable to swallow)",
+                "Antibiotics if purulent sputum — amoxicillin, doxycycline, or clarithromycin per local guidelines",
+                "Non-invasive ventilation (NIV/BiPAP) if pH <7.35 and PaCO2 >6 kPa despite initial treatment",
+                "Repeat ABG at 30–60 minutes to assess response to treatment"
+            ],
+            criticalPoints: [
+                "Target SpO2 88–92% — high-flow oxygen can suppress respiratory drive and cause fatal CO2 narcosis",
+                "NIV is indicated when pH <7.35 despite optimal medical therapy — do not delay",
+                "Drive nebulisers with air not oxygen in COPD — use nasal cannulae for concurrent oxygen"
+            ],
+            teachingNotes: """
+                Acute exacerbation of COPD is one of the most common medical emergencies. \
+                The key management principles are: controlled oxygen, bronchodilators, steroids, \
+                antibiotics if indicated, and NIV for acidotic type 2 respiratory failure. The \
+                Anthonisen criteria (increased dyspnoea, sputum volume, sputum purulence) help \
+                classify severity and guide antibiotic use. Always check an ABG early.
+                """,
+            tags: ["COPD", "respiratory", "NIV", "exacerbation", "nebulisers"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0000001-0004-0001-0001-000000000004")!,
+            title: "Acute Kidney Injury",
+            subspecialty: .generalMedicine,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 75-year-old woman is referred from her GP with a creatinine of 380 µmol/L \
+                (baseline 95 µmol/L three months ago). She has had diarrhoea and vomiting \
+                for 5 days and has been taking ibuprofen for back pain. She takes ramipril and \
+                furosemide for heart failure. She is clinically dehydrated with a blood pressure \
+                of 90/55 mmHg.
+                """,
+            keyHistoryPoints: [
+                "Acute rise in creatinine from known baseline — confirms AKI (KDIGO criteria)",
+                "Volume depletion — diarrhoea, vomiting, reduced oral intake (pre-renal cause)",
+                "Nephrotoxic medications — NSAIDs, ACE inhibitors, diuretics (the 'triple whammy')",
+                "Urine output — oliguria (<0.5 mL/kg/hr) or anuria suggests severe AKI",
+                "Symptoms of obstruction — lower urinary tract symptoms, haematuria, pelvic/abdominal mass"
+            ],
+            examinationFindings: [
+                "Dehydration — dry mucous membranes, reduced skin turgor, postural hypotension",
+                "Hypotension (BP 90/55) — pre-renal AKI until proven otherwise",
+                "Assess fluid status carefully — JVP, peripheral oedema, lung crackles (may be overloaded if cardiac failure)",
+                "Palpable bladder — suggests post-renal obstruction (urinary retention)",
+                "Examine for rashes, joint swelling — may suggest vasculitis or interstitial nephritis"
+            ],
+            investigations: [
+                "U&E — creatinine 380, assess potassium (hyperkalaemia risk), urea disproportionately raised in pre-renal AKI",
+                "Urinalysis — blood and protein suggest intrinsic renal disease; bland sediment favours pre-renal",
+                "Renal ultrasound — exclude obstruction (hydronephrosis); should be done within 24 hours",
+                "VBG — assess potassium and acid-base status urgently",
+                "FBC, CRP, LDH, blood film — exclude haemolysis, sepsis",
+                "ECG — check for hyperkalaemia changes (peaked T waves, broad QRS)"
+            ],
+            managementPlan: [
+                "Stop nephrotoxic medications — NSAIDs, ACE inhibitors, diuretics (sick day rules)",
+                "IV fluid challenge — 250–500 mL 0.9% saline bolus if clinically dehydrated, reassess after each bolus",
+                "Monitor urine output with catheter — target >0.5 mL/kg/hr",
+                "Treat hyperkalaemia urgently if K+ >6.5 or ECG changes — calcium gluconate, insulin/dextrose, salbutamol",
+                "Renal ultrasound within 24 hours to exclude obstruction",
+                "Nephrology referral if no response to fluids, hyperkalaemia refractory to treatment, or suspected intrinsic renal disease"
+            ],
+            criticalPoints: [
+                "Hyperkalaemia is the immediate life-threatening complication — check ECG and VBG urgently",
+                "Pre-renal AKI is the most common cause — fluid resuscitation and stopping nephrotoxics often resolves it",
+                "Always exclude obstruction (post-renal AKI) with ultrasound — it is easily reversible",
+                "The NSAID + ACE inhibitor + diuretic combination is a well-known cause of AKI ('triple whammy')"
+            ],
+            teachingNotes: """
+                AKI is classified as pre-renal (reduced perfusion), intrinsic renal (tubular necrosis, \
+                glomerulonephritis, interstitial nephritis), or post-renal (obstruction). Pre-renal AKI \
+                accounts for 60–70% of cases and is characterised by a urea:creatinine ratio >100:1, \
+                low urinary sodium (<20 mmol/L), and concentrated urine. The KDIGO criteria define AKI \
+                as a rise in creatinine ≥26.5 µmol/L within 48 hours or ≥1.5x baseline within 7 days.
+                """,
+            tags: ["nephrology", "AKI", "hyperkalaemia", "fluid resuscitation", "nephrotoxins"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0000001-0005-0001-0001-000000000005")!,
+            title: "Pulmonary Embolism",
+            subspecialty: .generalMedicine,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 35-year-old woman presents with sudden-onset pleuritic chest pain and \
+                breathlessness that started 6 hours ago. She returned from a long-haul flight \
+                3 days ago and takes the combined oral contraceptive pill. Her heart rate is \
+                110 bpm, respiratory rate 22, SpO2 93% on air, and she has a swollen left calf.
+                """,
+            keyHistoryPoints: [
+                "Sudden-onset pleuritic chest pain and dyspnoea — classic PE presentation",
+                "Risk factors for VTE — recent long-haul travel, oral contraceptive pill, immobility",
+                "Unilateral leg swelling — concurrent DVT (present in ~70% of PE cases)",
+                "Previous VTE or family history of thrombophilia",
+                "Haemoptysis — occurs in ~20% of PE cases (pulmonary infarction)",
+                "Assess for other risk factors — surgery, malignancy, pregnancy, obesity"
+            ],
+            examinationFindings: [
+                "Tachycardia (110 bpm) and tachypnoea (RR 22) — most common signs",
+                "Hypoxia (SpO2 93%) — ventilation-perfusion mismatch",
+                "Swollen, tender left calf — concurrent DVT",
+                "Pleural rub — may be heard over area of pulmonary infarction",
+                "Signs of right heart strain in massive PE — raised JVP, RV heave, loud P2, hypotension"
+            ],
+            investigations: [
+                "Wells score — calculate to determine pre-test probability (>4 = PE likely, ≤4 = PE unlikely)",
+                "D-dimer — only useful if Wells score ≤4 (PE unlikely); negative D-dimer excludes PE",
+                "CTPA — gold standard investigation for PE diagnosis (if Wells >4 or D-dimer positive)",
+                "ABG — type 1 respiratory failure (low PaO2, low PaCO2)",
+                "ECG — sinus tachycardia most common; S1Q3T3 pattern is classic but uncommon",
+                "Troponin and BNP — markers of right ventricular strain; help risk-stratify"
+            ],
+            managementPlan: [
+                "Anticoagulation — start treatment-dose LMWH (or DOAC) immediately if clinical suspicion high",
+                "CTPA to confirm diagnosis — do not delay anticoagulation while awaiting imaging",
+                "If massive PE with haemodynamic instability — thrombolysis (alteplase 50 mg IV) is indicated",
+                "Risk stratification — use PESI score; submassive PE (RV strain) may need escalation",
+                "Long-term anticoagulation — DOAC (rivaroxaban or apixaban) for ≥3 months",
+                "Investigate for underlying cause — thrombophilia screen (after anticoagulation), cancer screening if unprovoked"
+            ],
+            criticalPoints: [
+                "Massive PE with haemodynamic compromise is a medical emergency — thrombolysis is life-saving",
+                "Do NOT wait for CTPA to start anticoagulation if clinical suspicion is high",
+                "Wells score guides investigation pathway — D-dimer is only useful in the 'PE unlikely' group",
+                "Combined OCP is a significant VTE risk factor — should be stopped and alternative contraception arranged"
+            ],
+            teachingNotes: """
+                PE is the third most common cause of cardiovascular death. The Wells score \
+                stratifies patients into PE likely (>4) and PE unlikely (≤4) groups. In the \
+                PE unlikely group, a negative D-dimer safely excludes PE. In the PE likely \
+                group, proceed directly to CTPA. Massive PE (5% of cases) presents with \
+                haemodynamic collapse and requires thrombolysis. The S1Q3T3 ECG pattern, \
+                while classic, is present in only 20% of cases.
+                """,
+            tags: ["PE", "VTE", "anticoagulation", "CTPA", "Wells score", "emergency medicine"]
+        )
+    ]
+
+    // MARK: - Ophthalmology Cases
+
+    private static let ophthalmologyCases: [ClinicalCase] = [
+        ClinicalCase(
+            id: UUID(uuidString: "F0000001-0001-0001-0001-000000000001")!,
+            title: "Acute Angle-Closure Glaucoma",
+            subspecialty: .ophthalmology,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 65-year-old woman presents to A&E with severe pain in her right eye, \
+                blurred vision, and haloes around lights that started 3 hours ago. She is \
+                nauseated and vomiting. On examination, the right eye is injected with a \
+                hazy cornea, a fixed mid-dilated pupil, and the eye feels rock-hard on \
+                palpation. Visual acuity is 6/60 in the affected eye.
+                """,
+            keyHistoryPoints: [
+                "Acute onset of severe eye pain — distinguishes from chronic open-angle glaucoma (painless)",
+                "Blurred vision and haloes around lights — corneal oedema from raised intraocular pressure",
+                "Nausea and vomiting — vagal response to severely elevated IOP; may be misdiagnosed as acute abdomen",
+                "Precipitants — dim lighting, anticholinergic medications (e.g. tropicamide, antihistamines)",
+                "Previous episodes in same or fellow eye — risk of bilateral angle closure",
+                "Hypermetropia — long-sighted patients have shorter eyes with narrow angles"
+            ],
+            examinationFindings: [
+                "Conjunctival injection — diffuse circumcorneal injection (ciliary flush)",
+                "Hazy/oedematous cornea — due to raised IOP forcing fluid into the cornea",
+                "Fixed, mid-dilated, oval pupil — sphincter ischaemia from raised IOP",
+                "Raised IOP on palpation or tonometry — typically 40–80 mmHg (normal 10–21 mmHg)",
+                "Shallow anterior chamber — assessed with pen-torch (Van Herick grading on slit lamp)",
+                "Red reflex may be absent — due to corneal haze"
+            ],
+            investigations: [
+                "Intraocular pressure measurement (Goldmann tonometry or Tonopen) — IOP >40 mmHg confirms the diagnosis",
+                "Slit lamp examination — shallow anterior chamber, corneal oedema, flare and cells",
+                "Gonioscopy (when cornea clears) — confirms closed drainage angle",
+                "Ultrasound B-scan — if cornea too hazy to visualise the posterior segment",
+                "Visual acuity and visual field assessment — baseline for monitoring damage"
+            ],
+            managementPlan: [
+                "EMERGENCY — immediate IOP reduction is critical to prevent optic nerve damage",
+                "Pilocarpine 2% drops every 5 minutes for 30 minutes — constricts pupil, opens drainage angle",
+                "Timolol 0.5% drops — beta-blocker reduces aqueous production",
+                "IV acetazolamide 500 mg — systemic carbonic anhydrase inhibitor to reduce aqueous production",
+                "IV mannitol 20% (1 g/kg) — osmotic agent for refractory cases",
+                "Definitive treatment: laser peripheral iridotomy — creates alternative drainage pathway; treat BOTH eyes"
+            ],
+            criticalPoints: [
+                "This is an ophthalmic EMERGENCY — delay in treatment causes irreversible optic nerve damage and blindness",
+                "The fellow eye must also receive prophylactic laser iridotomy — 50% risk of angle closure in 5 years",
+                "Pilocarpine may not work if IOP >50 mmHg (iris sphincter ischaemic) — reduce IOP systemically first",
+                "Avoid mydriatic drops (tropicamide, phenylephrine) — these will worsen the angle closure"
+            ],
+            teachingNotes: """
+                Acute angle-closure glaucoma occurs when the peripheral iris blocks the trabecular \
+                meshwork, preventing aqueous drainage and causing a rapid rise in IOP. Risk factors \
+                include hypermetropia, increasing age, female sex, and East Asian ethnicity. It is a \
+                true emergency — without treatment, the optic nerve can be permanently damaged within \
+                hours. The definitive treatment is laser peripheral iridotomy, which should be \
+                performed on both eyes.
+                """,
+            tags: ["glaucoma", "raised IOP", "pilocarpine", "ophthalmic emergency", "laser iridotomy"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "F0000001-0002-0001-0001-000000000002")!,
+            title: "Retinal Detachment",
+            subspecialty: .ophthalmology,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 62-year-old myopic man presents with a 2-day history of flashing lights \
+                in his left eye, followed by a sudden shower of floaters and then a \
+                progressive dark shadow coming across his vision from the peripheral field \
+                like a curtain. His visual acuity is 6/12 in the affected eye. He had cataract \
+                surgery on the left eye 6 months ago.
+                """,
+            keyHistoryPoints: [
+                "Flashes (photopsia) — caused by vitreous traction on the retina",
+                "Sudden shower of floaters — vitreous haemorrhage from torn retinal vessel",
+                "Progressive visual field loss like a curtain or shadow — detaching retina",
+                "Myopia — significant risk factor (longer eye, thinner retina)",
+                "Previous cataract surgery — increases risk of retinal detachment",
+                "Any recent trauma — traumatic retinal tears"
+            ],
+            examinationFindings: [
+                "Reduced visual acuity — 6/12 (may be much worse if macula detached)",
+                "Relative afferent pupillary defect (RAPD) — if extensive detachment",
+                "Reduced red reflex — greyish reflex in area of detachment",
+                "Visual field defect — corresponds to the area of detachment (opposite quadrant)",
+                "Fundoscopy — grey, elevated retina with folds; may see retinal tear with horseshoe shape"
+            ],
+            investigations: [
+                "Dilated fundoscopy — direct visualisation of the detachment and causative retinal tear",
+                "Slit lamp biomicroscopy with 90D/78D lens — assess posterior vitreous detachment and retinal breaks",
+                "B-scan ultrasound — if view obscured by vitreous haemorrhage or dense cataract",
+                "OCT (optical coherence tomography) — assess macular involvement and subretinal fluid",
+                "Visual acuity and visual field documentation — baseline for surgical outcome assessment"
+            ],
+            managementPlan: [
+                "URGENT ophthalmology referral — same-day assessment required",
+                "Macula-on detachment: surgery within 24 hours to prevent macular detachment and preserve central vision",
+                "Macula-off detachment: surgery within 7 days (central vision already compromised)",
+                "Surgical options: pneumatic retinopexy, scleral buckle, or pars plana vitrectomy with gas/silicone oil tamponade",
+                "Posturing may be required post-operatively — face-down positioning for inferior breaks",
+                "Follow-up: monitor for re-detachment, PVR (proliferative vitreoretinopathy), cataract progression"
+            ],
+            criticalPoints: [
+                "Macula-on vs macula-off is the critical distinction — macula-on is more urgent as outcomes are much better",
+                "A sudden increase in floaters and flashes requires same-day dilated fundal examination",
+                "Bilateral retinal detachment risk — examine the fellow eye for lattice degeneration or tears",
+                "Patients with gas tamponade must NOT fly — gas expansion at altitude can raise IOP dangerously"
+            ],
+            teachingNotes: """
+                Rhegmatogenous retinal detachment (the most common type) occurs when a retinal \
+                break allows vitreous fluid to pass under the neurosensory retina. The classic \
+                triad is flashes, floaters, and visual field loss. Myopia is the strongest risk \
+                factor. Macula-on detachments are surgical emergencies because macular detachment \
+                causes significant and often permanent reduction in central vision. Visual outcome \
+                correlates with macular status and duration of detachment.
+                """,
+            tags: ["retinal detachment", "vitrectomy", "myopia", "flashes and floaters", "urgent surgery"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "F0000001-0003-0001-0001-000000000003")!,
+            title: "Central Retinal Artery Occlusion",
+            subspecialty: .ophthalmology,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 70-year-old man with atrial fibrillation and hypertension presents with \
+                sudden, painless, complete loss of vision in his right eye that occurred \
+                20 minutes ago. Visual acuity is hand movements only. The left eye is \
+                unaffected. On fundoscopy, the retina appears pale and oedematous with a \
+                cherry-red spot at the macula.
+                """,
+            keyHistoryPoints: [
+                "Sudden, painless, monocular vision loss — hallmark of retinal vascular occlusion",
+                "Complete loss of vision — CRAO causes global retinal ischaemia",
+                "Time of onset — retinal neurones tolerate ischaemia for only 90–120 minutes",
+                "Cardiovascular risk factors — AF, hypertension, carotid disease, diabetes (embolic source)",
+                "History of amaurosis fugax — transient episodes suggest emboli from carotid or cardiac source",
+                "Giant cell arteritis symptoms — headache, jaw claudication, scalp tenderness, polymyalgia (must exclude)"
+            ],
+            examinationFindings: [
+                "Markedly reduced visual acuity — hand movements or perception of light only",
+                "Relative afferent pupillary defect (RAPD) — indicates optic nerve/retinal dysfunction",
+                "Pale, oedematous retina with cherry-red spot at macula — retinal ischaemia with preserved choroidal supply at fovea",
+                "Retinal arteriolar attenuation — narrowed, segmented ('box-carring') arterioles",
+                "Emboli may be visible — Hollenhorst plaques (cholesterol) at arteriolar bifurcations",
+                "Tender, non-pulsatile temporal artery — if GCA is the cause"
+            ],
+            investigations: [
+                "ESR and CRP URGENTLY — to exclude giant cell arteritis (ESR >50 mm/hr is suspicious)",
+                "Carotid Doppler ultrasound — assess for ipsilateral carotid stenosis (embolic source)",
+                "ECG and echocardiography — exclude AF, valvular disease, mural thrombus",
+                "FBC, glucose, lipid profile, coagulation screen — cardiovascular risk assessment",
+                "Fluorescein angiography — delayed or absent retinal arterial filling confirms the diagnosis",
+                "Temporal artery biopsy — if GCA suspected (do not delay steroids while awaiting biopsy)"
+            ],
+            managementPlan: [
+                "EMERGENCY — treatment must begin within 90–120 minutes of onset for any chance of visual recovery",
+                "Ocular massage — intermittent digital pressure to dislodge embolus distally",
+                "Anterior chamber paracentesis — rapid IOP reduction may allow embolus to move distally",
+                "If GCA suspected: IV methylprednisolone 1 g for 3 days then high-dose oral prednisolone — do NOT wait for biopsy",
+                "Urgent stroke/TIA pathway — CRAO is a retinal stroke equivalent; high risk of cerebral stroke within days",
+                "Long-term cardiovascular risk factor management — antiplatelet, statin, antihypertensive, anticoagulation for AF"
+            ],
+            criticalPoints: [
+                "CRAO is a retinal stroke — treat with the same urgency as a cerebral TIA/stroke",
+                "Always exclude giant cell arteritis — failure to treat GCA risks bilateral blindness and stroke",
+                "Time window is extremely narrow — retinal neurones die within 90–120 minutes of ischaemia",
+                "Patients with CRAO have a high short-term risk of cerebral stroke — urgent vascular assessment required"
+            ],
+            teachingNotes: """
+                CRAO is caused by embolism (most commonly from the carotid or heart) or \
+                thrombosis of the central retinal artery. The cherry-red spot is pathognomonic — \
+                it represents the fovea, which is thin enough to be nourished by the underlying \
+                choroidal circulation, surrounded by pale, ischaemic, opacified retina. Visual \
+                prognosis is extremely poor. The most important differential is giant cell \
+                arteritis, which requires immediate high-dose steroids to prevent fellow eye involvement.
+                """,
+            tags: ["CRAO", "retinal artery", "cherry red spot", "GCA", "ophthalmic emergency", "stroke"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "F0000001-0004-0001-0001-000000000004")!,
+            title: "Anterior Uveitis (Acute Iritis)",
+            subspecialty: .ophthalmology,
+            difficulty: .straightforward,
+            clinicalVignette: """
+                A 28-year-old man presents with a 2-day history of a painful, red left eye \
+                with photophobia and blurred vision. He has a history of ankylosing \
+                spondylitis. On slit lamp examination, there is circumcorneal injection, \
+                cells and flare in the anterior chamber, and a small hypopyon. The pupil \
+                is small and irregular due to posterior synechiae.
+                """,
+            keyHistoryPoints: [
+                "Painful red eye with photophobia — classic triad of anterior uveitis",
+                "Blurred vision — from cells and protein in the anterior chamber",
+                "Ankylosing spondylitis — HLA-B27 associated; anterior uveitis occurs in ~30% of AS patients",
+                "Previous episodes — uveitis frequently recurs; document frequency and severity",
+                "Systemic associations — inflammatory bowel disease, psoriatic arthritis, reactive arthritis, sarcoidosis",
+                "Unilateral vs bilateral — HLA-B27 uveitis is typically unilateral and alternating"
+            ],
+            examinationFindings: [
+                "Circumcorneal (ciliary) injection — perilimbal redness, distinct from conjunctivitis",
+                "Cells and flare in anterior chamber — seen on slit lamp (Tyndall effect)",
+                "Hypopyon — layered white cells in the inferior anterior chamber (indicates severe inflammation)",
+                "Small, irregular pupil — posterior synechiae (iris adhesions to lens)",
+                "Keratic precipitates (KPs) on corneal endothelium — granulomatous (large, mutton-fat) or non-granulomatous (fine)",
+                "Reduced visual acuity — proportional to severity of inflammation"
+            ],
+            investigations: [
+                "Slit lamp biomicroscopy — essential for grading anterior chamber cells and flare (SUN classification)",
+                "Intraocular pressure — may be raised or low in uveitis",
+                "Dilated fundoscopy — exclude posterior segment involvement (vitritis, retinitis)",
+                "HLA-B27 — if first episode with suspected seronegative spondyloarthropathy",
+                "Chest X-ray and serum ACE — screen for sarcoidosis if granulomatous uveitis",
+                "Syphilis serology (VDRL/RPR, TPHA) — syphilis is a great mimicker; test in all uveitis"
+            ],
+            managementPlan: [
+                "Topical corticosteroid drops — prednisolone acetate 1% or dexamethasone 0.1%, initially hourly then taper",
+                "Cycloplegic drops — cyclopentolate 1% TDS to relieve pain (ciliary spasm) and prevent posterior synechiae",
+                "Monitor IOP — steroid-induced ocular hypertension is a common complication",
+                "Break existing posterior synechiae — intensive mydriasis (cyclopentolate + phenylephrine 2.5%)",
+                "Systemic immunosuppression if recurrent/refractory — refer to ophthalmology and rheumatology",
+                "Treat underlying systemic condition — coordinate with rheumatology for AS management"
+            ],
+            criticalPoints: [
+                "Always exclude infective causes (herpes, syphilis, TB) before starting immunosuppressive therapy",
+                "Posterior synechiae can cause iris bombe and secondary angle-closure glaucoma — use cycloplegics early",
+                "Steroid drops must be tapered slowly — abrupt cessation causes rebound inflammation",
+                "Refer urgently if posterior uveitis, hypopyon, bilateral disease, or poor response to topical therapy"
+            ],
+            teachingNotes: """
+                Anterior uveitis is the most common form of intraocular inflammation. HLA-B27 \
+                associated uveitis accounts for approximately 50% of cases of acute anterior \
+                uveitis. The hallmark features on slit lamp are cells (leucocytes) and flare \
+                (protein) in the anterior chamber. A hypopyon (visible layering of white cells) \
+                indicates severe inflammation. The mainstay of treatment is topical steroids and \
+                cycloplegics. Systemic workup is indicated for recurrent, bilateral, or \
+                granulomatous uveitis.
+                """,
+            tags: ["uveitis", "iritis", "HLA-B27", "red eye", "anterior chamber", "synechiae"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "F0000001-0005-0001-0001-000000000005")!,
+            title: "Orbital Cellulitis",
+            subspecialty: .ophthalmology,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 7-year-old boy presents with a 2-day history of worsening swelling and \
+                redness around his right eye following an upper respiratory tract infection. \
+                He now has proptosis, pain on eye movement, restricted extraocular motility, \
+                and a fever of 38.8°C. His visual acuity is reduced compared to the left eye. \
+                He had been treated for preseptal cellulitis by his GP 3 days ago but has \
+                deteriorated despite oral antibiotics.
+                """,
+            keyHistoryPoints: [
+                "Preceding URTI or sinusitis — paranasal sinus infection is the most common cause (ethmoid sinusitis in children)",
+                "Progression from preseptal to orbital cellulitis — worsening despite oral antibiotics",
+                "Pain on eye movement — indicates post-septal (orbital) involvement",
+                "Visual changes — reduced acuity suggests optic nerve compromise (sight-threatening emergency)",
+                "Fever and systemic symptoms — suggests significant infection",
+                "Age — more common in children; ethmoid sinuses are the usual source"
+            ],
+            examinationFindings: [
+                "Proptosis — forward displacement of the globe due to orbital inflammation/abscess",
+                "Ophthalmoplegia — restricted and painful extraocular movements (distinguishes from preseptal cellulitis)",
+                "Periorbital oedema and erythema — often marked, with eyelid swelling",
+                "Reduced visual acuity and colour vision — indicates optic nerve compromise (EMERGENCY)",
+                "Relative afferent pupillary defect (RAPD) — sign of optic neuropathy",
+                "Chemosis — conjunctival oedema from venous congestion"
+            ],
+            investigations: [
+                "CT orbits and sinuses with contrast — confirms orbital involvement, identifies subperiosteal or orbital abscess",
+                "FBC — raised WCC and neutrophilia",
+                "CRP — markedly elevated, useful for monitoring treatment response",
+                "Blood cultures — obtain before starting IV antibiotics",
+                "Nasal swab and any drainage for culture — identify causative organism",
+                "Visual acuity, colour vision, pupil examination — baseline and serial monitoring for optic nerve function"
+            ],
+            managementPlan: [
+                "Hospital admission for IV antibiotics — co-amoxiclav + metronidazole (or ceftriaxone + metronidazole per local protocol)",
+                "Urgent CT scan to identify subperiosteal or orbital abscess",
+                "Surgical drainage if: subperiosteal abscess >1 cm, no improvement after 48 hours IV antibiotics, or visual deterioration",
+                "ENT involvement for concurrent sinus drainage if sinusitis is the source",
+                "4-hourly monitoring of visual acuity, pupil reactions, and eye movements — deterioration requires urgent surgery",
+                "Nasal decongestants and saline irrigation to promote sinus drainage"
+            ],
+            criticalPoints: [
+                "Distinguish orbital from preseptal cellulitis — proptosis, ophthalmoplegia, and reduced vision indicate orbital involvement",
+                "Visual loss from optic nerve compression is a SURGICAL EMERGENCY — urgent drainage required",
+                "Cavernous sinus thrombosis is a life-threatening complication — bilateral eye signs, cranial nerve palsies, and sepsis",
+                "Intracranial extension (brain abscess, meningitis) must be considered — low threshold for MRI brain"
+            ],
+            teachingNotes: """
+                Orbital cellulitis is a sight-threatening and potentially life-threatening emergency, \
+                most commonly caused by extension of ethmoid sinusitis through the paper-thin \
+                lamina papyracea. The Chandler classification grades severity from preseptal \
+                cellulitis (Group I) to cavernous sinus thrombosis (Group V). The critical clinical \
+                distinction is between preseptal (eyelid only — safe to treat with oral antibiotics) \
+                and post-septal/orbital cellulitis (requires admission, IV antibiotics, and CT). \
+                Visual acuity monitoring is essential — any deterioration mandates urgent surgical drainage.
+                """,
+            tags: ["orbital cellulitis", "proptosis", "sinusitis", "ophthalmoplegia", "paediatric", "abscess"]
         )
     ]
 }

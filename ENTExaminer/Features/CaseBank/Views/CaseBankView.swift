@@ -8,7 +8,7 @@ struct CaseBankView: View {
 
     @Environment(AppState.self) private var appState
     var filter: Filter = .medical
-    @State private var selectedSubspecialty: ENTSubspecialty?
+    @State private var selectedCategory: MedicalCategory?
     @State private var selectedDifficulty: CaseDifficulty?
     @State private var expandedCaseId: UUID?
 
@@ -23,9 +23,18 @@ struct CaseBankView: View {
 
     private var filteredCases: [ClinicalCase] {
         baseCases.filter { clinicalCase in
-            let matchesSubspecialty = selectedSubspecialty.map { clinicalCase.subspecialty == $0 } ?? true
+            let matchesCategory = selectedCategory.map { clinicalCase.subspecialty.category == $0 } ?? true
             let matchesDifficulty = selectedDifficulty.map { clinicalCase.difficulty == $0 } ?? true
-            return matchesSubspecialty && matchesDifficulty
+            return matchesCategory && matchesDifficulty
+        }
+    }
+
+    /// Cases grouped by medical category, in display order.
+    private var groupedCases: [(category: MedicalCategory, cases: [ClinicalCase])] {
+        let categories = filter == .medical ? MedicalCategory.medicalCategories : [MedicalCategory.generalKnowledge]
+        return categories.compactMap { cat in
+            let cases = filteredCases.filter { $0.subspecialty.category == cat }
+            return cases.isEmpty ? nil : (category: cat, cases: cases)
         }
     }
 
@@ -34,7 +43,7 @@ struct CaseBankView: View {
             VStack(spacing: 20) {
                 header
                 filters
-                caseGrid
+                groupedCaseList
             }
             .padding(24)
         }
@@ -66,13 +75,15 @@ struct CaseBankView: View {
         #if os(iOS)
         VStack(spacing: 12) {
             HStack {
-                Picker("Subspecialty", selection: $selectedSubspecialty) {
-                    Text("All Subspecialties").tag(nil as ENTSubspecialty?)
-                    ForEach(ENTSubspecialty.allCases, id: \.self) { sub in
-                        Text(sub.displayName).tag(sub as ENTSubspecialty?)
+                if filter == .medical {
+                    Picker("Category", selection: $selectedCategory) {
+                        Text("All Specialties").tag(nil as MedicalCategory?)
+                        ForEach(MedicalCategory.medicalCategories, id: \.self) { cat in
+                            Label(cat.rawValue, systemImage: cat.systemImage).tag(cat as MedicalCategory?)
+                        }
                     }
+                    .pickerStyle(.menu)
                 }
-                .pickerStyle(.menu)
 
                 Spacer()
 
@@ -93,10 +104,7 @@ struct CaseBankView: View {
                 Spacer()
 
                 Button {
-                    if let randomCase = CaseBank.randomCase(
-                        subspecialty: selectedSubspecialty,
-                        difficulty: selectedDifficulty
-                    ) {
+                    if let randomCase = filteredCases.randomElement() {
                         Task { await appState.startCaseExamination(randomCase) }
                     }
                 } label: {
@@ -111,13 +119,15 @@ struct CaseBankView: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         #else
         HStack(spacing: 16) {
-            Picker("Subspecialty", selection: $selectedSubspecialty) {
-                Text("All Subspecialties").tag(nil as ENTSubspecialty?)
-                ForEach(ENTSubspecialty.allCases, id: \.self) { sub in
-                    Text(sub.displayName).tag(sub as ENTSubspecialty?)
+            if filter == .medical {
+                Picker("Category", selection: $selectedCategory) {
+                    Text("All Specialties").tag(nil as MedicalCategory?)
+                    ForEach(MedicalCategory.medicalCategories, id: \.self) { cat in
+                        Label(cat.rawValue, systemImage: cat.systemImage).tag(cat as MedicalCategory?)
+                    }
                 }
+                .frame(width: 200)
             }
-            .frame(width: 200)
 
             Picker("Difficulty", selection: $selectedDifficulty) {
                 Text("All Levels").tag(nil as CaseDifficulty?)
@@ -134,10 +144,7 @@ struct CaseBankView: View {
                 .foregroundStyle(.secondary)
 
             Button {
-                if let randomCase = CaseBank.randomCase(
-                    subspecialty: selectedSubspecialty,
-                    difficulty: selectedDifficulty
-                ) {
+                if let randomCase = filteredCases.randomElement() {
                     Task { await appState.startCaseExamination(randomCase) }
                 }
             } label: {
@@ -158,6 +165,36 @@ struct CaseBankView: View {
         LazyVStack(spacing: 12) {
             ForEach(filteredCases) { clinicalCase in
                 caseCard(clinicalCase)
+            }
+        }
+    }
+
+    private var groupedCaseList: some View {
+        LazyVStack(spacing: 24) {
+            ForEach(groupedCases, id: \.category) { group in
+                VStack(alignment: .leading, spacing: 12) {
+                    // Section header
+                    HStack(spacing: 8) {
+                        Image(systemName: group.category.systemImage)
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                        Text(group.category.rawValue)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text("\(group.cases.count)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.15), in: Capsule())
+                    }
+                    .padding(.horizontal, 4)
+
+                    ForEach(group.cases) { clinicalCase in
+                        caseCard(clinicalCase)
+                    }
+                }
             }
         }
     }
@@ -309,6 +346,8 @@ extension ENTSubspecialty {
         case .generalKnowledge: return .teal
         case .infectiousDiseases: return .pink
         case .generalSurgery: return .indigo
+        case .generalMedicine: return .cyan
+        case .ophthalmology: return .mint
         }
     }
 }

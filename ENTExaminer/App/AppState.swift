@@ -54,7 +54,7 @@ enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
     var preferredVoiceId: String {
         switch self {
         case .gogarty: return "JBFqnCBsd6RMkjVDRZzb"  // George — warm male
-        case .wilde: return "onwK4e9ZLuTAKqWW03F9"    // Daniel — steady British broadcaster
+        case .wilde: return "N5OUvQfQBxjhoGbziJhd"    // Tom's custom voice
         case .lynn: return "EXAVITQu4vr4xnSDxMaL"     // Sarah — mature female
         case .caroline: return "Xb7hH8MSUJpSbSDYk0k2"  // Alice — clear, engaging British educator
         }

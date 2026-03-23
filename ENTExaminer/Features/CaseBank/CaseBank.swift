@@ -9,6 +9,7 @@ enum ENTSubspecialty: String, Codable, CaseIterable, Sendable {
     case pediatricENT = "Pediatric ENT"
     case laryngology = "Laryngology"
     case generalKnowledge = "General Knowledge"
+    case infectiousDiseases = "Infectious Diseases"
 }
 
 // MARK: - Case Difficulty
@@ -139,6 +140,7 @@ struct CaseBank {
         + rhinologyCases
         + pediatricENTCases
         + generalKnowledgeCases
+        + infectiousDiseasesCases
 
     // MARK: - Head & Neck Cases
 
@@ -1499,6 +1501,294 @@ struct CaseBank {
                 would stretch to the Sun and back about 600 times.
                 """,
             tags: ["biology", "anatomy", "health", "science", "medicine"]
+        )
+    ]
+
+    // MARK: - Infectious Diseases Cases
+
+    private static let infectiousDiseasesCases: [ClinicalCase] = [
+        ClinicalCase(
+            id: UUID(uuidString: "C0000001-0001-0001-0001-000000000001")!,
+            title: "Community-Acquired Pneumonia",
+            subspecialty: .infectiousDiseases,
+            difficulty: .straightforward,
+            clinicalVignette: """
+                A 58-year-old man presents with a 4-day history of productive cough with \
+                rust-coloured sputum, fever of 38.9°C, rigors, and right-sided pleuritic \
+                chest pain. He is a smoker with no significant past medical history. \
+                Examination reveals bronchial breathing and crackles at the right base.
+                """,
+            keyHistoryPoints: [
+                "Duration and onset of symptoms (acute vs subacute)",
+                "Character of sputum (rust-coloured suggests pneumococcal)",
+                "Smoking history — major risk factor",
+                "Vaccination status (pneumococcal, influenza)",
+                "Recent travel or hospitalisation",
+                "Immunosuppression or comorbidities"
+            ],
+            examinationFindings: [
+                "Fever 38.9°C with tachycardia",
+                "Bronchial breathing at right base — consolidation",
+                "Increased vocal resonance and dullness to percussion",
+                "Reduced oxygen saturations (SpO2 93% on air)",
+                "Respiratory rate elevated at 24/min"
+            ],
+            investigations: [
+                "Chest X-ray — lobar consolidation right lower lobe",
+                "Blood cultures before antibiotics",
+                "Sputum culture and sensitivity",
+                "CRP and white cell count (raised neutrophils)",
+                "CURB-65 score for severity assessment",
+                "Urine pneumococcal and legionella antigens"
+            ],
+            managementPlan: [
+                "CURB-65 score determines setting (community vs hospital vs ICU)",
+                "Empirical antibiotics: amoxicillin for mild, co-amoxiclav + macrolide for moderate",
+                "Oxygen therapy to maintain SpO2 94-98%",
+                "Fluid resuscitation if septic",
+                "Repeat CXR at 6 weeks to confirm resolution",
+                "Smoking cessation advice"
+            ],
+            criticalPoints: [
+                "Always calculate CURB-65 (Confusion, Urea, RR, BP, age ≥65)",
+                "Blood cultures BEFORE starting antibiotics",
+                "Consider atypical organisms (Legionella, Mycoplasma) if not responding",
+                "Parapneumonic effusion/empyema if not improving"
+            ],
+            teachingNotes: """
+                Streptococcus pneumoniae remains the most common cause of CAP. The CURB-65 \
+                score is essential for guiding management — a score of 0-1 can be managed \
+                in the community, 2 consider hospital, 3-5 requires hospital and consider ICU.
+                """,
+            tags: ["pneumonia", "respiratory", "antibiotics", "CURB-65", "sepsis"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "C0000001-0002-0001-0001-000000000002")!,
+            title: "Bacterial Meningitis",
+            subspecialty: .infectiousDiseases,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 22-year-old university student presents with a 12-hour history of severe \
+                headache, neck stiffness, photophobia, and vomiting. His flatmate reports \
+                he has become increasingly confused. Temperature is 39.5°C and a non-blanching \
+                petechial rash is noted on his trunk and legs.
+                """,
+            keyHistoryPoints: [
+                "Rapid onset over hours — suggests bacterial rather than viral",
+                "Classic triad: headache, neck stiffness, fever",
+                "Altered consciousness — indicates severity",
+                "Non-blanching rash — meningococcal until proven otherwise",
+                "Close contacts (university halls — high-risk setting)",
+                "Vaccination history (MenACWY, MenB)"
+            ],
+            examinationFindings: [
+                "GCS 13 (confused, opens eyes to voice)",
+                "Marked neck stiffness — positive Kernig's and Brudzinski's signs",
+                "Petechial and purpuric rash — non-blanching (glass test)",
+                "Photophobia",
+                "Tachycardia 120 bpm, BP 95/60 — early septic shock",
+                "No focal neurological deficits"
+            ],
+            investigations: [
+                "Blood cultures — BEFORE antibiotics if no delay",
+                "Lumbar puncture if no contraindications (raised ICP, coagulopathy, rash)",
+                "CSF: high WCC (neutrophils), high protein, low glucose, Gram-negative diplococci",
+                "FBC, CRP, lactate, coagulation screen",
+                "CT head before LP if GCS <12, focal neurology, or seizures",
+                "PCR for Neisseria meningitidis"
+            ],
+            managementPlan: [
+                "DO NOT DELAY antibiotics — IV ceftriaxone immediately",
+                "Dexamethasone 0.15mg/kg before or with first antibiotic dose",
+                "Aggressive fluid resuscitation for septic shock",
+                "ICU referral if haemodynamic instability",
+                "Public health notification — close contact prophylaxis (ciprofloxacin)",
+                "Monitor for complications: SIADH, seizures, cerebral oedema"
+            ],
+            criticalPoints: [
+                "Non-blanching rash + meningism = give antibiotics IMMEDIATELY, do not wait for LP",
+                "Dexamethasone reduces mortality in pneumococcal meningitis",
+                "Close contacts need prophylactic antibiotics within 24 hours",
+                "CT before LP if signs of raised ICP — but never delay antibiotics for imaging"
+            ],
+            teachingNotes: """
+                Neisseria meningitidis (meningococcus) is the most common cause in young adults. \
+                The mortality rate is 10-15% even with treatment. The key teaching point is that \
+                antibiotics must never be delayed — in primary care, give IM benzylpenicillin \
+                before transfer to hospital.
+                """,
+            tags: ["meningitis", "meningococcal", "sepsis", "lumbar puncture", "emergency"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "C0000001-0003-0001-0001-000000000003")!,
+            title: "Pulmonary Tuberculosis",
+            subspecialty: .infectiousDiseases,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 35-year-old man originally from South Asia presents with a 3-month history \
+                of productive cough, night sweats, weight loss of 8kg, and intermittent \
+                haemoptysis. He has been in the UK for 2 years and works as a taxi driver. \
+                He has no known HIV or immunosuppression.
+                """,
+            keyHistoryPoints: [
+                "Chronic cough >2 weeks — red flag for TB",
+                "Constitutional symptoms: night sweats, weight loss, malaise",
+                "Haemoptysis — suggests cavitating disease",
+                "Country of origin — high TB prevalence area",
+                "Contact history — anyone in household with TB",
+                "BCG vaccination status, previous TB treatment"
+            ],
+            examinationFindings: [
+                "Thin, cachectic appearance",
+                "Low-grade fever 37.8°C",
+                "Crackles and bronchial breathing at left apex",
+                "Possible lymphadenopathy (cervical)",
+                "Finger clubbing may be present in chronic disease",
+                "Check for hepatosplenomegaly (disseminated TB)"
+            ],
+            investigations: [
+                "Chest X-ray — upper lobe cavitation, infiltrates, fibrosis",
+                "Sputum for acid-fast bacilli (AFB) — 3 early morning samples",
+                "Sputum culture on Löwenstein-Jensen medium (takes 6-8 weeks)",
+                "GeneXpert MTB/RIF — rapid PCR, detects rifampicin resistance",
+                "HIV test — all TB patients must be tested",
+                "Interferon-gamma release assay (IGRA) or Mantoux test"
+            ],
+            managementPlan: [
+                "Standard regimen: RIPE — Rifampicin, Isoniazid, Pyrazinamide, Ethambutol for 2 months",
+                "Continuation phase: Rifampicin + Isoniazid for further 4 months (total 6 months)",
+                "Directly Observed Therapy (DOT) if adherence concerns",
+                "Contact tracing of household and close contacts",
+                "Notify public health (TB is notifiable)",
+                "Pyridoxine (vitamin B6) supplementation with isoniazid to prevent peripheral neuropathy"
+            ],
+            criticalPoints: [
+                "Always test for HIV in TB patients",
+                "Check visual acuity before starting ethambutol (optic neuritis risk)",
+                "Monitor LFTs — rifampicin, isoniazid, and pyrazinamide are all hepatotoxic",
+                "MDR-TB if resistance to rifampicin and isoniazid — requires specialist management"
+            ],
+            teachingNotes: """
+                TB remains a major global killer — about 10 million new cases annually. The \
+                mnemonic RIPE helps remember first-line drugs. Rifampicin turns body fluids \
+                orange-red (warn patients about urine and tears). Treatment must be completed \
+                in full even when patients feel better — incomplete treatment drives resistance.
+                """,
+            tags: ["tuberculosis", "TB", "respiratory", "public health", "antibiotics"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "C0000001-0004-0001-0001-000000000004")!,
+            title: "Infective Endocarditis",
+            subspecialty: .infectiousDiseases,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 42-year-old intravenous drug user presents with a 3-week history of \
+                intermittent fevers, malaise, and progressive breathlessness. He has a \
+                history of hepatitis C. Examination reveals a new pansystolic murmur at \
+                the left sternal edge, splinter haemorrhages, and Janeway lesions on his palms.
+                """,
+            keyHistoryPoints: [
+                "IV drug use — major risk factor for right-sided endocarditis",
+                "Intermittent fevers with rigors — bacteraemia",
+                "Progressive breathlessness — valvular regurgitation or septic emboli",
+                "Previous dental work or invasive procedures",
+                "Pre-existing valvular disease or prosthetic valves",
+                "Hepatitis C co-infection common in IVDU"
+            ],
+            examinationFindings: [
+                "New pansystolic murmur — tricuspid regurgitation (IVDU) or mitral",
+                "Splinter haemorrhages in nail beds",
+                "Janeway lesions (painless erythematous lesions on palms/soles)",
+                "Osler's nodes (painful nodules on fingertips) — immune complex deposition",
+                "Splenomegaly",
+                "Petechiae on conjunctivae and oral mucosa"
+            ],
+            investigations: [
+                "Blood cultures x3 from different sites before antibiotics",
+                "Transthoracic echocardiography (TTE) — then TOE if negative but clinical suspicion high",
+                "Look for vegetations, abscess, regurgitation",
+                "FBC (anaemia of chronic disease, raised WCC), CRP, ESR",
+                "Urinalysis — microscopic haematuria (immune complex glomerulonephritis)",
+                "Modified Duke criteria for diagnosis (2 major, or 1 major + 3 minor, or 5 minor)"
+            ],
+            managementPlan: [
+                "Prolonged IV antibiotics — typically 4-6 weeks",
+                "Empirical: flucloxacillin + gentamicin (native valve), vancomycin + gentamicin (IVDU/prosthetic)",
+                "Guided by blood culture sensitivities once available",
+                "Surgical referral if: heart failure, uncontrolled infection, large vegetations (>10mm), embolic events",
+                "Monitor renal function (gentamicin toxicity)",
+                "Dental assessment and source control"
+            ],
+            criticalPoints: [
+                "Never start antibiotics before taking blood cultures (3 sets minimum)",
+                "Staphylococcus aureus is commonest in IVDU (usually right-sided, tricuspid)",
+                "Streptococcus viridans commonest in native valve (usually left-sided)",
+                "Prosthetic valve endocarditis within 60 days = coagulase-negative staph"
+            ],
+            teachingNotes: """
+                The Duke criteria remain the gold standard for diagnosis. Remember the peripheral \
+                stigmata: FROM JANE — Fever, Roth spots, Osler's nodes, Murmur (new), Janeway \
+                lesions, Anaemia, Nail haemorrhages, Emboli. Mortality is 20-30% even with treatment.
+                """,
+            tags: ["endocarditis", "cardiology", "IVDU", "bacteraemia", "Duke criteria"]
+        ),
+        ClinicalCase(
+            id: UUID(uuidString: "C0000001-0005-0001-0001-000000000005")!,
+            title: "HIV Seroconversion Illness",
+            subspecialty: .infectiousDiseases,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 28-year-old man presents with a 10-day history of fever, sore throat, \
+                diffuse maculopapular rash, myalgia, and cervical lymphadenopathy. He \
+                reports unprotected sexual intercourse with a new partner 3 weeks ago. \
+                A monospot test for EBV is negative.
+                """,
+            keyHistoryPoints: [
+                "Symptoms 2-4 weeks after exposure — classic seroconversion window",
+                "Glandular fever-like illness with negative monospot — think HIV",
+                "Unprotected sexual intercourse — risk factor",
+                "Rash — occurs in ~70% of acute HIV infections",
+                "Ask about oral ulcers, diarrhoea, weight loss",
+                "Previous STI screening history"
+            ],
+            examinationFindings: [
+                "Diffuse maculopapular rash — trunk and face predominantly",
+                "Generalised lymphadenopathy (cervical, axillary, inguinal)",
+                "Pharyngitis with mucosal ulceration",
+                "Fever 38.5°C",
+                "Oral candidiasis may be present",
+                "No hepatosplenomegaly at this stage typically"
+            ],
+            investigations: [
+                "4th-generation HIV test (p24 antigen + HIV antibody) — may be positive",
+                "HIV RNA viral load — detectable before antibodies (high in acute infection)",
+                "FBC — lymphopenia, atypical lymphocytes",
+                "CD4 count — may be transiently low",
+                "Full STI screen (syphilis, hepatitis B/C, gonorrhoea, chlamydia)",
+                "LFTs — may show transient transaminitis"
+            ],
+            managementPlan: [
+                "Confirm diagnosis with repeat HIV test and viral load",
+                "Early referral to HIV specialist — antiretroviral therapy (ART) recommended for all",
+                "Start ART as soon as possible — reduces viral reservoir and transmission risk",
+                "Preferred regimen: integrase inhibitor-based (e.g. dolutegravir + tenofovir/emtricitabine)",
+                "Partner notification and contact tracing",
+                "Baseline resistance testing before starting ART"
+            ],
+            criticalPoints: [
+                "A negative antibody test does NOT exclude acute HIV — must test p24 antigen or RNA",
+                "Acute HIV has extremely high viral load — highest transmission risk period",
+                "Always consider HIV in unexplained glandular fever-like illness with negative monospot",
+                "Treatment is now recommended for ALL HIV-positive patients regardless of CD4 count"
+            ],
+            teachingNotes: """
+                Acute HIV seroconversion is missed in up to 70% of cases because it mimics \
+                glandular fever. The key clinical pearl: negative monospot + glandular fever \
+                symptoms + risk factors = test for HIV. The window period for 4th-gen tests \
+                is about 4 weeks. U=U (Undetectable = Untransmittable) is now established — \
+                patients on effective ART with undetectable viral load do not transmit sexually.
+                """,
+            tags: ["HIV", "seroconversion", "STI", "antiretroviral", "sexual health"]
         )
     ]
 }

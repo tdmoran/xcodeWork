@@ -307,6 +307,7 @@ extension ENTSubspecialty {
         case .pediatricENT: return .orange
         case .laryngology: return .purple
         case .generalKnowledge: return .teal
+        case .infectiousDiseases: return .pink
         }
     }
 }

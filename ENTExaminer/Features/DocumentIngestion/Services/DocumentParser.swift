@@ -270,16 +270,12 @@ struct DocxParserService: DocumentParserProtocol {
     func parse(url: URL) async throws -> ParsedDocument {
         let data = try Data(contentsOf: url)
         let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-
-        let tempDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("docx_\(UUID().uuidString)")
-
-        defer { try? FileManager.default.removeItem(at: tempDir) }
-
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-
-        let extractedXML = try extractDocumentXML(from: url, to: tempDir)
-        let text = try parseWordXML(at: extractedXML)
+        let attributed = try NSAttributedString(
+            url: url,
+            options: [.documentType: NSAttributedString.DocumentType.officeOpenXML],
+            documentAttributes: nil
+        )
+        let text = attributed.string
 
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw AppError.documentEmpty
@@ -303,96 +299,6 @@ struct DocxParserService: DocumentParserProtocol {
         )
     }
 
-    private func extractDocumentXML(from docxURL: URL, to tempDir: URL) throws -> URL {
-        #if os(macOS)
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-        process.arguments = ["-o", docxURL.path, "word/document.xml", "-d", tempDir.path]
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-
-        try process.run()
-        process.waitUntilExit()
-
-        guard process.terminationStatus == 0 else {
-            throw AppError.parseFailure("Failed to extract DOCX contents (unzip exit code \(process.terminationStatus))")
-        }
-        #else
-        // On iOS, Process is unavailable. Extract the zip archive manually.
-        let docxData = try Data(contentsOf: docxURL)
-        try extractZipEntry(from: docxData, entryPath: "word/document.xml", to: tempDir)
-        #endif
-
-        let xmlPath = tempDir.appendingPathComponent("word/document.xml")
-        guard FileManager.default.fileExists(atPath: xmlPath.path) else {
-            throw AppError.parseFailure("DOCX file does not contain word/document.xml")
-        }
-
-        return xmlPath
-    }
-
-    private func parseWordXML(at xmlURL: URL) throws -> String {
-        let data = try Data(contentsOf: xmlURL)
-        let delegate = WordXMLParserDelegate()
-        let parser = XMLParser(data: data)
-        parser.delegate = delegate
-
-        guard parser.parse() else {
-            let errorDesc = parser.parserError?.localizedDescription ?? "Unknown XML parse error"
-            throw AppError.parseFailure("Failed to parse DOCX XML: \(errorDesc)")
-        }
-
-        return delegate.extractedText
-    }
-
-    #if !os(macOS)
-    /// Minimal zip entry extraction for iOS (no Process available).
-    /// Locates a single file inside a zip archive and writes it to the destination directory.
-    private func extractZipEntry(from zipData: Data, entryPath: String, to destinationDir: URL) throws {
-        // ZIP local file header signature = 0x04034b50
-        let signature: [UInt8] = [0x50, 0x4B, 0x03, 0x04]
-        var offset = 0
-
-        while offset + 30 <= zipData.count {
-            let headerBytes = [UInt8](zipData[offset..<offset + 4])
-            guard headerBytes == signature else { break }
-
-            let compressionMethod = UInt16(zipData[offset + 8]) | (UInt16(zipData[offset + 9]) << 8)
-            let compressedSize = Int(UInt32(zipData[offset + 18])
-                | (UInt32(zipData[offset + 19]) << 8)
-                | (UInt32(zipData[offset + 20]) << 16)
-                | (UInt32(zipData[offset + 21]) << 24))
-            let fileNameLength = Int(UInt16(zipData[offset + 26]) | (UInt16(zipData[offset + 27]) << 8))
-            let extraFieldLength = Int(UInt16(zipData[offset + 28]) | (UInt16(zipData[offset + 29]) << 8))
-
-            let fileNameStart = offset + 30
-            let fileNameData = zipData[fileNameStart..<fileNameStart + fileNameLength]
-            let fileName = String(data: fileNameData, encoding: .utf8) ?? ""
-
-            let dataStart = fileNameStart + fileNameLength + extraFieldLength
-
-            if fileName == entryPath {
-                guard compressionMethod == 0 else {
-                    // Stored (uncompressed) entries only; deflate would need zlib
-                    throw AppError.parseFailure("DOCX entry is compressed; a zip library is required on iOS")
-                }
-                let entryData = zipData[dataStart..<dataStart + compressedSize]
-                let targetURL = destinationDir.appendingPathComponent(entryPath)
-                try FileManager.default.createDirectory(
-                    at: targetURL.deletingLastPathComponent(),
-                    withIntermediateDirectories: true
-                )
-                try entryData.write(to: targetURL)
-                return
-            }
-
-            offset = dataStart + compressedSize
-        }
-
-        throw AppError.parseFailure("DOCX file does not contain \(entryPath)")
-    }
-    #endif
-
     private func splitIntoParagraphSections(text: String) -> [DocumentSection] {
         let paragraphs = text.components(separatedBy: "\n\n")
         var sections: [DocumentSection] = []
@@ -410,61 +316,6 @@ struct DocxParserService: DocumentParserProtocol {
         }
 
         return sections
-    }
-}
-
-// MARK: - Word XML Parser Delegate
-
-private final class WordXMLParserDelegate: NSObject, XMLParserDelegate {
-    private(set) var extractedText = ""
-    private var isInsideTextElement = false
-    private var currentParagraphText = ""
-    private var isNewParagraph = false
-
-    func parser(
-        _ parser: XMLParser,
-        didStartElement elementName: String,
-        namespaceURI: String?,
-        qualifiedName: String?,
-        attributes: [String: String] = [:]
-    ) {
-        // <w:t> elements contain the actual text runs
-        if elementName == "w:t" {
-            isInsideTextElement = true
-        }
-        // <w:p> marks a new paragraph
-        if elementName == "w:p" {
-            isNewParagraph = true
-            currentParagraphText = ""
-        }
-    }
-
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
-        if isInsideTextElement {
-            currentParagraphText += string
-        }
-    }
-
-    func parser(
-        _ parser: XMLParser,
-        didEndElement elementName: String,
-        namespaceURI: String?,
-        qualifiedName: String?
-    ) {
-        if elementName == "w:t" {
-            isInsideTextElement = false
-        }
-        if elementName == "w:p" {
-            let trimmed = currentParagraphText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmed.isEmpty {
-                if !extractedText.isEmpty {
-                    extractedText += "\n\n"
-                }
-                extractedText += trimmed
-            }
-            isNewParagraph = false
-            currentParagraphText = ""
-        }
     }
 }
 
@@ -487,6 +338,13 @@ struct CompositeDocumentParser: DocumentParserProtocol {
     }
 
     func parse(url: URL) async throws -> ParsedDocument {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
         guard let format = DocumentFormat.detect(from: url) else {
             throw AppError.unsupportedFormat(url.pathExtension)
         }

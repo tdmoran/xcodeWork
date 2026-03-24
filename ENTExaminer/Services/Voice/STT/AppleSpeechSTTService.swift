@@ -197,7 +197,7 @@ actor AppleSpeechSTTService: STTService {
 
         switch status {
         case .authorized:
-            return
+            break
 
         case .notDetermined:
             let granted = await withCheckedContinuation { continuation in

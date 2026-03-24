@@ -73,13 +73,13 @@ final class FlowControllerTests: XCTestCase {
         }
     }
 
-    func testEscalatesDifficultyOnHighMastery() {
+    func testEscalatesDifficultyBeforeTopicTransitionThreshold() {
         let turns = [
-            makeTurn(index: 0, topic: sampleAnalysis.topics[0], score: 0.85),
+            makeTurn(index: 0, topic: sampleAnalysis.topics[0], score: 0.75),
         ]
 
         let topicScores = [
-            TopicScore(topicName: "Photosynthesis", mastery: 0.85, questionsAsked: 1, questionsCorrect: 1, trend: .stable)
+            TopicScore(topicName: "Photosynthesis", mastery: 0.75, questionsAsked: 1, questionsCorrect: 1, trend: .stable)
         ]
 
         let action = flowController.decideNextAction(

@@ -19,6 +19,7 @@ actor PipelinedSpeaker {
     // MARK: - State
 
     private var currentSpeakTask: Task<Void, Error>?
+    private var currentStreamTask: Task<String, Error>?
     private var bargedIn: Bool = false
 
     // MARK: - Initialization
@@ -60,55 +61,76 @@ actor PipelinedSpeaker {
         onAudioLevel: @escaping @Sendable (Float) -> Void
     ) async throws -> String {
         bargedIn = false
-        var buffer = ""
-        var fullText = ""
-        var pendingSentences: [String] = []
-
         logger.info("Starting pipelined speech from Claude stream")
+        let splitter = sentenceSplitter
 
-        for try await event in stream {
-            switch event {
-            case .textDelta(let delta):
-                buffer += delta
-                fullText += delta
+        let streamTask = Task<String, Error> {
+            var buffer = ""
+            var fullText = ""
+            var pendingSentences: [String] = []
 
-                // If barged in, keep consuming stream for full text but don't speak
-                guard !bargedIn else { continue }
+            do {
+                for try await event in stream {
+                    switch event {
+                    case .textDelta(let delta):
+                        buffer += delta
+                        fullText += delta
 
-                let result = sentenceSplitter.extract(from: buffer)
-                buffer = result.remainder
-                pendingSentences = pendingSentences + result.sentences
+                        guard !self.wasBargedIn else {
+                            throw CancellationError()
+                        }
 
-                // Speak all ready sentences in order
-                while let sentence = pendingSentences.first, !bargedIn {
-                    pendingSentences = Array(pendingSentences.dropFirst())
-                    try await speakSentence(sentence, onAudioLevel: onAudioLevel)
+                        let result = splitter.extract(from: buffer)
+                        buffer = result.remainder
+                        pendingSentences = pendingSentences + result.sentences
+
+                        while let sentence = pendingSentences.first {
+                            guard !self.wasBargedIn else {
+                                throw CancellationError()
+                            }
+
+                            pendingSentences.removeFirst()
+                            try await self.speakSentence(sentence, onAudioLevel: onAudioLevel)
+                        }
+
+                    case .messageComplete:
+                        logger.debug("Stream complete, flushing remaining buffer")
+
+                    case .error(let message):
+                        logger.error("Stream error during pipelined speech: \(message)")
+                        throw AppError.apiServerError(statusCode: 0, message: message)
+                    }
                 }
 
-            case .messageComplete:
-                logger.debug("Stream complete, flushing remaining buffer")
+                guard !self.wasBargedIn else {
+                    throw CancellationError()
+                }
 
-            case .error(let message):
-                logger.error("Stream error during pipelined speech: \(message)")
-                throw AppError.apiServerError(statusCode: 0, message: message)
+                let remainingText = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !remainingText.isEmpty {
+                    try await self.speakSentence(remainingText, onAudioLevel: onAudioLevel)
+                }
+
+                for sentence in pendingSentences {
+                    guard !self.wasBargedIn else {
+                        throw CancellationError()
+                    }
+                    try await self.speakSentence(sentence, onAudioLevel: onAudioLevel)
+                }
+
+                return fullText
+            } catch is CancellationError {
+                return fullText
             }
         }
+        currentStreamTask = streamTask
+        defer { currentStreamTask = nil }
 
-        // Flush remaining text only if not barged in
-        if !bargedIn {
-            let remainingText = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !remainingText.isEmpty {
-                try await speakSentence(remainingText, onAudioLevel: onAudioLevel)
-            }
-
-            for sentence in pendingSentences {
-                try await speakSentence(sentence, onAudioLevel: onAudioLevel)
-            }
-        }
+        let spokenText = try await streamTask.value
 
         let wasBargedIn = bargedIn
-        logger.info("Pipelined speech finished (\(fullText.count) chars, bargedIn: \(wasBargedIn))")
-        return fullText
+        logger.info("Pipelined speech finished (\(spokenText.count) chars, bargedIn: \(wasBargedIn))")
+        return spokenText
     }
 
     /// Immediately stops speech playback, allowing the trainee to interrupt.
@@ -118,6 +140,7 @@ actor PipelinedSpeaker {
         bargedIn = true
         currentSpeakTask?.cancel()
         currentSpeakTask = nil
+        currentStreamTask?.cancel()
         await ttsService.stopSpeaking()
         logger.info("Barge-in: speech interrupted by trainee")
     }
@@ -129,6 +152,8 @@ actor PipelinedSpeaker {
     func stop() async {
         currentSpeakTask?.cancel()
         currentSpeakTask = nil
+        currentStreamTask?.cancel()
+        currentStreamTask = nil
         await ttsService.stopSpeaking()
         logger.info("Pipelined speaker stopped")
     }

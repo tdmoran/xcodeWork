@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import OSLog
+import CryptoKit
 
 private let logger = Logger(subsystem: "com.examiner", category: "AppState")
 
@@ -694,9 +695,19 @@ final class AppState {
                 let dSummary = await engine.buildDialogueSummary()
                 dialogueSummary = dSummary
                 examSummary = dSummary.asLegacySummary()
+                recordExamSession(
+                    score: dSummary.overallScore,
+                    topics: dSummary.topicScores.map(\.topicName),
+                    duration: dSummary.totalDuration
+                )
             } else {
                 let summary = await engine.buildSummary()
                 examSummary = summary
+                recordExamSession(
+                    score: summary.overallScore,
+                    topics: summary.topicScores.map(\.topicName),
+                    duration: summary.totalDuration
+                )
             }
             currentPhase = .complete
             selectedSection = .results
@@ -719,7 +730,7 @@ final class AppState {
     // MARK: - Exam Session Recording
 
     private func recordExamSession(score: Double, topics: [String], duration: TimeInterval) {
-        guard let docId = selectedLibraryDocument?.id else { return }
+        guard let docId = currentSessionDocumentID() else { return }
 
         // Update document exam count
         libraryDocuments = libraryDocuments.map { doc in
@@ -740,6 +751,29 @@ final class AppState {
         Task {
             try? await DocumentStore.shared.addSession(record)
         }
+    }
+
+    private func currentSessionDocumentID() -> UUID? {
+        if let selectedLibraryDocument {
+            return selectedLibraryDocument.id
+        }
+
+        if let selectedCase {
+            return selectedCase.id
+        }
+
+        guard let document else {
+            return nil
+        }
+
+        let digest = Insecure.MD5.hash(data: Data(document.contentHash.utf8))
+        let bytes = Array(digest)
+        return UUID(uuid: (
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        ))
     }
 
     // MARK: - Helpers

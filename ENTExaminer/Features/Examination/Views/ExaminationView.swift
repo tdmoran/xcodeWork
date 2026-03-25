@@ -6,6 +6,7 @@ import UIKit
 struct ExaminationView: View {
     @Environment(AppState.self) private var appState
     let sessionState: ExaminationSessionState
+    @State private var showSpeechVisualizer = true
 
     var body: some View {
         #if os(macOS)
@@ -131,9 +132,33 @@ struct ExaminationView: View {
             dialogueThread
                 .frame(maxHeight: .infinity)
 
-            // Active speech area
-            activeSpeechArea
-                .padding(.horizontal)
+            // Active speech area (collapsible)
+            if showSpeechVisualizer {
+                activeSpeechArea
+                    .padding(.horizontal)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+
+            // Visualizer toggle + controls
+            HStack {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        showSpeechVisualizer.toggle()
+                    }
+                } label: {
+                    Label(
+                        showSpeechVisualizer ? "Hide Visualizer" : "Show Visualizer",
+                        systemImage: showSpeechVisualizer ? "waveform.slash" : "waveform"
+                    )
+                    .font(.caption)
+                }
+                .buttonStyle(.borderless)
+                .foregroundStyle(.secondary)
+
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top, 4)
 
             // Controls
             controlBar

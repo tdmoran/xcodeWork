@@ -257,10 +257,13 @@ actor ExaminationEngine {
 
     func pause() async {
         timerTask?.cancel()
+        await ttsService.pauseSpeaking()
+        await sttService.stopListening()
         await state.update(status: .paused)
     }
 
     func resume() async {
+        await ttsService.resumeSpeaking()
         startTimer()
         let isConversational = await state.isConversationalMode
         await state.update(status: isConversational ? .inConversation : .askingQuestion)

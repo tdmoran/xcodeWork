@@ -184,6 +184,25 @@ actor AudioPipeline {
         logger.info("Audio engine stopped (playback-only mode)")
     }
 
+    // MARK: - Pause / Resume Playback
+
+    /// Pauses audio playback without tearing down the engine.
+    /// The player node retains its scheduled buffers so playback can resume seamlessly.
+    func pausePlayback() {
+        guard let playerNode = playbackPlayerNode, playerNode.isPlaying else { return }
+        playerNode.pause()
+        logger.info("Audio playback paused")
+    }
+
+    /// Resumes audio playback from where it was paused.
+    func resumePlayback() {
+        guard let playerNode = playbackPlayerNode, let engine, engine.isRunning else { return }
+        // AVAudioPlayerNode.play() resumes from the paused position
+        // when buffers are still scheduled.
+        playerNode.play()
+        logger.info("Audio playback resumed")
+    }
+
     // MARK: - Volume Control
 
     func setPlaybackVolume(_ volume: Float) {

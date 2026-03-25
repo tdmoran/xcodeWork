@@ -21,5 +21,13 @@ let package = Package(
                 .swiftLanguageMode(.v5),
             ]
         ),
+        .testTarget(
+            name: "ENTExaminerTests",
+            dependencies: ["ENTExaminer"],
+            path: "ENTExaminerTests",
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+            ]
+        ),
     ]
 )

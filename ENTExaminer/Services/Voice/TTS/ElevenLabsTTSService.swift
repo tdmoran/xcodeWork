@@ -116,6 +116,16 @@ actor ElevenLabsTTSService: TTSService {
         logger.info("TTS playback stopped by request")
     }
 
+    func pauseSpeaking() async {
+        await audioPipeline.pausePlayback()
+        logger.info("TTS playback paused")
+    }
+
+    func resumeSpeaking() async {
+        await audioPipeline.resumePlayback()
+        logger.info("TTS playback resumed")
+    }
+
     // MARK: - Private Helpers
 
     private func cancelActiveStream() {

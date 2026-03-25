@@ -348,6 +348,7 @@ extension ENTSubspecialty {
         case .generalSurgery: return .indigo
         case .generalMedicine: return .cyan
         case .ophthalmology: return .mint
+        case .urology: return .yellow
         }
     }
 }

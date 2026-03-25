@@ -18,4 +18,10 @@ protocol TTSService: Sendable {
 
     /// Stops any currently playing speech and cancels the active stream.
     func stopSpeaking() async
+
+    /// Pauses any currently playing speech. Call ``resumeSpeaking()`` to continue.
+    func pauseSpeaking() async
+
+    /// Resumes speech that was previously paused with ``pauseSpeaking()``.
+    func resumeSpeaking() async
 }

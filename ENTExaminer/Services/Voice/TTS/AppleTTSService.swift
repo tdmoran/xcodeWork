@@ -85,6 +85,26 @@ final class AppleTTSService: NSObject, TTSService, AVSpeechSynthesizerDelegate {
         }
     }
 
+    nonisolated func pauseSpeaking() async {
+        await MainActor.run {
+            if self.synthesizer.isSpeaking {
+                self.synthesizer.pauseSpeaking(at: .immediate)
+                self.stopLevelSimulation()
+            }
+            logger.info("Apple TTS paused")
+        }
+    }
+
+    nonisolated func resumeSpeaking() async {
+        await MainActor.run {
+            if self.synthesizer.isPaused {
+                self.startLevelSimulation()
+                self.synthesizer.continueSpeaking()
+            }
+            logger.info("Apple TTS resumed")
+        }
+    }
+
     // MARK: - AVSpeechSynthesizerDelegate
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

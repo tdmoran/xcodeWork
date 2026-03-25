@@ -13,6 +13,7 @@ enum ENTSubspecialty: String, Codable, CaseIterable, Sendable {
     case generalSurgery = "General Surgery"
     case generalMedicine = "General Medicine"
     case ophthalmology = "Ophthalmology"
+    case urology = "Urology"
 
     /// The broad medical category this subspecialty belongs to.
     var category: MedicalCategory {
@@ -27,6 +28,8 @@ enum ENTSubspecialty: String, Codable, CaseIterable, Sendable {
             return .generalMedicine
         case .ophthalmology:
             return .ophthalmology
+        case .urology:
+            return .urology
         case .generalKnowledge:
             return .generalKnowledge
         }
@@ -39,6 +42,7 @@ enum MedicalCategory: String, CaseIterable, Sendable {
     case generalMedicine = "General Medicine"
     case infectiousDiseases = "Infectious Diseases"
     case ophthalmology = "Ophthalmology"
+    case urology = "Urology"
     case generalKnowledge = "General Knowledge"
 
     var systemImage: String {
@@ -48,6 +52,7 @@ enum MedicalCategory: String, CaseIterable, Sendable {
         case .generalMedicine: return "stethoscope"
         case .infectiousDiseases: return "microbe.fill"
         case .ophthalmology: return "eye.fill"
+        case .urology: return "drop.fill"
         case .generalKnowledge: return "lightbulb.fill"
         }
     }
@@ -195,6 +200,7 @@ struct CaseBank {
         + generalSurgeryCases
         + generalMedicineCases
         + ophthalmologyCases
+        + urologyCases
 
     // MARK: - Head & Neck Cases
 
@@ -2860,6 +2866,326 @@ struct CaseBank {
                 Visual acuity monitoring is essential — any deterioration mandates urgent surgical drainage.
                 """,
             tags: ["orbital cellulitis", "proptosis", "sinusitis", "ophthalmoplegia", "paediatric", "abscess"]
+        )
+    ]
+
+    // MARK: - Urology Cases
+
+    static let urologyCases: [ClinicalCase] = [
+        ClinicalCase(
+            id: UUID(uuidString: "E0A10001-0001-0001-0001-000000000001")!,
+            title: "Renal Cell Carcinoma with Renal Vein Thrombus",
+            subspecialty: .urology,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 62-year-old retired electrician presents with painless gross haematuria for 3 weeks \
+                with clot passage, left flank dull ache, and 6 kg weight loss over 2 months. He has a \
+                30 pack-year smoking history. Examination reveals a palpable left flank mass and a left \
+                varicocele that does not decompress when supine.
+                """,
+            keyHistoryPoints: [
+                "Painless gross haematuria with clots — 3 weeks duration",
+                "Left flank dull ache — persistent, non-radiating",
+                "Unintentional weight loss 6 kg in 2 months",
+                "30 pack-year smoking history (quit 5 years ago)",
+                "Background of hypertension and type 2 diabetes",
+                "Early satiety and reduced appetite suggesting systemic disease"
+            ],
+            examinationFindings: [
+                "Cachectic appearance with pallor",
+                "Palpable, ballotable left flank mass — non-tender",
+                "Left varicocele that does NOT decompress supine — indicates left renal vein obstruction",
+                "BP 155/90 — hypertension",
+                "No hepatomegaly or ascites"
+            ],
+            investigations: [
+                "Hb 10.2 (anaemia), Calcium 2.85 (hypercalcaemia), ALP 180 (raised), ESR 85, LDH 450 — paraneoplastic features",
+                "eGFR 62 — mildly impaired renal function",
+                "USS: 8.5 cm solid heterogeneous left renal mass",
+                "CT: Enhancing left renal mass (Bosniak IV) with tumour thrombus in left renal vein",
+                "Two enlarged para-aortic lymph nodes (2.1 cm, 1.8 cm)",
+                "CT chest: Two indeterminate subcentimetre pulmonary nodules (6 mm, 4 mm)"
+            ],
+            managementPlan: [
+                "MDT discussion — urology, oncology, radiology",
+                "Staging: T3a (renal vein thrombus), N1, M0/M1 (indeterminate lung nodules)",
+                "Radical nephrectomy with Level I thrombectomy",
+                "DMSA split function scan to assess contralateral kidney",
+                "Surveillance CT for indeterminate lung nodules",
+                "Consider adjuvant pembrolizumab if high-risk non-metastatic (KEYNOTE-564)",
+                "If metastatic: nivolumab + ipilimumab or sunitinib based on IMDC score"
+            ],
+            criticalPoints: [
+                "Left varicocele not decompressing supine = left renal vein obstruction — do not miss",
+                "IVC thrombus extension must be excluded — determines surgical approach",
+                "Paraneoplastic hypercalcaemia requires urgent management if symptomatic",
+                "Lung nodules need follow-up CT — may upstage to M1"
+            ],
+            teachingNotes: """
+                The classic triad of RCC (haematuria, flank pain, palpable mass) is present in fewer \
+                than 10% of patients. A left varicocele that fails to decompress supine is a critical \
+                clinical sign — the left gonadal vein drains into the left renal vein, so obstruction \
+                by tumour thrombus prevents decompression. RCC is notable for paraneoplastic syndromes \
+                including hypercalcaemia (PTHrP), polycythaemia (EPO), and Stauffer syndrome \
+                (non-metastatic hepatic dysfunction).
+                """,
+            tags: ["RCC", "haematuria", "renal vein thrombus", "nephrectomy", "paraneoplastic", "varicocele"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0A10001-0001-0001-0001-000000000002")!,
+            title: "Acute Ureteric Calculus with Sepsis",
+            subspecialty: .urology,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 38-year-old woman with Crohn's disease presents with severe right-sided colicky \
+                loin-to-groin pain for 6 hours, rigors, and fever of 39.2°C. She is tachycardic \
+                (HR 120) and hypotensive (BP 95/60). CT KUB shows a 9 mm calculus at the right \
+                vesicoureteric junction with moderate hydroureteronephrosis.
+                """,
+            keyHistoryPoints: [
+                "Sudden onset severe right loin-to-groin pain — colicky, 10/10",
+                "Rigors and fever (39.2°C) — indicates infected obstructed system",
+                "Vomited three times",
+                "Previous left renal calculus 4 years ago (4 mm, passed spontaneously)",
+                "Crohn's disease (terminal ileum) on azathioprine — risk factor for oxalate stones",
+                "Recurrent UTIs — 3 in past year",
+                "BMI 32 — obesity is an independent risk factor"
+            ],
+            examinationFindings: [
+                "Distressed, diaphoretic, rigoring",
+                "Hypotensive BP 95/60, tachycardic HR 120 — SEPSIS",
+                "Temperature 39.2°C, RR 22",
+                "Right flank tenderness with positive renal angle tenderness",
+                "Abdomen soft, no peritonism"
+            ],
+            investigations: [
+                "WCC 18.7, Neutrophils 15.2, CRP 210 — marked inflammatory response",
+                "Platelets 95 — thrombocytopenia (early DIC marker in sepsis)",
+                "Creatinine 145, eGFR 38 — acute kidney injury",
+                "Lactate 3.8 — tissue hypoperfusion",
+                "Urinalysis: Leucocytes +++, Nitrites +, Blood ++",
+                "CT KUB: 9 mm calculus at right VUJ, moderate hydroureteronephrosis, perinephric stranding",
+                "Stone density 950 HU — suggests calcium oxalate"
+            ],
+            managementPlan: [
+                "SEPSIS 6 pathway: blood cultures, IV antibiotics, IV fluids, lactate, urine output monitoring, oxygen",
+                "IV antibiotics: gentamicin + co-amoxiclav or piperacillin-tazobactam",
+                "URGENT decompression: nephrostomy or ureteric stent — infected obstructed system is a urological EMERGENCY",
+                "Definitive stone management after sepsis resolves: ureteroscopy + laser lithotripsy",
+                "ESWL less effective for VUJ stones and dense stones (>1000 HU)",
+                "Metabolic workup: 24-hour urine collection, stone analysis after retrieval",
+                "Address Crohn's-related hyperoxaluria: dietary oxalate reduction, fluid intake >2.5L/day"
+            ],
+            criticalPoints: [
+                "Obstructed infected kidney is a UROLOGICAL EMERGENCY — decompress before definitive stone treatment",
+                "Do NOT attempt ureteroscopy in a septic patient — decompression only",
+                "Thrombocytopenia + raised lactate = evolving sepsis — may need ICU",
+                "Crohn's disease causes enteric hyperoxaluria — drives recurrent calcium oxalate stones"
+            ],
+            teachingNotes: """
+                An obstructed infected collecting system is one of the few true urological emergencies. \
+                The combination of obstruction and infection creates a closed-space abscess that rapidly \
+                leads to Gram-negative septicaemia and multi-organ failure. Decompression (nephrostomy \
+                or ureteric stent) must occur within hours, not days. Definitive stone treatment is \
+                deferred until the patient is well. In patients with Crohn's disease, fat malabsorption \
+                leads to free fatty acids binding calcium in the gut, leaving oxalate unbound for \
+                absorption — causing enteric hyperoxaluria and calcium oxalate stones.
+                """,
+            tags: ["ureteric calculus", "sepsis", "obstructed kidney", "nephrostomy", "Crohn's", "hyperoxaluria"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0A10001-0001-0001-0001-000000000003")!,
+            title: "BPH with Acute Urinary Retention",
+            subspecialty: .urology,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 72-year-old man presents unable to pass urine for 10 hours with severe suprapubic \
+                pain. He has a 3-year history of progressive LUTS (IPSS 24/35) on tamsulosin. He took \
+                an over-the-counter cold remedy containing pseudoephedrine last week. Catheterisation \
+                drains 1200 mL. DRE reveals a smooth, symmetrically enlarged prostate (~60 g).
+                """,
+            keyHistoryPoints: [
+                "Progressive LUTS for 3 years — hesitancy, poor stream, terminal dribbling, nocturia x4-5",
+                "IPSS 24/35 (severe) — on tamsulosin 400 mcg with initial improvement",
+                "Acute retention precipitated by pseudoephedrine (sympathomimetic)",
+                "Unable to void for 10 hours with strong urge",
+                "No previous urological surgery",
+                "Lives alone, independent — social context for management decisions"
+            ],
+            examinationFindings: [
+                "Distressed, restless, unable to get comfortable",
+                "Palpable tense bladder to umbilicus",
+                "DRE: Smooth, symmetrically enlarged prostate (~60 g), firm, no nodules",
+                "Median sulcus preserved — consistent with benign enlargement",
+                "No hernias"
+            ],
+            investigations: [
+                "Catheterisation residual: 1200 mL",
+                "Creatinine 130, eGFR 48 — impaired renal function from back-pressure",
+                "K+ 5.2 — mild hyperkalaemia (monitor post-obstructive diuresis)",
+                "PSA 5.8 — elevated but in context of catheterisation and large prostate",
+                "USS: Bilateral mild hydronephrosis, trabeculated bladder, cortical thinning",
+                "Urinalysis: No infection"
+            ],
+            managementPlan: [
+                "Catheterisation and monitor for post-obstructive diuresis (fluid balance, U&Es 6-hourly)",
+                "Stop pseudoephedrine — educate on medications that precipitate retention",
+                "Optimise alpha-blocker + add 5-alpha reductase inhibitor (finasteride or dutasteride)",
+                "Trial without catheter (TWOC) at 48-72 hours — poor prognostic features in this patient",
+                "Repeat PSA after 6 weeks once catheter removed",
+                "If TWOC fails: surgical options — TURP (gold standard), HoLEP, or Rezum",
+                "Monitor renal function — bilateral hydronephrosis suggests chronic high-pressure retention"
+            ],
+            criticalPoints: [
+                "Post-obstructive diuresis can cause dangerous electrolyte shifts — monitor K+, Na+, fluid balance",
+                "Pseudoephedrine precipitated retention — always ask about OTC medications",
+                "PSA elevated in context of retention and large prostate — do NOT biopsy acutely",
+                "Bilateral hydronephrosis + raised creatinine = chronic high-pressure retention — needs careful monitoring"
+            ],
+            teachingNotes: """
+                Acute urinary retention is a common urological emergency. Precipitants include \
+                sympathomimetics (pseudoephedrine), anticholinergics, opioids, alcohol, and \
+                constipation. Post-obstructive diuresis occurs because of osmotic diuresis from \
+                retained urea and impaired tubular concentrating ability — it can be massive \
+                (>200 mL/hr) and cause dangerous dehydration and electrolyte derangement. The TWOC \
+                success rate is lower when residual volume exceeds 1000 mL, age is over 65, or \
+                symptoms were chronic. The CombAT and MTOPS trials showed combination therapy \
+                (alpha-blocker + 5ARI) is superior to monotherapy for large prostates.
+                """,
+            tags: ["BPH", "acute retention", "LUTS", "TURP", "post-obstructive diuresis", "pseudoephedrine"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0A10001-0001-0001-0001-000000000004")!,
+            title: "Muscle-Invasive Bladder Cancer",
+            subspecialty: .urology,
+            difficulty: .challenging,
+            clinicalVignette: """
+                A 68-year-old former chemical plant worker and current smoker presents with painless \
+                frank haematuria for 6 weeks and two episodes of clot retention. He has a history of \
+                previous pTa high-grade TCC treated with TURBT and BCG. TURBT histology now shows \
+                pT2a high-grade urothelial carcinoma with LVI and surrounding CIS.
+                """,
+            keyHistoryPoints: [
+                "Painless frank haematuria 6 weeks with clot retention x2",
+                "Occupational exposure: aromatic amines (2-naphthylamine, benzidine) for 25 years in dye manufacturing",
+                "40 pack-year current smoker — synergistic risk with occupational exposure",
+                "Previous NMIBC (pTa HG) treated with TURBT + BCG maintenance — now BCG failure",
+                "New urinary frequency and urgency — CIS symptom",
+                "Bilateral lower back ache — consider local extension",
+                "COPD (FEV1 55%) and IHD (PCI 3 years ago) — fitness for surgery concerns"
+            ],
+            examinationFindings: [
+                "No cachexia, tar-stained fingers",
+                "SpO2 93% on room air — significant COPD",
+                "Bilateral wheeze, reduced air entry at bases",
+                "Catheter in situ draining clear post-washout",
+                "DRE: No palpable pelvic mass"
+            ],
+            investigations: [
+                "Hb 11.8 — mild anaemia",
+                "Urine cytology: High-grade malignant urothelial cells",
+                "Cystoscopy: 4 cm sessile tumour on left lateral wall extending to trigone, adjacent CIS",
+                "TURBT histology: pT2a (inner detrusor invasion), HG, LVI positive, CIS present",
+                "CT staging: Perivesical fat stranding, two enlarged left obturator nodes (1.5 cm, 1.2 cm)",
+                "PET-CT: FDG-avid bladder mass and obturator nodes, no distant metastases",
+                "eGFR 72 — borderline for cisplatin eligibility"
+            ],
+            managementPlan: [
+                "MDT discussion — urology, oncology, radiology, anaesthetics",
+                "Staging: pT2a N1 M0 — muscle-invasive with nodal disease",
+                "Neoadjuvant chemotherapy: gemcitabine + cisplatin (5% survival benefit, level 1 evidence)",
+                "Assess cisplatin eligibility: eGFR 72 (borderline), ECOG status, hearing, neuropathy",
+                "Radical cystectomy with extended pelvic lymph node dissection",
+                "Urinary diversion: ileal conduit (preferred — CIS at trigone contraindicates neobladder)",
+                "CPET testing for fitness assessment given COPD and cardiac history",
+                "Prehabilitation: smoking cessation, nutritional optimisation, exercise programme",
+                "Alternative if unfit: trimodal therapy (TURBT + RT + concurrent chemo) — less favourable with CIS"
+            ],
+            criticalPoints: [
+                "Detrusor muscle MUST be present in TURBT specimen — otherwise cannot stage accurately",
+                "CIS at trigone contraindicates orthotopic neobladder — urothelial margin risk",
+                "Occupational exposure to aromatic amines — industrial disease compensation considerations",
+                "BCG failure progression to muscle-invasive disease — surveillance protocol importance"
+            ],
+            teachingNotes: """
+                Bladder cancer is the most common urological malignancy after prostate cancer. \
+                Occupational exposure to aromatic amines (2-naphthylamine, benzidine, 4-aminobiphenyl) \
+                was historically the leading cause, particularly in dye, rubber, and chemical workers. \
+                The latency period is 15-40 years. Smoking is the strongest current risk factor. \
+                Neoadjuvant cisplatin-based chemotherapy before radical cystectomy provides a 5% absolute \
+                survival benefit at 5 years. The choice of urinary diversion depends on tumour factors \
+                (CIS location), patient factors (dexterity, cognition), and surgeon experience. Trimodal \
+                therapy is an organ-preserving alternative but requires careful patient selection.
+                """,
+            tags: ["bladder cancer", "MIBC", "cystectomy", "BCG failure", "neoadjuvant chemotherapy", "occupational"]
+        ),
+
+        ClinicalCase(
+            id: UUID(uuidString: "E0A10001-0001-0001-0001-000000000005")!,
+            title: "Testicular Torsion in an Adolescent",
+            subspecialty: .urology,
+            difficulty: .intermediate,
+            clinicalVignette: """
+                A 16-year-old boy is brought to A&E at 3 AM with sudden onset severe left scrotal pain \
+                that woke him from sleep 4 hours ago, with radiation to the left groin. He has vomited \
+                twice. Examination reveals a high-riding left testis with horizontal lie, absent \
+                cremasteric reflex, and negative Prehn's sign.
+                """,
+            keyHistoryPoints: [
+                "Sudden onset left scrotal pain waking from sleep — 4 hours ago",
+                "Pain 9/10, constant, radiating to left iliac fossa and groin",
+                "Vomited twice — autonomic response to pain",
+                "No trauma, no sexual activity, no urinary symptoms",
+                "Testis feels higher than usual — patient observation",
+                "No previous testicular problems or similar episodes",
+                "No recent illness or fever — helps exclude epididymo-orchitis"
+            ],
+            examinationFindings: [
+                "In obvious pain, lying still, reluctant to move",
+                "Tachycardic HR 105, afebrile 36.9°C",
+                "Left testis: HIGH-RIDING, HORIZONTAL LIE — cardinal signs of torsion",
+                "Extremely tender, swollen left testis",
+                "ABSENT left cremasteric reflex",
+                "Negative Prehn's sign — elevation does not relieve pain",
+                "Right testis: Normal lie, non-tender, cremasteric reflex intact",
+                "No inguinal lymphadenopathy"
+            ],
+            investigations: [
+                "WCC 10.2, CRP 3 — no significant inflammatory markers (argues against infection)",
+                "Urinalysis: Clear, no leucocytes, no nitrites — normal (argues against epididymitis)",
+                "Doppler USS (if performed): Absent intratesticular blood flow on left, normal right flow",
+                "NOTE: Imaging should NOT delay surgical exploration when clinical suspicion is high"
+            ],
+            managementPlan: [
+                "Clinical diagnosis — do NOT delay for imaging",
+                "Emergency scrotal exploration within 1 hour of presentation",
+                "Consent: exploration, possible orchidectomy, BILATERAL orchidopexy",
+                "Gillick competence assessment for the 16-year-old — consent from patient AND parent",
+                "Operative: detorsion, assess viability (warm packs, observe 10-15 minutes for colour return)",
+                "Bilateral orchidopexy with 3-point non-absorbable suture fixation to dartos — bell-clapper deformity is bilateral",
+                "Orchidectomy if non-viable — must consent for this preoperatively",
+                "Post-op: fertility counselling, consider testicular prosthesis if orchidectomy"
+            ],
+            criticalPoints: [
+                "Time is testis: >6 hours = salvage rate drops below 50%, >12 hours approaches 0%",
+                "This patient at 4 hours — excellent salvage window, do NOT waste time on imaging",
+                "BILATERAL orchidopexy is MANDATORY — bell-clapper deformity is usually bilateral",
+                "Any acute scrotum in a young male is torsion until proven otherwise — medicolegal standard",
+                "Document timing, examination findings, and decision-making meticulously"
+            ],
+            teachingNotes: """
+                Testicular torsion is one of the most litigated conditions in urology. The key clinical \
+                signs are a high-riding testis, horizontal lie, absent cremasteric reflex, and negative \
+                Prehn's sign. The underlying cause is usually a bell-clapper deformity where the tunica \
+                vaginalis attaches high on the spermatic cord, allowing the testis to rotate freely. \
+                This deformity is bilateral in >80% of cases, mandating fixation of both testes. The \
+                testicular artery is an end-artery arising from the aorta at L2, meaning torsion causes \
+                complete ischaemia. Salvage rates are >90% at 6 hours but <10% beyond 24 hours.
+                """,
+            tags: ["testicular torsion", "acute scrotum", "orchidopexy", "bell-clapper", "emergency", "adolescent"]
         )
     ]
 }

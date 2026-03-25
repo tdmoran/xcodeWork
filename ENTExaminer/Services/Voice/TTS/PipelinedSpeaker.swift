@@ -148,6 +148,18 @@ actor PipelinedSpeaker {
     /// Whether the speaker was interrupted by a barge-in during the last stream.
     var wasBargedIn: Bool { bargedIn }
 
+    /// Pauses speech playback. The stream continues buffering but audio output is suspended.
+    func pause() async {
+        await ttsService.pauseSpeaking()
+        logger.info("Pipelined speaker paused")
+    }
+
+    /// Resumes speech playback from where it was paused.
+    func resume() async {
+        await ttsService.resumeSpeaking()
+        logger.info("Pipelined speaker resumed")
+    }
+
     /// Stops the current speech pipeline, cancelling any in-progress TTS.
     func stop() async {
         currentSpeakTask?.cancel()

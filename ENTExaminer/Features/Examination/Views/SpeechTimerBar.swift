@@ -91,24 +91,30 @@ struct SpeechTurnIndicator: View {
                     }
                 }
             }
-            .frame(height: 6)
+            .frame(height: 14)
+            .clipShape(Capsule())
 
             // Labels
             HStack {
                 Text(leftLabel)
-                    .font(.system(size: 9, weight: .medium))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(leftLabelColor)
 
                 Spacer()
 
                 if !rightLabel.isEmpty {
                     Text(rightLabel)
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(rightLabelColor)
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.ultraThinMaterial)
+        )
         .animation(.easeOut(duration: 0.15), value: greenProgress)
         .animation(.easeOut(duration: 0.15), value: redProgress)
         .animation(.easeInOut(duration: 0.8), value: examinerPulse)

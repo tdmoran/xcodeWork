@@ -7,6 +7,7 @@ struct ExaminationView: View {
     @Environment(AppState.self) private var appState
     let sessionState: ExaminationSessionState
     @State private var showSpeechVisualizer = true
+    @State private var showTurnIndicator = true
 
     var body: some View {
         #if os(macOS)
@@ -132,14 +133,53 @@ struct ExaminationView: View {
             dialogueThread
                 .frame(maxHeight: .infinity)
 
-            // Active speech area (collapsible)
+            // Speech Turn Indicator (separate, collapsible)
+            if showTurnIndicator {
+                SpeechTurnIndicator(
+                    status: sessionState.status,
+                    isListening: sessionState.isListening,
+                    isSpeaking: sessionState.isSpeaking,
+                    listeningStartTime: sessionState.listeningStartTime,
+                    lastSpeechTime: sessionState.lastSpeechTime,
+                    silenceTimeout: sessionState.silenceTimeout,
+                    maxSpeakingDuration: sessionState.maxAnswerLength
+                )
+                .padding(.horizontal)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+
+            // Turn Indicator toggle button
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showTurnIndicator.toggle()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: showTurnIndicator ? "gauge.open.with.lines.needle.84percent.exclamation" : "gauge.open.with.lines.needle.33percent")
+                        .font(.body)
+                    Text(showTurnIndicator ? "Hide Turn Indicator" : "Show Turn Indicator")
+                        .font(.subheadline.weight(.medium))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(showTurnIndicator ? Color.blue.opacity(0.1) : Color.secondary.opacity(0.08))
+                )
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(showTurnIndicator ? .blue : .secondary)
+            .padding(.horizontal)
+            .padding(.top, 4)
+
+            // Voice visualizer (waveforms, collapsible)
             if showSpeechVisualizer {
                 activeSpeechArea
                     .padding(.horizontal)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
-            // Visualizer toggle + controls
+            // Waveform toggle
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.25)) {
@@ -147,7 +187,7 @@ struct ExaminationView: View {
                     }
                 } label: {
                     Label(
-                        showSpeechVisualizer ? "Hide Turn Indicator" : "Show Turn Indicator",
+                        showSpeechVisualizer ? "Hide Waveforms" : "Show Waveforms",
                         systemImage: showSpeechVisualizer ? "waveform.slash" : "waveform"
                     )
                     .font(.caption)
@@ -158,7 +198,7 @@ struct ExaminationView: View {
                 Spacer()
             }
             .padding(.horizontal)
-            .padding(.top, 4)
+            .padding(.top, 2)
 
             // Controls
             controlBar
@@ -362,17 +402,6 @@ struct ExaminationView: View {
             }
             .padding(12)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-
-            // Speech Turn Indicator — always visible, shows whose turn it is
-            SpeechTurnIndicator(
-                status: sessionState.status,
-                isListening: sessionState.isListening,
-                isSpeaking: sessionState.isSpeaking,
-                listeningStartTime: sessionState.listeningStartTime,
-                lastSpeechTime: sessionState.lastSpeechTime,
-                silenceTimeout: sessionState.silenceTimeout,
-                maxSpeakingDuration: sessionState.maxAnswerLength
-            )
 
             // Conversational status
             conversationalStatusBadge

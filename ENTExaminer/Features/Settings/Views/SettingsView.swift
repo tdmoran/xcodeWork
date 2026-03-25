@@ -67,15 +67,8 @@ struct GeneralSettingsView: View {
             Section("AI Model") {
                 Picker("Default Model", selection: $state.selectedModel) {
                     ForEach(ClaudeModel.allCases) { model in
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(model.displayName)
-                                Spacer()
-                                Text(model.costTier)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .tag(model)
+                        Text("\(model.displayName)  (\(model.costTier))")
+                            .tag(model)
                     }
                 }
                 #if os(macOS)

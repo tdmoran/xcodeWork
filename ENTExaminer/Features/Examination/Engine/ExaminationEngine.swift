@@ -111,7 +111,6 @@ actor ExaminationEngine {
     private var startTime: Date?
     private var lastBargeInText: String?
     private var isPaused: Bool = false
-    private var pauseContinuation: CheckedContinuation<Void, Never>?
 
     private let voiceId: String
 
@@ -325,27 +324,20 @@ actor ExaminationEngine {
 
     func resume() async {
         isPaused = false
-        // Resume the continuation if the loop is waiting
-        pauseContinuation?.resume()
-        pauseContinuation = nil
         startTimer()
         let isConversational = await state.isConversationalMode
         await state.update(status: isConversational ? .inConversation : .askingQuestion)
     }
 
-    /// Suspends execution if the engine is paused. Resumes when `resume()` is called.
+    /// Suspends execution if the engine is paused. Resumes when `resume()` sets isPaused to false.
     private func waitIfPaused() async {
-        guard isPaused else { return }
-        await withCheckedContinuation { continuation in
-            self.pauseContinuation = continuation
+        while isPaused && !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(100))
         }
     }
 
     func stop() async {
         isPaused = false
-        // Unblock conversation loop if it's waiting on pause
-        pauseContinuation?.resume()
-        pauseContinuation = nil
         timerTask?.cancel()
         assessmentTask?.cancel()
         await ttsService.stopSpeaking()
@@ -500,9 +492,11 @@ actor ExaminationEngine {
         let traineeText = try await sttService.listen(
             onPartialTranscript: { @Sendable partial in
                 Task { @MainActor in
+                    // Only update lastSpeechTime when transcript content actually changes
+                    let isNew = partial != capturedState.userTranscript && !partial.isEmpty
                     capturedState.update(
                         userTranscript: partial,
-                        lastSpeechTime: .some(Date())
+                        lastSpeechTime: isNew ? .some(Date()) : nil
                     )
                 }
             },

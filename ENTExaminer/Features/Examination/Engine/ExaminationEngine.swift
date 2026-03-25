@@ -308,11 +308,11 @@ actor ExaminationEngine {
     }
 
     func pause() async {
+        guard !isPaused else { return }  // Prevent double-tap
         isPaused = true
         timerTask?.cancel()
-        // Use pipelined speaker's stop (cancels stream + TTS cleanly)
-        await pipelinedSpeaker.stop()
-        await sttService.stopListening()
+
+        // Set UI state immediately so the button switches to "play"
         await state.update(
             isListening: false,
             isSpeaking: false,
@@ -320,9 +320,14 @@ actor ExaminationEngine {
             listeningStartTime: .some(nil),
             lastSpeechTime: .some(nil)
         )
+
+        // Then clean up audio (may take time)
+        await pipelinedSpeaker.stop()
+        await sttService.stopListening()
     }
 
     func resume() async {
+        guard isPaused else { return }  // Prevent double-tap
         isPaused = false
         startTimer()
         let isConversational = await state.isConversationalMode

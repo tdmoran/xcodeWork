@@ -43,20 +43,19 @@ struct SpeechTurnIndicator: View {
                             )
                             .frame(width: max(0, geo.size.width * greenProgress))
 
-                        // Red bar: silence countdown (right to left)
+                        // Red bar: silence countdown (right to left, anchored to right edge)
                         if redProgress > 0 {
-                            HStack {
-                                Spacer()
-                                Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [redBarColor, redBarColor.opacity(0.7)],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
+                            let redWidth = max(0, geo.size.width * redProgress)
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [redBarColor.opacity(0.7), redBarColor],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
                                     )
-                                    .frame(width: max(0, geo.size.width * redProgress))
-                            }
+                                )
+                                .frame(width: redWidth)
+                                .position(x: geo.size.width - redWidth / 2, y: geo.size.height / 2)
                         }
 
                     case .examinerActive:

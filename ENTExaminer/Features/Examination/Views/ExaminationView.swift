@@ -338,6 +338,16 @@ struct ExaminationView: View {
             .padding(12)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
 
+            // Speech timer bar — shows speaking progress and silence countdown
+            if sessionState.isListening {
+                SpeechTimerBar(
+                    listeningStartTime: sessionState.listeningStartTime,
+                    lastSpeechTime: sessionState.lastSpeechTime,
+                    silenceTimeout: sessionState.silenceTimeout
+                )
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
             // Conversational status
             conversationalStatusBadge
         }

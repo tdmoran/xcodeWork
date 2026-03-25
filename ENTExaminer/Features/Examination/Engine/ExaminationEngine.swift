@@ -22,6 +22,11 @@ final class ExaminationSessionState {
     // Persona
     var personaName: String = "Mr. Gogarty"
 
+    // Speech timer state
+    private(set) var listeningStartTime: Date?
+    private(set) var lastSpeechTime: Date?
+    private(set) var silenceTimeout: TimeInterval = 1.2
+
     // Conversational mode state
     private(set) var dialogueMessages: [DialogueMessage] = []
     private(set) var conversationContext: ConversationContext = .empty
@@ -40,6 +45,9 @@ final class ExaminationSessionState {
         examinerAudioLevels: [Float]? = nil,
         userAudioLevels: [Float]? = nil,
         elapsedTime: TimeInterval? = nil,
+        listeningStartTime: Date?? = nil,
+        lastSpeechTime: Date?? = nil,
+        silenceTimeout: TimeInterval? = nil,
         dialogueMessages: [DialogueMessage]? = nil,
         conversationContext: ConversationContext? = nil,
         isConversationalMode: Bool? = nil,
@@ -59,6 +67,9 @@ final class ExaminationSessionState {
         if let examinerAudioLevels { self.examinerAudioLevels = examinerAudioLevels }
         if let userAudioLevels { self.userAudioLevels = userAudioLevels }
         if let elapsedTime { self.elapsedTime = elapsedTime }
+        if let listeningStartTime { self.listeningStartTime = listeningStartTime }
+        if let lastSpeechTime { self.lastSpeechTime = lastSpeechTime }
+        if let silenceTimeout { self.silenceTimeout = silenceTimeout }
         if let dialogueMessages { self.dialogueMessages = dialogueMessages }
         if let conversationContext { self.conversationContext = conversationContext }
         if let isConversationalMode { self.isConversationalMode = isConversationalMode }
@@ -410,17 +421,24 @@ actor ExaminationEngine {
     /// Listens for the trainee's response with live transcript updates.
     private func listenToTrainee() async throws -> String {
         let capturedState = state
+        let timeout: TimeInterval = 1.2  // Matches AppleSpeechSTTService default
 
         await capturedState.update(
             isListening: true,
             status: .inConversation,
-            userTranscript: ""
+            userTranscript: "",
+            listeningStartTime: .some(Date()),
+            lastSpeechTime: .some(nil),
+            silenceTimeout: timeout
         )
 
         let traineeText = try await sttService.listen(
             onPartialTranscript: { @Sendable partial in
                 Task { @MainActor in
-                    capturedState.update(userTranscript: partial)
+                    capturedState.update(
+                        userTranscript: partial,
+                        lastSpeechTime: .some(Date())
+                    )
                 }
             },
             onAudioLevel: { @Sendable level in
@@ -431,7 +449,12 @@ actor ExaminationEngine {
             }
         )
 
-        await capturedState.update(isListening: false, userTranscript: traineeText)
+        await capturedState.update(
+            isListening: false,
+            userTranscript: traineeText,
+            listeningStartTime: .some(nil),
+            lastSpeechTime: .some(nil)
+        )
 
         // Record in Claude conversation history
         conversationHistory = conversationHistory + [

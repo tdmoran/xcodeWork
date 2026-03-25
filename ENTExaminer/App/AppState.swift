@@ -717,6 +717,11 @@ final class AppState {
     }
 
     func pauseExamination() async {
+        // Stop audio output immediately — don't wait for the engine actor
+        await currentTTSService?.stopSpeaking()
+        await audioPipeline.stopPlayback()
+        currentSTTService?.requestStop()
+
         await examinationEngine?.pause()
     }
 

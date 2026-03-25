@@ -320,7 +320,13 @@ actor ExaminationEngine {
         isPaused = true
         timerTask?.cancel()
 
-        // Update UI immediately
+        // Kill audio FIRST — this is what the user actually wants to happen immediately
+        conversationTask?.cancel()
+        conversationTask = nil
+        await pipelinedSpeaker.stop()
+        await sttService.stopListening()
+
+        // Then update UI
         await state.update(
             isListening: false,
             isSpeaking: false,
@@ -328,14 +334,6 @@ actor ExaminationEngine {
             listeningStartTime: .some(nil),
             lastSpeechTime: .some(nil)
         )
-
-        // Cancel the conversation task — this kills whatever is in flight
-        conversationTask?.cancel()
-        conversationTask = nil
-
-        // Force stop all audio
-        await pipelinedSpeaker.stop()
-        await sttService.stopListening()
     }
 
     func resume() async {

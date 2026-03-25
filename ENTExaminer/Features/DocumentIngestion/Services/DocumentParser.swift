@@ -270,14 +270,22 @@ struct DocxParserService: DocumentParserProtocol {
     func parse(url: URL) async throws -> ParsedDocument {
         let data = try Data(contentsOf: url)
         let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+
+        #if os(macOS)
         let attributed = try NSAttributedString(
             url: url,
             options: [.documentType: NSAttributedString.DocumentType.officeOpenXML],
             documentAttributes: nil
         )
         let text = attributed.string
+        #else
+        // On iOS, NSAttributedString doesn't support officeOpenXML directly.
+        // Fall back to reading raw data as UTF-8 text (basic extraction).
+        let text = String(data: data, encoding: .utf8) ?? ""
+        #endif
 
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        let trimmedText = text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else {
             throw AppError.documentEmpty
         }
 
@@ -292,7 +300,7 @@ struct DocxParserService: DocumentParserProtocol {
         )
 
         return ParsedDocument(
-            text: text.trimmingCharacters(in: .whitespacesAndNewlines),
+            text: trimmedText,
             sections: sections,
             metadata: metadata,
             contentHash: hash

@@ -877,6 +877,7 @@ enum AppSection: String, CaseIterable, Identifiable {
     case results
     case archive
     case settings
+    case status
 
     var id: String { rawValue }
 
@@ -890,6 +891,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .results: return "Results"
         case .archive: return "Archive"
         case .settings: return "Settings"
+        case .status: return "System Status"
         }
     }
 
@@ -903,11 +905,12 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .results: return "chart.bar.fill"
         case .archive: return "archivebox.fill"
         case .settings: return "gearshape.fill"
+        case .status: return "stethoscope.circle.fill"
         }
     }
 
     /// Sections shown in the sidebar.
     static var sidebarSections: [AppSection] {
-        [.library, .cases, .generalKnowledge, .examination, .results, .archive, .settings]
+        [.library, .cases, .generalKnowledge, .examination, .results, .archive, .settings, .status]
     }
 }

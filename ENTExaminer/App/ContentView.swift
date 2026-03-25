@@ -114,6 +114,10 @@ struct ContentView: View {
                 SettingsView()
                     .environment(appState)
                     .id(AppSection.settings)
+            case .status:
+                SystemStatusView()
+                    .environment(appState)
+                    .id(AppSection.status)
             }
         }
         .transition(.opacity.animation(.easeInOut(duration: 0.2)))
@@ -243,6 +247,7 @@ struct SidebarView: View {
         case .results: return appState.examSummary != nil || appState.dialogueSummary != nil
         case .archive: return true
         case .settings: return true
+        case .status: return true
         }
     }
 
@@ -252,7 +257,7 @@ struct SidebarView: View {
             return appState.libraryDocuments.filter { !$0.isArchived }.count
         case .archive:
             return appState.libraryDocuments.filter(\.isArchived).count
-        default:
+        case .documentDetail, .cases, .generalKnowledge, .examination, .results, .settings, .status:
             return 0
         }
     }

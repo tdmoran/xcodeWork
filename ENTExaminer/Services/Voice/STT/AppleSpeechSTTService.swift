@@ -73,12 +73,12 @@ actor AppleSpeechSTTService: STTService {
     ///
     /// - Parameters:
     ///   - locale: The locale for speech recognition (default: current).
-    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 1.2).
+    ///   - silenceTimeout: Seconds of silence after speech before finalizing (default: 3.5).
     ///   - energyThreshold: RMS energy below which audio is classified as silence (default: 0.04).
     ///   - audioPipeline: Optional reference to stop playback engine before capturing.
     init(
         locale: Locale = .current,
-        silenceTimeout: TimeInterval = 1.2,
+        silenceTimeout: TimeInterval = 3.5,
         energyThreshold: Float = 0.04,
         audioPipeline: AudioPipeline? = nil
     ) {

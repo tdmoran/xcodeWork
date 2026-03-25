@@ -25,7 +25,7 @@ final class ExaminationSessionState {
     // Speech timer state
     private(set) var listeningStartTime: Date?
     private(set) var lastSpeechTime: Date?
-    private(set) var silenceTimeout: TimeInterval = 1.2
+    private(set) var silenceTimeout: TimeInterval = 3.5
 
     // Conversational mode state
     private(set) var dialogueMessages: [DialogueMessage] = []
@@ -109,6 +109,8 @@ actor ExaminationEngine {
     private var speakingTask: Task<String, Error>?
     private var startTime: Date?
     private var lastBargeInText: String?
+    private var isPaused: Bool = false
+    private var pauseContinuation: CheckedContinuation<Void, Never>?
 
     private let voiceId: String
 
@@ -201,8 +203,19 @@ actor ExaminationEngine {
 
         // Main conversation loop: listen → assess → think → respond
         while !Task.isCancelled {
+            // 0. Wait if paused — blocks here until resume() is called
+            await waitIfPaused()
+            guard !Task.isCancelled else { break }
+
             // 1. Listen for trainee's response (with barge-in detection)
             let traineeText = try await listenToTrainee()
+
+            // If paused during listening, the STT was killed and returned partial text.
+            // Wait for resume, then re-listen instead of processing empty input.
+            if isPaused {
+                await waitIfPaused()
+                continue
+            }
 
             // 2. Check if trainee wants to end the conversation
             if isStopRequest(traineeText) {
@@ -231,7 +244,11 @@ actor ExaminationEngine {
             // 4. Assess the exchange in background (non-blocking)
             launchBackgroundAssessment(traineeText: traineeText)
 
-            // 5. Thinking pause — brief natural delay before responding
+            // 5. Wait if paused before responding
+            await waitIfPaused()
+            guard !Task.isCancelled else { break }
+
+            // 5b. Thinking pause — brief natural delay before responding
             await showThinkingPause()
 
             // 6. Decide the examiner's next conversational move
@@ -267,20 +284,42 @@ actor ExaminationEngine {
     }
 
     func pause() async {
+        isPaused = true
         timerTask?.cancel()
-        await ttsService.pauseSpeaking()
+        await ttsService.stopSpeaking()
         await sttService.stopListening()
-        await state.update(status: .paused)
+        await state.update(
+            isListening: false,
+            isSpeaking: false,
+            status: .paused,
+            listeningStartTime: .some(nil),
+            lastSpeechTime: .some(nil)
+        )
     }
 
     func resume() async {
-        await ttsService.resumeSpeaking()
+        isPaused = false
+        // Resume the continuation if the loop is waiting
+        pauseContinuation?.resume()
+        pauseContinuation = nil
         startTimer()
         let isConversational = await state.isConversationalMode
         await state.update(status: isConversational ? .inConversation : .askingQuestion)
     }
 
+    /// Suspends execution if the engine is paused. Resumes when `resume()` is called.
+    private func waitIfPaused() async {
+        guard isPaused else { return }
+        await withCheckedContinuation { continuation in
+            self.pauseContinuation = continuation
+        }
+    }
+
     func stop() async {
+        isPaused = false
+        // Unblock conversation loop if it's waiting on pause
+        pauseContinuation?.resume()
+        pauseContinuation = nil
         timerTask?.cancel()
         assessmentTask?.cancel()
         await ttsService.stopSpeaking()
@@ -421,7 +460,7 @@ actor ExaminationEngine {
     /// Listens for the trainee's response with live transcript updates.
     private func listenToTrainee() async throws -> String {
         let capturedState = state
-        let timeout: TimeInterval = 1.2  // Matches AppleSpeechSTTService default
+        let timeout: TimeInterval = 3.5  // Matches AppleSpeechSTTService default
 
         await capturedState.update(
             isListening: true,

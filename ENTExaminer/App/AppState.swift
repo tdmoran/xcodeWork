@@ -69,6 +69,24 @@ enum ExaminerPersona: String, CaseIterable, Identifiable, Codable, Sendable {
         case .caroline: return "Alice"
         }
     }
+
+    var appleVoiceNameCandidates: [String] {
+        switch self {
+        case .gogarty: return ["Arthur", "Aaron", "Daniel", "Reed"]
+        case .wilde: return ["Daniel", "Eddy", "Nathan", "Sandy"]
+        case .lynn: return ["Moira", "Martha", "Karen", "Tessa"]
+        case .caroline: return ["Samantha", "Ava", "Allison", "Karen"]
+        }
+    }
+
+    var appleVoiceLanguagePreferences: [String] {
+        switch self {
+        case .gogarty, .wilde, .lynn:
+            return ["en-IE", "en-GB", "en-US"]
+        case .caroline:
+            return ["en-GB", "en-US", "en-AU"]
+        }
+    }
 }
 
 @MainActor
@@ -518,7 +536,7 @@ final class AppState {
         examinationState = sessionState
         selectedSection = .examination
 
-        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedPersona.preferredVoiceId
+        let effectiveVoiceId = effectiveVoiceId(for: selectedPersona)
         let config = ExamConfiguration(
             model: selectedModel,
             maxQuestions: analysis.suggestedQuestionCount,
@@ -582,7 +600,7 @@ final class AppState {
         examinationState = sessionState
         selectedSection = .examination
 
-        let effectiveVoiceId: String? = voiceEngine == .apple ? selectedAppleVoiceId : selectedPersona.preferredVoiceId
+        let effectiveVoiceId = effectiveVoiceId(for: selectedPersona)
         let config = ExamConfiguration(
             model: selectedModel,
             maxQuestions: analysis.suggestedQuestionCount,
@@ -656,6 +674,18 @@ final class AppState {
         document = caseParsedDoc
         analysis = caseAnalysis
         await startConversation()
+    }
+
+    private func effectiveVoiceId(for persona: ExaminerPersona) -> String? {
+        switch voiceEngine {
+        case .apple:
+            if !selectedAppleVoiceId.isEmpty {
+                return selectedAppleVoiceId
+            }
+            return AppleTTSService.preferredVoice(for: persona)?.identifier
+        case .elevenLabs:
+            return persona.preferredVoiceId
+        }
     }
 
     func handleBargeIn() async {

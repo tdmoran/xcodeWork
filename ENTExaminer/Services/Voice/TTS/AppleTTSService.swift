@@ -155,6 +155,25 @@ final class AppleTTSService: NSObject, TTSService, AVSpeechSynthesizerDelegate {
         return AVSpeechSynthesisVoice(language: "en-US")
     }
 
+    /// Returns a persona-specific default system voice when the user has not
+    /// explicitly picked one in settings.
+    static func preferredVoice(for persona: ExaminerPersona) -> AVSpeechSynthesisVoice? {
+        let voices = availableEnglishVoices()
+        guard !voices.isEmpty else {
+            return AVSpeechSynthesisVoice(language: "en-US")
+        }
+
+        let preferredNames = persona.appleVoiceNameCandidates.map { $0.lowercased() }
+        let languagePreferences = persona.appleVoiceLanguagePreferences
+        let maleHints: Set<String> = ["aaron", "arthur", "daniel", "eddy", "fred", "jorge", "nathan", "reed", "rishi", "sandy"]
+        let femaleHints: Set<String> = ["allison", "ava", "karen", "martha", "moira", "samantha", "serena", "shelley", "tessa", "victoria", "zoe"]
+
+        return voices.max { lhs, rhs in
+            score(lhs, preferredNames: preferredNames, languagePreferences: languagePreferences, maleHints: maleHints, femaleHints: femaleHints, gender: persona.voiceGender)
+            < score(rhs, preferredNames: preferredNames, languagePreferences: languagePreferences, maleHints: maleHints, femaleHints: femaleHints, gender: persona.voiceGender)
+        }
+    }
+
     /// Returns available English voices suitable for the voice picker.
     static func availableEnglishVoices() -> [AVSpeechSynthesisVoice] {
         AVSpeechSynthesisVoice.speechVoices()
@@ -166,5 +185,50 @@ final class AppleTTSService: NSObject, TTSService, AVSpeechSynthesizerDelegate {
                 }
                 return v1.name < v2.name
             }
+    }
+
+    private static func score(
+        _ voice: AVSpeechSynthesisVoice,
+        preferredNames: [String],
+        languagePreferences: [String],
+        maleHints: Set<String>,
+        femaleHints: Set<String>,
+        gender: String
+    ) -> Int {
+        let lowercasedName = voice.name.lowercased()
+        var score = 0
+
+        if let nameIndex = preferredNames.firstIndex(of: lowercasedName) {
+            score += 500 - (nameIndex * 50)
+        }
+
+        if let languageIndex = languagePreferences.firstIndex(where: { voice.language.hasPrefix($0) }) {
+            score += 200 - (languageIndex * 30)
+        }
+
+        switch voice.quality {
+        case .premium:
+            score += 40
+        case .enhanced:
+            score += 20
+        default:
+            break
+        }
+
+        if gender == "male" {
+            if maleHints.contains(lowercasedName) {
+                score += 30
+            } else if femaleHints.contains(lowercasedName) {
+                score -= 20
+            }
+        } else if gender == "female" {
+            if femaleHints.contains(lowercasedName) {
+                score += 30
+            } else if maleHints.contains(lowercasedName) {
+                score -= 20
+            }
+        }
+
+        return score
     }
 }

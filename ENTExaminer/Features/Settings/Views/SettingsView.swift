@@ -8,6 +8,23 @@ struct SettingsView: View {
         @Bindable var state = appState
 
         VStack(spacing: 0) {
+            HStack {
+                Spacer()
+
+                Button {
+                    closeSettings()
+                } label: {
+                    Label("Close", systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .font(.title3)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close settings")
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+            }
+
             TabView {
                 GeneralSettingsView()
                     .environment(appState)
@@ -30,6 +47,11 @@ struct SettingsView: View {
         #if os(macOS)
         .frame(width: 480, height: 400)
         #endif
+    }
+
+    private func closeSettings() {
+        appState.showSettings = false
+        dismiss()
     }
 }
 

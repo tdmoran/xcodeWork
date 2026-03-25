@@ -137,8 +137,7 @@ actor AppleSpeechSTTService: STTService {
 
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
-
-        let nativeFormat = inputNode.outputFormat(forBus: 0)
+        let nativeFormat = try await resolveInputFormat(for: inputNode)
         guard nativeFormat.sampleRate > 0, nativeFormat.channelCount > 0 else {
             throw AppError.noAudioInputDevice
         }
@@ -266,6 +265,45 @@ actor AppleSpeechSTTService: STTService {
         }
 
         return recognizer
+    }
+
+    private func resolveInputFormat(for inputNode: AVAudioInputNode) async throws -> AVAudioFormat {
+        #if os(iOS)
+        var attemptsRemaining = 3
+        var fallbackFormat = inputNode.inputFormat(forBus: 0)
+        var preferredFormat = inputNode.outputFormat(forBus: 0)
+
+        while attemptsRemaining > 0 {
+            if preferredFormat.channelCount > 0, preferredFormat.sampleRate > 0 {
+                return preferredFormat
+            }
+
+            if fallbackFormat.channelCount > 0, fallbackFormat.sampleRate > 0 {
+                logger.info("Using AVAudioInputNode.inputFormat fallback for speech recognition")
+                return fallbackFormat
+            }
+
+            attemptsRemaining -= 1
+            if attemptsRemaining == 0 { break }
+
+            let session = AVAudioSession.sharedInstance()
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            try? await Task.sleep(for: .milliseconds(200))
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try session.setActive(true)
+
+            fallbackFormat = inputNode.inputFormat(forBus: 0)
+            preferredFormat = inputNode.outputFormat(forBus: 0)
+        }
+
+        return preferredFormat.channelCount > 0 ? preferredFormat : fallbackFormat
+        #else
+        let preferredFormat = inputNode.outputFormat(forBus: 0)
+        if preferredFormat.channelCount > 0, preferredFormat.sampleRate > 0 {
+            return preferredFormat
+        }
+        return inputNode.inputFormat(forBus: 0)
+        #endif
     }
 
     // MARK: - Recognition Loop

@@ -108,6 +108,7 @@ actor ExaminationEngine {
     private var timerTask: Task<Void, Never>?
     private var assessmentTask: Task<Void, Never>?
     private var speakingTask: Task<String, Error>?
+    private var conversationTask: Task<Void, Error>?
     private var startTime: Date?
     private var lastBargeInText: String?
     private var isPaused: Bool = false
@@ -201,103 +202,110 @@ actor ExaminationEngine {
 
         try await speakExaminerMove(openingMove)
 
-        // Main conversation loop: listen → assess → think → respond
+        // Run the conversation loop. Pause cancels and resume restarts it.
+        // This outer loop keeps startConversation alive across pause/resume cycles.
+        conversationTask = Task { [weak self] in
+            guard let self else { return }
+            try await self.runConversationLoop()
+        }
+
         while !Task.isCancelled {
-            // 0. Wait if paused — blocks here until resume() is called
-            await waitIfPaused()
-            guard !Task.isCancelled else { break }
-
-            // Wrap the loop body so pause-induced errors don't kill the exam
-            do {
-                // 1. Listen for trainee's response (with barge-in detection)
-                let traineeText = try await listenToTrainee()
-
-                // If paused during listening, the STT was killed and returned partial text.
-                // Wait for resume, then re-listen instead of processing empty input.
-                if isPaused {
-                    await waitIfPaused()
-                    continue
+            // Wait for current conversation task
+            if let task = conversationTask {
+                do {
+                    try await task.value
+                    break  // Loop ended naturally
+                } catch is CancellationError {
+                    // Cancelled by pause or stop
+                } catch {
+                    if !isPaused {
+                        throw error  // Real error
+                    }
                 }
+            }
 
-                // Skip empty responses (can happen after pause/resume)
-                let trimmed = traineeText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if trimmed.isEmpty {
-                    continue
-                }
+            // If paused, wait for resume or stop
+            while isPaused && !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(200))
+            }
 
-                // 2. Check if trainee wants to end the conversation
-                if isStopRequest(traineeText) {
-                    let closingText = "Grand, we'll leave it there. Well done — good session."
-                    let capturedState = state
-                    await capturedState.update(currentQuestion: .some(closingText), isSpeaking: true)
-                    try await ttsService.speak(
-                        text: closingText,
-                        voiceId: voiceId,
-                        onAudioLevel: { @Sendable level in
-                            Task { @MainActor in
-                                let levels = Self.buildLevelsArray(from: level)
-                                capturedState.update(examinerAudioLevels: levels)
-                            }
-                        }
-                    )
-                    await capturedState.update(isSpeaking: false)
-                    break
-                }
-
-                // 3. Record trainee message
-                let traineeMessage = DialogueMessage(role: .trainee, content: traineeText)
-                dialogueMessages = dialogueMessages + [traineeMessage]
-                await updateDialogueState()
-
-                // 4. Assess the exchange in background (non-blocking)
-                launchBackgroundAssessment(traineeText: traineeText)
-
-                // 5. Wait if paused before responding
-                await waitIfPaused()
-                guard !Task.isCancelled else { break }
-
-                // 5b. Thinking pause — brief natural delay before responding
-                await showThinkingPause()
-
-                // 6. Decide the examiner's next conversational move
-                let context = buildConversationContext()
-                let responseMove = dialogueFlowController.decideNextMove(
-                    analysis: analysis,
-                    messages: dialogueMessages,
-                    context: context,
-                    assessments: inlineAssessments
-                )
-
-                // 7. Speak the response (or close)
-                try await speakExaminerMove(responseMove)
-
-                if case .closing = responseMove.intent {
-                    break
-                }
-            } catch is CancellationError {
-                // Task was cancelled (stop or pause killed a sub-task)
-                if isPaused {
-                    // Pause interrupted something — wait for resume and retry
-                    continue
-                }
+            // If not paused and no task, either resume created a new one or we should exit
+            if !isPaused && conversationTask == nil {
                 break
-            } catch {
-                // If paused, this error was caused by stopping TTS/STT — safe to retry
-                if isPaused {
-                    logger.info("Pause interrupted conversation step; will retry after resume")
-                    continue
-                }
-                // Real error — re-throw
-                throw error
             }
         }
 
-        // Wait for any pending assessment
+        // Clean up
         assessmentTask?.cancel()
         timerTask?.cancel()
+        conversationTask = nil
         await state.update(status: .finished)
 
         logger.info("Conversation complete: \(self.dialogueMessages.count) exchanges")
+    }
+
+    /// The core conversation loop. Runs in a Task so it can be cancelled by pause
+    /// and restarted by resume.
+    private func runConversationLoop() async throws {
+        while !Task.isCancelled {
+            // 1. Listen for trainee's response
+            let traineeText = try await listenToTrainee()
+            try Task.checkCancellation()
+
+            // Skip empty responses
+            let trimmed = traineeText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+
+            // 2. Check if trainee wants to end
+            if isStopRequest(traineeText) {
+                let closingText = "Grand, we'll leave it there. Well done — good session."
+                let capturedState = state
+                await capturedState.update(currentQuestion: .some(closingText), isSpeaking: true)
+                try await ttsService.speak(
+                    text: closingText,
+                    voiceId: voiceId,
+                    onAudioLevel: { @Sendable level in
+                        Task { @MainActor in
+                            let levels = Self.buildLevelsArray(from: level)
+                            capturedState.update(examinerAudioLevels: levels)
+                        }
+                    }
+                )
+                await capturedState.update(isSpeaking: false)
+                break
+            }
+
+            // 3. Record trainee message
+            let traineeMessage = DialogueMessage(role: .trainee, content: traineeText)
+            dialogueMessages = dialogueMessages + [traineeMessage]
+            await updateDialogueState()
+
+            // 4. Assess in background
+            launchBackgroundAssessment(traineeText: traineeText)
+
+            try Task.checkCancellation()
+
+            // 5. Think
+            await showThinkingPause()
+
+            try Task.checkCancellation()
+
+            // 6. Decide next move
+            let context = buildConversationContext()
+            let responseMove = dialogueFlowController.decideNextMove(
+                analysis: analysis,
+                messages: dialogueMessages,
+                context: context,
+                assessments: inlineAssessments
+            )
+
+            // 7. Speak
+            try await speakExaminerMove(responseMove)
+
+            if case .closing = responseMove.intent {
+                break
+            }
+        }
     }
 
     // MARK: - Shared Controls
@@ -308,11 +316,11 @@ actor ExaminationEngine {
     }
 
     func pause() async {
-        guard !isPaused else { return }  // Prevent double-tap
+        guard !isPaused else { return }
         isPaused = true
         timerTask?.cancel()
 
-        // Set UI state immediately so the button switches to "play"
+        // Update UI immediately
         await state.update(
             isListening: false,
             isSpeaking: false,
@@ -321,31 +329,35 @@ actor ExaminationEngine {
             lastSpeechTime: .some(nil)
         )
 
-        // Then clean up audio (may take time)
+        // Cancel the conversation task — this kills whatever is in flight
+        conversationTask?.cancel()
+        conversationTask = nil
+
+        // Force stop all audio
         await pipelinedSpeaker.stop()
         await sttService.stopListening()
     }
 
     func resume() async {
-        guard isPaused else { return }  // Prevent double-tap
+        guard isPaused else { return }
         isPaused = false
         startTimer()
-        let isConversational = await state.isConversationalMode
-        await state.update(status: isConversational ? .inConversation : .askingQuestion)
-    }
+        await state.update(status: .inConversation)
 
-    /// Suspends execution if the engine is paused. Resumes when `resume()` sets isPaused to false.
-    private func waitIfPaused() async {
-        while isPaused && !Task.isCancelled {
-            try? await Task.sleep(for: .milliseconds(100))
+        // Restart the conversation loop from where we left off
+        conversationTask = Task { [weak self] in
+            guard let self else { return }
+            try await self.runConversationLoop()
         }
     }
 
     func stop() async {
         isPaused = false
+        conversationTask?.cancel()
+        conversationTask = nil
         timerTask?.cancel()
         assessmentTask?.cancel()
-        await ttsService.stopSpeaking()
+        await pipelinedSpeaker.stop()
         await sttService.stopListening()
         await state.update(status: .finished)
     }

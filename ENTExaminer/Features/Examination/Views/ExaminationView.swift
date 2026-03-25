@@ -368,7 +368,8 @@ struct ExaminationView: View {
                 SpeechTimerBar(
                     listeningStartTime: sessionState.listeningStartTime,
                     lastSpeechTime: sessionState.lastSpeechTime,
-                    silenceTimeout: sessionState.silenceTimeout
+                    silenceTimeout: sessionState.silenceTimeout,
+                    maxSpeakingDuration: sessionState.maxAnswerLength
                 )
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }

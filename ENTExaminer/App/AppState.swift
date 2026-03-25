@@ -122,6 +122,8 @@ final class AppState {
     var voiceEngine: VoiceEngine = .elevenLabs
     var selectedAppleVoiceId: String = ""
     var selectedPersona: ExaminerPersona = .gogarty
+    var silenceTimeout: Double = 2.0      // seconds before examiner takes over (0.5–5.0)
+    var maxAnswerLength: Double = 60.0    // max speaking time in seconds (10–120)
 
     // Services
     private let documentParser = CompositeDocumentParser()
@@ -533,6 +535,8 @@ final class AppState {
 
         let sessionState = ExaminationSessionState()
         sessionState.personaName = selectedPersona.name
+        sessionState.update(silenceTimeout: silenceTimeout)
+        sessionState.maxAnswerLength = maxAnswerLength
         examinationState = sessionState
         selectedSection = .examination
 
@@ -556,7 +560,7 @@ final class AppState {
             )
         }
 
-        let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
+        let sttService = AppleSpeechSTTService(silenceTimeout: silenceTimeout, audioPipeline: audioPipeline)
         currentSTTService = sttService
         currentTTSService = ttsService
 
@@ -597,6 +601,8 @@ final class AppState {
 
         let sessionState = ExaminationSessionState()
         sessionState.personaName = selectedPersona.name
+        sessionState.update(silenceTimeout: silenceTimeout)
+        sessionState.maxAnswerLength = maxAnswerLength
         examinationState = sessionState
         selectedSection = .examination
 
@@ -620,7 +626,7 @@ final class AppState {
             )
         }
 
-        let sttService = AppleSpeechSTTService(audioPipeline: audioPipeline)
+        let sttService = AppleSpeechSTTService(silenceTimeout: silenceTimeout, audioPipeline: audioPipeline)
         currentSTTService = sttService
         currentTTSService = ttsService
 

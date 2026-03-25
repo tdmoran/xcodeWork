@@ -86,9 +86,55 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            Section("Answer Timing") {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Max Answer Length")
+                        Spacer()
+                        Text(answerLengthLabel(appState.maxAnswerLength))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+
+                    Slider(value: $state.maxAnswerLength, in: 10...120, step: 5)
+                        .accessibilityLabel("Maximum answer length")
+
+                    Text("How long the green progress bar takes to fill. Longer values give you more time per answer.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Silence Before Examiner")
+                        Spacer()
+                        Text(String(format: "%.1fs", appState.silenceTimeout))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+
+                    Slider(value: $state.silenceTimeout, in: 0.5...5.0, step: 0.25)
+                        .accessibilityLabel("Silence timeout before examiner speaks")
+
+                    Text("How long the examiner waits after you stop talking before responding. Shorter = snappier conversation, longer = more thinking time.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .formStyle(.grouped)
         .padding()
+    }
+
+    private func answerLengthLabel(_ seconds: Double) -> String {
+        let s = Int(seconds)
+        if s >= 60 {
+            let m = s / 60
+            let rem = s % 60
+            return rem > 0 ? "\(m)m \(rem)s" : "\(m)m"
+        }
+        return "\(s)s"
     }
 }
 

@@ -10,13 +10,11 @@ struct SpeechTimerBar: View {
     let listeningStartTime: Date?
     let lastSpeechTime: Date?
     let silenceTimeout: TimeInterval
+    var maxSpeakingDuration: TimeInterval = 60.0
 
     // Drive animation updates
     @State private var now = Date()
     @State private var timer: Timer?
-
-    // Reasonable max speaking time for the green bar scale
-    private let maxSpeakingDuration: TimeInterval = 30.0
 
     var body: some View {
         VStack(spacing: 4) {

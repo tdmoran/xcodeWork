@@ -26,6 +26,7 @@ final class ExaminationSessionState {
     private(set) var listeningStartTime: Date?
     private(set) var lastSpeechTime: Date?
     private(set) var silenceTimeout: TimeInterval = 2.0
+    var maxAnswerLength: TimeInterval = 60.0
 
     // Conversational mode state
     private(set) var dialogueMessages: [DialogueMessage] = []
@@ -485,7 +486,7 @@ actor ExaminationEngine {
     /// Listens for the trainee's response with live transcript updates.
     private func listenToTrainee() async throws -> String {
         let capturedState = state
-        let timeout: TimeInterval = 2.0  // Matches AppleSpeechSTTService default
+        let timeout = await capturedState.silenceTimeout
 
         await capturedState.update(
             isListening: true,

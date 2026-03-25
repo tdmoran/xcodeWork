@@ -147,7 +147,7 @@ struct ExaminationView: View {
                     }
                 } label: {
                     Label(
-                        showSpeechVisualizer ? "Hide Visualizer" : "Show Visualizer",
+                        showSpeechVisualizer ? "Hide Turn Indicator" : "Show Turn Indicator",
                         systemImage: showSpeechVisualizer ? "waveform.slash" : "waveform"
                     )
                     .font(.caption)
@@ -363,16 +363,16 @@ struct ExaminationView: View {
             .padding(12)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
 
-            // Speech timer bar — shows speaking progress and silence countdown
-            if sessionState.isListening {
-                SpeechTimerBar(
-                    listeningStartTime: sessionState.listeningStartTime,
-                    lastSpeechTime: sessionState.lastSpeechTime,
-                    silenceTimeout: sessionState.silenceTimeout,
-                    maxSpeakingDuration: sessionState.maxAnswerLength
-                )
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
+            // Speech Turn Indicator — always visible, shows whose turn it is
+            SpeechTurnIndicator(
+                status: sessionState.status,
+                isListening: sessionState.isListening,
+                isSpeaking: sessionState.isSpeaking,
+                listeningStartTime: sessionState.listeningStartTime,
+                lastSpeechTime: sessionState.lastSpeechTime,
+                silenceTimeout: sessionState.silenceTimeout,
+                maxSpeakingDuration: sessionState.maxAnswerLength
+            )
 
             // Conversational status
             conversationalStatusBadge

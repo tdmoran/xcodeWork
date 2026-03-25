@@ -1,12 +1,17 @@
 import SwiftUI
 
-/// A horizontal bar showing the user how long they've been speaking (green, left-to-right)
-/// and how close they are to the silence cutoff (red, right-to-left).
+/// Speech Turn Indicator — a persistent horizontal bar showing whose turn it is
+/// and the timing state of the conversation.
 ///
-/// The green bar grows steadily while the user speaks. When the user stops speaking,
-/// a red bar begins filling from the right edge toward the left — once it reaches
-/// full width, the examiner will take over.
-struct SpeechTimerBar: View {
+/// - **Trainee speaking**: Green bar fills left-to-right showing answer duration.
+/// - **Silence detected**: Orange/red bar fills right-to-left showing countdown to examiner.
+/// - **Examiner speaking**: Blue bar pulses to show the examiner has the floor.
+/// - **Thinking**: Subtle animated bar while the examiner prepares a response.
+/// - **Paused / Idle**: Empty track with status label.
+struct SpeechTurnIndicator: View {
+    let status: ExamStatus
+    let isListening: Bool
+    let isSpeaking: Bool
     let listeningStartTime: Date?
     let lastSpeechTime: Date?
     let silenceTimeout: TimeInterval
@@ -15,6 +20,7 @@ struct SpeechTimerBar: View {
     // Drive animation updates
     @State private var now = Date()
     @State private var timer: Timer?
+    @State private var examinerPulse: Bool = false
 
     var body: some View {
         VStack(spacing: 4) {
@@ -24,31 +30,64 @@ struct SpeechTimerBar: View {
                     Capsule()
                         .fill(Color.secondary.opacity(0.12))
 
-                    // Green bar: speaking progress (left to right)
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [.green.opacity(0.7), .green],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: max(0, geo.size.width * greenProgress))
-
-                    // Red bar: silence countdown (right to left)
-                    if redProgress > 0 {
-                        HStack {
-                            Spacer()
-                            Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [redBarColor, redBarColor.opacity(0.7)],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
+                    switch currentMode {
+                    case .traineeActive:
+                        // Green bar: speaking progress (left to right)
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.green.opacity(0.7), .green],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
                                 )
-                                .frame(width: max(0, geo.size.width * redProgress))
+                            )
+                            .frame(width: max(0, geo.size.width * greenProgress))
+
+                        // Red bar: silence countdown (right to left)
+                        if redProgress > 0 {
+                            HStack {
+                                Spacer()
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [redBarColor, redBarColor.opacity(0.7)],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: max(0, geo.size.width * redProgress))
+                            }
                         }
+
+                    case .examinerActive:
+                        // Blue pulsing bar while examiner speaks
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.blue.opacity(0.5), .cyan.opacity(0.7)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .opacity(examinerPulse ? 1.0 : 0.5)
+
+                    case .thinking:
+                        // Animated indeterminate bar
+                        Capsule()
+                            .fill(Color.blue.opacity(0.3))
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.clear, .blue.opacity(0.5), .clear],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: geo.size.width * 0.3)
+                            .offset(x: examinerPulse ? geo.size.width * 0.7 : 0)
+
+                    case .idle:
+                        EmptyView()
                     }
                 }
             }
@@ -56,55 +95,125 @@ struct SpeechTimerBar: View {
 
             // Labels
             HStack {
-                if greenProgress > 0 {
-                    Text("Speaking")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(.green)
-                }
+                Text(leftLabel)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(leftLabelColor)
 
                 Spacer()
 
-                if redProgress > 0 {
-                    Text(redProgress > 0.7 ? "Examiner taking over..." : "Silence detected")
+                if !rightLabel.isEmpty {
+                    Text(rightLabel)
                         .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(redBarColor)
+                        .foregroundStyle(rightLabelColor)
                 }
             }
         }
         .padding(.horizontal, 4)
-        .animation(.easeOut(duration: 0.1), value: greenProgress)
-        .animation(.easeOut(duration: 0.1), value: redProgress)
+        .animation(.easeOut(duration: 0.15), value: greenProgress)
+        .animation(.easeOut(duration: 0.15), value: redProgress)
+        .animation(.easeInOut(duration: 0.8), value: examinerPulse)
         .onAppear {
             now = Date()
             timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { _ in
                 now = Date()
             }
+            startPulse()
         }
         .onDisappear {
             timer?.invalidate()
             timer = nil
         }
+        .onChange(of: currentMode) { _, _ in
+            startPulse()
+        }
     }
 
-    // MARK: - Computed Progress
+    // MARK: - Mode
 
-    /// Green bar: fraction of max speaking time elapsed since listening started.
+    private enum Mode: Equatable {
+        case traineeActive
+        case examinerActive
+        case thinking
+        case idle
+    }
+
+    private var currentMode: Mode {
+        if isListening { return .traineeActive }
+        if isSpeaking { return .examinerActive }
+        if status == .thinking { return .thinking }
+        return .idle
+    }
+
+    // MARK: - Labels
+
+    private var leftLabel: String {
+        switch currentMode {
+        case .traineeActive: return "Your turn"
+        case .examinerActive: return "Examiner speaking"
+        case .thinking: return "Examiner thinking..."
+        case .idle:
+            switch status {
+            case .paused: return "Paused"
+            case .finished: return "Examination complete"
+            default: return "Speech Turn Indicator"
+            }
+        }
+    }
+
+    private var leftLabelColor: Color {
+        switch currentMode {
+        case .traineeActive: return .green
+        case .examinerActive: return .blue
+        case .thinking: return .blue
+        case .idle: return .secondary
+        }
+    }
+
+    private var rightLabel: String {
+        switch currentMode {
+        case .traineeActive:
+            if redProgress > 0.7 {
+                return "Examiner taking over..."
+            } else if redProgress > 0 {
+                return "Silence detected"
+            }
+            return ""
+        case .examinerActive: return ""
+        case .thinking: return ""
+        case .idle: return ""
+        }
+    }
+
+    private var rightLabelColor: Color {
+        redBarColor
+    }
+
+    // MARK: - Pulse
+
+    private func startPulse() {
+        examinerPulse = false
+        if currentMode == .examinerActive || currentMode == .thinking {
+            withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                examinerPulse = true
+            }
+        }
+    }
+
+    // MARK: - Progress (trainee mode)
+
     private var greenProgress: CGFloat {
-        guard let start = listeningStartTime else { return 0 }
+        guard currentMode == .traineeActive, let start = listeningStartTime else { return 0 }
         let elapsed = now.timeIntervalSince(start)
         return min(1.0, CGFloat(elapsed / maxSpeakingDuration))
     }
 
-    /// Red bar: fraction of silence timeout consumed since last speech.
-    /// Returns 0 while the user is still speaking.
     private var redProgress: CGFloat {
-        guard let lastSpeech = lastSpeechTime else { return 0 }
+        guard currentMode == .traineeActive, let lastSpeech = lastSpeechTime else { return 0 }
         let silenceElapsed = now.timeIntervalSince(lastSpeech)
         guard silenceElapsed > 0 else { return 0 }
         return min(1.0, CGFloat(silenceElapsed / silenceTimeout))
     }
 
-    /// Red bar color intensifies as silence approaches the cutoff.
     private var redBarColor: Color {
         redProgress > 0.7 ? .red : .orange
     }

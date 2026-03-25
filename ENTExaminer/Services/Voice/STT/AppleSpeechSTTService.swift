@@ -78,7 +78,7 @@ actor AppleSpeechSTTService: STTService {
     ///   - audioPipeline: Optional reference to stop playback engine before capturing.
     init(
         locale: Locale = .current,
-        silenceTimeout: TimeInterval = 3.5,
+        silenceTimeout: TimeInterval = 2.0,
         energyThreshold: Float = 0.04,
         audioPipeline: AudioPipeline? = nil
     ) {
